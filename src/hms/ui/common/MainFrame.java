@@ -1,18 +1,29 @@
 package hms.ui.common;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /**
- * Foundation window for the HMS application.
+ * Main application window controller for the Hospital Management System.
  *
- * <p>Screen navigation will be added in a later development phase.</p>
+ * <p>Window configuration, screen navigation, and common application
+ * structure will be added in later development phases.</p>
  */
 public class MainFrame extends JFrame {
 
+    /**
+     * Creates the main application window controller.
+     */
     public MainFrame() {
-        super("HMS-OODJ");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(Theme.WINDOW_WIDTH, Theme.WINDOW_HEIGHT);
-        setLocationRelativeTo(null);
+        // Window configuration will be added later.
+    }
+
+    /**
+     * Placeholder for displaying application screens in the future.
+     *
+     * @param panel panel to display
+     */
+    public void showPanel(JPanel panel) {
+        // Screen navigation will be implemented later.
     }
 }
