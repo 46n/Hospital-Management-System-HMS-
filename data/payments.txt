@@ -1,0 +1,1 @@
+#paymentId|patientId|appointmentId|amount|paymentDate|status

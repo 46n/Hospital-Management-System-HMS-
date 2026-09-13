@@ -1,0 +1,1 @@
+#networkId|providerName|planName|coveragePercentage|active|managedByStaffId

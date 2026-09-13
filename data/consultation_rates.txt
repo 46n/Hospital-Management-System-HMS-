@@ -1,0 +1,1 @@
+#rateId|consultationType|baseAmount|effectiveDate|active|configuredByStaffId

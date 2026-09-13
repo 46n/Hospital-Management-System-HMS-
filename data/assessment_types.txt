@@ -1,0 +1,3 @@
+#assessmentTypeId|name|category|gradingRule|baseCharge|active|createdByManagerId
+AT001|Full Blood Count|LAB|NUMERIC_RANGE|45.0|true|MM001
+AT002|Blood Pressure Check|VITALS|DESCRIPTIVE|15.0|true|MM001

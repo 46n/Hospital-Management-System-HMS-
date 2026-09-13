@@ -1,0 +1,1 @@
+#recordId|appointmentId|patientId|doctorId|vitalSigns|consultationNotes|diagnosis|recordDate
