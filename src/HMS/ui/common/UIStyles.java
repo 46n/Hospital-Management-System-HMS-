@@ -14,6 +14,10 @@ public final class UIStyles {
     }
 
     public static void applyPrimaryButtonStyle(AbstractButton button) {
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setBorderPainted(false);
+
         button.setBackground(Theme.PRIMARY_COLOR);
         button.setForeground(Color.WHITE);
         button.setFont(Theme.DEFAULT_FONT);
