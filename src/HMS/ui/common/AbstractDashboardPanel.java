@@ -4,9 +4,7 @@ import hms.manager.SessionManager;
 import hms.model.User;
 
 import java.awt.BorderLayout;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
@@ -15,8 +13,14 @@ import javax.swing.JPanel;
  * footer. Holds no business logic - it only displays session state and
  * delegates logging out to SessionManager, the same way every dashboard
  * needs to.
+ *
+ * The header and footer are managed by the NetBeans GUI Builder (see
+ * AbstractDashboardPanel.form). The CENTER navigation area is supplied by
+ * each subclass at runtime via createNavigationPanel(), so it stays out of
+ * the generated block - the same contract every dashboard subclass already
+ * relied on before this conversion, unchanged.
  */
-public abstract class AbstractDashboardPanel extends JPanel {
+public abstract class AbstractDashboardPanel extends javax.swing.JPanel {
 
     protected AbstractDashboardPanel(SessionManager sessionManager, Runnable onLogout, String roleDisplayName) {
         if (sessionManager == null || onLogout == null) {
@@ -26,34 +30,47 @@ public abstract class AbstractDashboardPanel extends JPanel {
         if (user == null) {
             throw new IllegalStateException("No user is currently logged in");
         }
-        buildLayout(user, roleDisplayName, sessionManager, onLogout);
+        initComponents();
+        customizeComponents(user, roleDisplayName, sessionManager, onLogout);
+        add(createNavigationPanel(), BorderLayout.CENTER);
     }
 
-    private void buildLayout(User user, String roleDisplayName, SessionManager sessionManager, Runnable onLogout) {
-        setLayout(new BorderLayout());
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        welcomeLabel = new javax.swing.JLabel();
+        footerPanel = new javax.swing.JPanel();
+        logoutButton = new javax.swing.JButton();
+
+        setLayout(new java.awt.BorderLayout());
+
+        welcomeLabel.setText("Welcome");
+        add(welcomeLabel, java.awt.BorderLayout.NORTH);
+
+        logoutButton.setText("Log Out");
+        footerPanel.add(logoutButton);
+        add(footerPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Applies HMS theming and wires the one listener the generated block cannot express. */
+    private void customizeComponents(User user, String roleDisplayName, SessionManager sessionManager, Runnable onLogout) {
         setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(
                 Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
 
-        JLabel welcomeLabel = new JLabel("Welcome, " + user.getUsername() + " (" + roleDisplayName + ")");
+        welcomeLabel.setText("Welcome, " + user.getUsername() + " (" + roleDisplayName + ")");
         UIStyles.applyHeadingStyle(welcomeLabel);
-        add(welcomeLabel, BorderLayout.NORTH);
 
-        add(createNavigationPanel(), BorderLayout.CENTER);
+        footerPanel.setBackground(Theme.BACKGROUND_COLOR);
 
-        JButton logoutButton = new JButton("Log Out");
         UIStyles.applyPrimaryButtonStyle(logoutButton);
         logoutButton.addActionListener(e -> {
             sessionManager.logout();
             onLogout.run();
         });
-        JPanel footerPanel = new JPanel();
-        footerPanel.setBackground(Theme.BACKGROUND_COLOR);
-        footerPanel.add(logoutButton);
-        add(footerPanel, BorderLayout.SOUTH);
     }
 
-    /** Each role dashboard supplies its own navigation placeholders here. */
+    /** Each role dashboard supplies its own navigation content here. */
     protected abstract JPanel createNavigationPanel();
 
     /** Shared helper so every dashboard's placeholder buttons look and behave the same. */
@@ -64,4 +81,10 @@ public abstract class AbstractDashboardPanel extends JPanel {
         button.setToolTipText("Not implemented yet");
         return button;
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel welcomeLabel;
+    private javax.swing.JPanel footerPanel;
+    private javax.swing.JButton logoutButton;
+    // End of variables declaration//GEN-END:variables
 }

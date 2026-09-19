@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridLayout">
+    <Property name="rows" type="int" value="0"/>
+    <Property name="columns" type="int" value="1"/>
+    <Property name="hgap" type="int" value="16"/>
+    <Property name="vgap" type="int" value="16"/>
+  </Layout>
+  <SubComponents>
+    <Component class="javax.swing.JButton" name="editProfileButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Edit My Profile"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="manageUsersButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Manage Users"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="manageDoctorsButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Manage Doctors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="viewAppointmentsButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="View Appointments"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="manageAssetsButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Manage Hospital Assets"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="manageRatesButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Manage Consultation Rates"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="manageInsuranceButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Manage Insurance Networks"/>
+      </Properties>
+    </Component>
+  </SubComponents>
+</Form>

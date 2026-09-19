@@ -8,15 +8,17 @@ import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.common.AbstractDashboardPanel;
 import hms.ui.common.MainFrame;
-import hms.ui.common.Theme;
-import hms.ui.common.UIStyles;
 
-import java.awt.GridLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JPanel;
 
-/** Landing screen for Administrative Staff. All six admin features are wired up. */
+/**
+ * Landing screen for Administrative Staff. All six admin features are wired up.
+ *
+ * The navigation button grid itself is a separate NetBeans GUI Builder panel
+ * (see AdminNavigationPanel / AdminNavigationPanel.form) - this class only
+ * wires each button's action listener, since it has no static component tree
+ * of its own beyond what AbstractDashboardPanel already provides.
+ */
 public class AdminDashboardPanel extends AbstractDashboardPanel {
 
     private final SessionManager sessionManager;
@@ -45,59 +47,35 @@ public class AdminDashboardPanel extends AbstractDashboardPanel {
 
     @Override
     protected JPanel createNavigationPanel() {
-        JPanel panel = new JPanel(new GridLayout(0, 1, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
-        panel.setBackground(Theme.BACKGROUND_COLOR);
-        panel.setBorder(BorderFactory.createEmptyBorder(
-                Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
+        AdminNavigationPanel panel = new AdminNavigationPanel();
 
-        JButton editProfileButton = new JButton("Edit My Profile");
-        UIStyles.applyPrimaryButtonStyle(editProfileButton);
-        editProfileButton.addActionListener(e -> mainFrame.showPanel(new EditProfilePanel(
+        panel.getEditProfileButton().addActionListener(e -> mainFrame.showPanel(new EditProfilePanel(
                 userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(editProfileButton);
 
-        JButton manageUsersButton = new JButton("Manage Users");
-        UIStyles.applyPrimaryButtonStyle(manageUsersButton);
-        manageUsersButton.addActionListener(e -> mainFrame.showPanel(new UserManagementPanel(
+        panel.getManageUsersButton().addActionListener(e -> mainFrame.showPanel(new UserManagementPanel(
                 userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(manageUsersButton);
 
-        JButton manageDoctorsButton = new JButton("Manage Doctors");
-        UIStyles.applyPrimaryButtonStyle(manageDoctorsButton);
-        manageDoctorsButton.addActionListener(e -> mainFrame.showPanel(new DoctorManagementPanel(
+        panel.getManageDoctorsButton().addActionListener(e -> mainFrame.showPanel(new DoctorManagementPanel(
                 userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(manageDoctorsButton);
 
-        JButton viewAppointmentsButton = new JButton("View Appointments");
-        UIStyles.applyPrimaryButtonStyle(viewAppointmentsButton);
-        viewAppointmentsButton.addActionListener(e -> mainFrame.showPanel(new AppointmentManagementPanel(
+        panel.getViewAppointmentsButton().addActionListener(e -> mainFrame.showPanel(new AppointmentManagementPanel(
                 appointmentManager, userManager, assetManager, rateManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(viewAppointmentsButton);
 
-        JButton manageAssetsButton = new JButton("Manage Hospital Assets");
-        UIStyles.applyPrimaryButtonStyle(manageAssetsButton);
-        manageAssetsButton.addActionListener(e -> mainFrame.showPanel(new HospitalAssetManagementPanel(
+        panel.getManageAssetsButton().addActionListener(e -> mainFrame.showPanel(new HospitalAssetManagementPanel(
                 assetManager, userManager, appointmentManager, rateManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(manageAssetsButton);
 
-        JButton manageRatesButton = new JButton("Manage Consultation Rates");
-        UIStyles.applyPrimaryButtonStyle(manageRatesButton);
-        manageRatesButton.addActionListener(e -> mainFrame.showPanel(new ConsultationRateManagementPanel(
+        panel.getManageRatesButton().addActionListener(e -> mainFrame.showPanel(new ConsultationRateManagementPanel(
                 rateManager, userManager, appointmentManager, assetManager, insuranceManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(manageRatesButton);
 
-        JButton manageInsuranceButton = new JButton("Manage Insurance Networks");
-        UIStyles.applyPrimaryButtonStyle(manageInsuranceButton);
-        manageInsuranceButton.addActionListener(e -> mainFrame.showPanel(new InsuranceNetworkManagementPanel(
+        panel.getManageInsuranceButton().addActionListener(e -> mainFrame.showPanel(new InsuranceNetworkManagementPanel(
                 insuranceManager, userManager, appointmentManager, assetManager, rateManager,
                 sessionManager, mainFrame, onLogout)));
-        panel.add(manageInsuranceButton);
 
         return panel;
     }
