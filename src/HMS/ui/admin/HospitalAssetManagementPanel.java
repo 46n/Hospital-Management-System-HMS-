@@ -11,11 +11,9 @@ import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.util.List;
 import javax.swing.BorderFactory;
@@ -25,9 +23,6 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
@@ -36,8 +31,13 @@ import javax.swing.table.DefaultTableModel;
  * labs, imaging rooms). All rules (required fields, valid asset type) live
  * in HospitalAssetManager - this panel only collects input and displays
  * results.
+ *
+ * Visual structure is managed by the NetBeans GUI Builder (see
+ * HospitalAssetManagementPanel.form). Only initComponents() is
+ * generated/guarded; the table model, dialogs, and navigation stay
+ * hand-written.
  */
-public class HospitalAssetManagementPanel extends JPanel {
+public class HospitalAssetManagementPanel extends javax.swing.JPanel {
 
     private static final String[] COLUMN_NAMES = {"ID", "Name", "Type", "Location", "Available", "Managed By"};
 
@@ -51,7 +51,6 @@ public class HospitalAssetManagementPanel extends JPanel {
     private final Runnable onLogout;
 
     private DefaultTableModel tableModel;
-    private JTable assetTable;
 
     public HospitalAssetManagementPanel(HospitalAssetManager assetManager, UserManager userManager,
             AppointmentManager appointmentManager, ConsultationRateManager rateManager,
@@ -65,19 +64,60 @@ public class HospitalAssetManagementPanel extends JPanel {
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
-        buildLayout();
+        initComponents();
+        customizeComponents();
         refreshTable();
     }
 
-    private void buildLayout() {
-        setLayout(new BorderLayout());
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        titleLabel = new javax.swing.JLabel();
+        assetScrollPane = new javax.swing.JScrollPane();
+        assetTable = new javax.swing.JTable();
+        buttonPanel = new javax.swing.JPanel();
+        addButton = new javax.swing.JButton();
+        editButton = new javax.swing.JButton();
+        toggleButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        backButton = new javax.swing.JButton();
+
+        setLayout(new java.awt.BorderLayout());
+
+        titleLabel.setText("Hospital Asset Management");
+        add(titleLabel, java.awt.BorderLayout.NORTH);
+
+        assetTable.setRowHeight(24);
+        assetScrollPane.setViewportView(assetTable);
+        add(assetScrollPane, java.awt.BorderLayout.CENTER);
+
+        buttonPanel.setLayout(new java.awt.GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
+
+        addButton.setText("Add Asset");
+        buttonPanel.add(addButton);
+
+        editButton.setText("Edit Selected");
+        buttonPanel.add(editButton);
+
+        toggleButton.setText("Toggle Availability");
+        buttonPanel.add(toggleButton);
+
+        deleteButton.setText("Delete Selected");
+        buttonPanel.add(deleteButton);
+
+        backButton.setText("Back to Dashboard");
+        buttonPanel.add(backButton);
+
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Applies HMS theming, builds the table model, and wires listeners. */
+    private void customizeComponents() {
         setBackground(Theme.BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(
                 Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
 
-        JLabel titleLabel = new JLabel("Hospital Asset Management");
         UIStyles.applyHeadingStyle(titleLabel);
-        add(titleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(COLUMN_NAMES, 0) {
             @Override
@@ -85,24 +125,10 @@ public class HospitalAssetManagementPanel extends JPanel {
                 return false;
             }
         };
-        assetTable = new JTable(tableModel);
-        assetTable.setRowHeight(24);
+        assetTable.setModel(tableModel);
         assetTable.setFont(Theme.DEFAULT_FONT);
-        add(new JScrollPane(assetTable), BorderLayout.CENTER);
 
-        add(createButtonPanel(), BorderLayout.SOUTH);
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
         buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JButton addButton = new JButton("Add Asset");
-        JButton editButton = new JButton("Edit Selected");
-        JButton toggleButton = new JButton("Toggle Availability");
-        JButton deleteButton = new JButton("Delete Selected");
-        JButton backButton = new JButton("Back to Dashboard");
-
         for (JButton button : new JButton[]{addButton, editButton, toggleButton, deleteButton, backButton}) {
             UIStyles.applyPrimaryButtonStyle(button);
         }
@@ -119,13 +145,6 @@ public class HospitalAssetManagementPanel extends JPanel {
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
                 sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 mainFrame, onLogout)));
-
-        buttonPanel.add(addButton);
-        buttonPanel.add(editButton);
-        buttonPanel.add(toggleButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(backButton);
-        return buttonPanel;
     }
 
     private void refreshTable() {
@@ -260,4 +279,16 @@ public class HospitalAssetManagementPanel extends JPanel {
         dialog.add(field, gbc);
         gbc.gridy++;
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JScrollPane assetScrollPane;
+    private javax.swing.JTable assetTable;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton addButton;
+    private javax.swing.JButton editButton;
+    private javax.swing.JButton toggleButton;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JButton backButton;
+    // End of variables declaration//GEN-END:variables
 }

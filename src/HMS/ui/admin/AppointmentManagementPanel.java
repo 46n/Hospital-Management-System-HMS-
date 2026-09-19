@@ -12,24 +12,21 @@ import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
 
-import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 /**
  * Admin, read-only view of every appointment in the system. Booking,
  * rescheduling, and cancellation stay with the patient/doctor workflows -
  * this screen is for oversight only.
+ *
+ * Visual structure is managed by the NetBeans GUI Builder (see
+ * AppointmentManagementPanel.form). Only initComponents() is
+ * generated/guarded; the table model, search, and navigation stay
+ * hand-written.
  */
-public class AppointmentManagementPanel extends JPanel {
+public class AppointmentManagementPanel extends javax.swing.JPanel {
 
     private final AppointmentManager appointmentManager;
     private final UserManager userManager;
@@ -41,7 +38,6 @@ public class AppointmentManagementPanel extends JPanel {
     private final Runnable onLogout;
 
     private DefaultTableModel tableModel;
-    private JTextField searchField;
 
     public AppointmentManagementPanel(AppointmentManager appointmentManager, UserManager userManager,
             HospitalAssetManager assetManager, ConsultationRateManager rateManager,
@@ -55,17 +51,75 @@ public class AppointmentManagementPanel extends JPanel {
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
-        buildLayout();
+        initComponents();
+        customizeComponents();
         refreshTable(appointmentManager.getAppointments());
     }
 
-    private void buildLayout() {
-        setLayout(new BorderLayout());
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        topPanel = new javax.swing.JPanel();
+        titleLabel = new javax.swing.JLabel();
+        searchPanel = new javax.swing.JPanel();
+        searchLabel = new javax.swing.JLabel();
+        searchField = new javax.swing.JTextField();
+        searchButton = new javax.swing.JButton();
+        clearButton = new javax.swing.JButton();
+        tableScrollPane = new javax.swing.JScrollPane();
+        appointmentTable = new javax.swing.JTable();
+        buttonPanel = new javax.swing.JPanel();
+        backButton = new javax.swing.JButton();
+
+        setLayout(new java.awt.BorderLayout());
+
+        topPanel.setLayout(new java.awt.BorderLayout());
+
+        titleLabel.setText("Appointment Management");
+        topPanel.add(titleLabel, java.awt.BorderLayout.WEST);
+
+        searchLabel.setText("Search (patient, doctor, or status):");
+        searchPanel.add(searchLabel);
+
+        searchField.setColumns(16);
+        searchPanel.add(searchField);
+
+        searchButton.setText("Search");
+        searchPanel.add(searchButton);
+
+        clearButton.setText("Clear");
+        searchPanel.add(clearButton);
+
+        topPanel.add(searchPanel, java.awt.BorderLayout.EAST);
+
+        add(topPanel, java.awt.BorderLayout.NORTH);
+
+        appointmentTable.setRowHeight(24);
+        tableScrollPane.setViewportView(appointmentTable);
+        add(tableScrollPane, java.awt.BorderLayout.CENTER);
+
+        backButton.setText("Back to Dashboard");
+        buttonPanel.add(backButton);
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Applies HMS theming, builds the table model, and wires listeners. */
+    private void customizeComponents() {
         setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(
                 Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
 
-        add(createTopPanel(), BorderLayout.NORTH);
+        topPanel.setBackground(Theme.BACKGROUND_COLOR);
+        UIStyles.applyHeadingStyle(titleLabel);
+
+        searchPanel.setBackground(Theme.BACKGROUND_COLOR);
+        UIStyles.applyPrimaryButtonStyle(searchButton);
+        UIStyles.applyPrimaryButtonStyle(clearButton);
+        searchButton.addActionListener(e -> applySearch());
+        clearButton.addActionListener(e -> {
+            searchField.setText("");
+            refreshTable(appointmentManager.getAppointments());
+        });
 
         tableModel = new DefaultTableModel(AppointmentTableUtil.COLUMN_NAMES, 0) {
             @Override
@@ -73,49 +127,14 @@ public class AppointmentManagementPanel extends JPanel {
                 return false;
             }
         };
-        JTable table = new JTable(tableModel);
-        table.setRowHeight(24);
-        table.setFont(Theme.DEFAULT_FONT);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        appointmentTable.setModel(tableModel);
+        appointmentTable.setFont(Theme.DEFAULT_FONT);
 
-        JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-        JButton backButton = new JButton("Back to Dashboard");
         UIStyles.applyPrimaryButtonStyle(backButton);
         backButton.addActionListener(e -> mainFrame.showPanel(
                 new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
                         rateManager, insuranceManager, mainFrame, onLogout)));
-        buttonPanel.add(backButton);
-        add(buttonPanel, BorderLayout.SOUTH);
-    }
-
-    private JPanel createTopPanel() {
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JLabel titleLabel = new JLabel("Appointment Management");
-        UIStyles.applyHeadingStyle(titleLabel);
-        topPanel.add(titleLabel, BorderLayout.WEST);
-
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBackground(Theme.BACKGROUND_COLOR);
-        searchField = new JTextField(16);
-        JButton searchButton = new JButton("Search");
-        UIStyles.applyPrimaryButtonStyle(searchButton);
-        searchButton.addActionListener(e -> applySearch());
-        JButton clearButton = new JButton("Clear");
-        UIStyles.applyPrimaryButtonStyle(clearButton);
-        clearButton.addActionListener(e -> {
-            searchField.setText("");
-            refreshTable(appointmentManager.getAppointments());
-        });
-        searchPanel.add(new JLabel("Search (patient, doctor, or status):"));
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(clearButton);
-        topPanel.add(searchPanel, BorderLayout.EAST);
-
-        return topPanel;
     }
 
     private void applySearch() {
@@ -141,4 +160,18 @@ public class AppointmentManagementPanel extends JPanel {
             tableModel.addRow(AppointmentTableUtil.toRow(appointment));
         }
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel topPanel;
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JPanel searchPanel;
+    private javax.swing.JLabel searchLabel;
+    private javax.swing.JTextField searchField;
+    private javax.swing.JButton searchButton;
+    private javax.swing.JButton clearButton;
+    private javax.swing.JScrollPane tableScrollPane;
+    private javax.swing.JTable appointmentTable;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton backButton;
+    // End of variables declaration//GEN-END:variables
 }

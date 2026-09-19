@@ -15,11 +15,9 @@ import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,10 +30,7 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
@@ -45,8 +40,12 @@ import javax.swing.table.DefaultTableModel;
  * rules (duplicate usernames, required fields, role validity, active-state
  * persistence) live in UserManager - this panel only collects input, calls
  * it, and displays the result.
+ *
+ * Visual structure is managed by the NetBeans GUI Builder (see
+ * UserManagementPanel.form). Only initComponents() is generated/guarded;
+ * the table model, dialogs, and navigation stay hand-written.
  */
-public class UserManagementPanel extends JPanel {
+public class UserManagementPanel extends javax.swing.JPanel {
 
     private static final String[] ROLE_OPTIONS = {"Admin Staff", "Medical Manager", "Doctor", "Patient"};
     private static final String[] COLUMN_NAMES = {"ID", "Role", "Username", "Phone", "Email", "Active"};
@@ -62,8 +61,6 @@ public class UserManagementPanel extends JPanel {
     private final Runnable onLogout;
 
     private DefaultTableModel tableModel;
-    private JTable userTable;
-    private JTextField searchField;
 
     public UserManagementPanel(UserManager userManager, AppointmentManager appointmentManager,
             HospitalAssetManager assetManager, ConsultationRateManager rateManager,
@@ -77,80 +74,118 @@ public class UserManagementPanel extends JPanel {
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
-        buildLayout();
+        initComponents();
+        customizeComponents();
         refreshTable(userManager.getUsers());
     }
 
-    private void buildLayout() {
-        setLayout(new BorderLayout());
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        topPanel = new javax.swing.JPanel();
+        titleLabel = new javax.swing.JLabel();
+        searchPanel = new javax.swing.JPanel();
+        searchLabel = new javax.swing.JLabel();
+        searchField = new javax.swing.JTextField();
+        searchButton = new javax.swing.JButton();
+        clearButton = new javax.swing.JButton();
+        tableWrapperPanel = new javax.swing.JPanel();
+        userScrollPane = new javax.swing.JScrollPane();
+        userTable = new javax.swing.JTable();
+        buttonPanel = new javax.swing.JPanel();
+        registerButton = new javax.swing.JButton();
+        editButton = new javax.swing.JButton();
+        resetPasswordButton = new javax.swing.JButton();
+        toggleStatusButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        backButton = new javax.swing.JButton();
+
+        setLayout(new java.awt.BorderLayout());
+
+        topPanel.setLayout(new java.awt.BorderLayout());
+
+        titleLabel.setText("User Management");
+        topPanel.add(titleLabel, java.awt.BorderLayout.WEST);
+
+        searchLabel.setText("Search (username or role):");
+        searchPanel.add(searchLabel);
+
+        searchField.setColumns(16);
+        searchPanel.add(searchField);
+
+        searchButton.setText("Search");
+        searchPanel.add(searchButton);
+
+        clearButton.setText("Clear");
+        searchPanel.add(clearButton);
+
+        topPanel.add(searchPanel, java.awt.BorderLayout.EAST);
+
+        add(topPanel, java.awt.BorderLayout.NORTH);
+
+        tableWrapperPanel.setLayout(new java.awt.BorderLayout());
+
+        userTable.setRowHeight(24);
+        userScrollPane.setViewportView(userTable);
+        tableWrapperPanel.add(userScrollPane, java.awt.BorderLayout.CENTER);
+
+        add(tableWrapperPanel, java.awt.BorderLayout.CENTER);
+
+        buttonPanel.setLayout(new java.awt.GridLayout(2, 3, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
+
+        registerButton.setText("Register New User");
+        buttonPanel.add(registerButton);
+
+        editButton.setText("Edit Profile");
+        buttonPanel.add(editButton);
+
+        resetPasswordButton.setText("Reset Password");
+        buttonPanel.add(resetPasswordButton);
+
+        toggleStatusButton.setText("Toggle Account Status");
+        buttonPanel.add(toggleStatusButton);
+
+        deleteButton.setText("Delete Account");
+        buttonPanel.add(deleteButton);
+
+        backButton.setText("Back to Dashboard");
+        buttonPanel.add(backButton);
+
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Applies HMS theming, builds the table model, and wires listeners. */
+    private void customizeComponents() {
         setBackground(Theme.BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(
                 Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
 
-        add(createTopPanel(), BorderLayout.NORTH);
-        add(createTablePanel(), BorderLayout.CENTER);
-        add(createButtonPanel(), BorderLayout.SOUTH);
-    }
-
-    private JPanel createTopPanel() {
-        JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JLabel titleLabel = new JLabel("User Management");
         UIStyles.applyHeadingStyle(titleLabel);
-        topPanel.add(titleLabel, BorderLayout.WEST);
 
-        JPanel searchPanel = new JPanel();
         searchPanel.setBackground(Theme.BACKGROUND_COLOR);
-        searchField = new JTextField(16);
-        JButton searchButton = new JButton("Search");
         UIStyles.applyPrimaryButtonStyle(searchButton);
-        searchButton.addActionListener(e -> applySearch());
-        JButton clearButton = new JButton("Clear");
         UIStyles.applyPrimaryButtonStyle(clearButton);
+        searchButton.addActionListener(e -> applySearch());
         clearButton.addActionListener(e -> {
             searchField.setText("");
             refreshTable(userManager.getUsers());
         });
-        searchPanel.add(new JLabel("Search (username or role):"));
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(clearButton);
-        topPanel.add(searchPanel, BorderLayout.EAST);
 
-        return topPanel;
-    }
+        tableWrapperPanel.setBackground(Theme.BACKGROUND_COLOR);
+        tableWrapperPanel.setBorder(BorderFactory.createEmptyBorder(Theme.SPACING_MEDIUM, 0, Theme.SPACING_MEDIUM, 0));
 
-    private JPanel createTablePanel() {
         tableModel = new DefaultTableModel(COLUMN_NAMES, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        userTable = new JTable(tableModel);
-        userTable.setRowHeight(24);
+        userTable.setModel(tableModel);
         userTable.setFont(Theme.DEFAULT_FONT);
         userTable.getTableHeader().setFont(Theme.DEFAULT_FONT);
 
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(Theme.BACKGROUND_COLOR);
-        wrapper.setBorder(BorderFactory.createEmptyBorder(Theme.SPACING_MEDIUM, 0, Theme.SPACING_MEDIUM, 0));
-        wrapper.add(new JScrollPane(userTable), BorderLayout.CENTER);
-        return wrapper;
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 3, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
         buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JButton registerButton = new JButton("Register New User");
-        JButton editButton = new JButton("Edit Profile");
-        JButton resetPasswordButton = new JButton("Reset Password");
-        JButton toggleStatusButton = new JButton("Toggle Account Status");
-        JButton deleteButton = new JButton("Delete Account");
-        JButton backButton = new JButton("Back to Dashboard");
-
         for (JButton button : new JButton[]{registerButton, editButton, resetPasswordButton,
                 toggleStatusButton, deleteButton, backButton}) {
             UIStyles.applyPrimaryButtonStyle(button);
@@ -164,14 +199,6 @@ public class UserManagementPanel extends JPanel {
         backButton.addActionListener(e -> mainFrame.showPanel(
                 new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
                         rateManager, insuranceManager, mainFrame, onLogout)));
-
-        buttonPanel.add(registerButton);
-        buttonPanel.add(editButton);
-        buttonPanel.add(resetPasswordButton);
-        buttonPanel.add(toggleStatusButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(backButton);
-        return buttonPanel;
     }
 
     private void applySearch() {
@@ -519,4 +546,24 @@ public class UserManagementPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel topPanel;
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JPanel searchPanel;
+    private javax.swing.JLabel searchLabel;
+    private javax.swing.JTextField searchField;
+    private javax.swing.JButton searchButton;
+    private javax.swing.JButton clearButton;
+    private javax.swing.JPanel tableWrapperPanel;
+    private javax.swing.JScrollPane userScrollPane;
+    private javax.swing.JTable userTable;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton registerButton;
+    private javax.swing.JButton editButton;
+    private javax.swing.JButton resetPasswordButton;
+    private javax.swing.JButton toggleStatusButton;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JButton backButton;
+    // End of variables declaration//GEN-END:variables
 }

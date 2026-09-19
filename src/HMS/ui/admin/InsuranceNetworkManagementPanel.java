@@ -11,20 +11,15 @@ import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
@@ -32,8 +27,13 @@ import javax.swing.table.DefaultTableModel;
  * Admin screen for accepted insurance network configuration. All rules
  * (required fields, coverage range 0-100) live in InsuranceNetworkManager -
  * this panel only collects input and displays results.
+ *
+ * Visual structure is managed by the NetBeans GUI Builder (see
+ * InsuranceNetworkManagementPanel.form). Only initComponents() is
+ * generated/guarded; the table model, dialogs, and navigation stay
+ * hand-written.
  */
-public class InsuranceNetworkManagementPanel extends JPanel {
+public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
 
     private static final String[] COLUMN_NAMES =
             {"ID", "Provider", "Plan", "Coverage %", "Active", "Managed By"};
@@ -48,7 +48,6 @@ public class InsuranceNetworkManagementPanel extends JPanel {
     private final Runnable onLogout;
 
     private DefaultTableModel tableModel;
-    private JTable networkTable;
 
     public InsuranceNetworkManagementPanel(InsuranceNetworkManager insuranceManager, UserManager userManager,
             AppointmentManager appointmentManager, HospitalAssetManager assetManager,
@@ -62,19 +61,60 @@ public class InsuranceNetworkManagementPanel extends JPanel {
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
-        buildLayout();
+        initComponents();
+        customizeComponents();
         refreshTable();
     }
 
-    private void buildLayout() {
-        setLayout(new BorderLayout());
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        titleLabel = new javax.swing.JLabel();
+        networkScrollPane = new javax.swing.JScrollPane();
+        networkTable = new javax.swing.JTable();
+        buttonPanel = new javax.swing.JPanel();
+        addButton = new javax.swing.JButton();
+        editButton = new javax.swing.JButton();
+        toggleButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        backButton = new javax.swing.JButton();
+
+        setLayout(new java.awt.BorderLayout());
+
+        titleLabel.setText("Insurance Network Management");
+        add(titleLabel, java.awt.BorderLayout.NORTH);
+
+        networkTable.setRowHeight(24);
+        networkScrollPane.setViewportView(networkTable);
+        add(networkScrollPane, java.awt.BorderLayout.CENTER);
+
+        buttonPanel.setLayout(new java.awt.GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
+
+        addButton.setText("Add Network");
+        buttonPanel.add(addButton);
+
+        editButton.setText("Edit Selected");
+        buttonPanel.add(editButton);
+
+        toggleButton.setText("Toggle Active");
+        buttonPanel.add(toggleButton);
+
+        deleteButton.setText("Delete Selected");
+        buttonPanel.add(deleteButton);
+
+        backButton.setText("Back to Dashboard");
+        buttonPanel.add(backButton);
+
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Applies HMS theming, builds the table model, and wires listeners. */
+    private void customizeComponents() {
         setBackground(Theme.BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(
                 Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
 
-        JLabel titleLabel = new JLabel("Insurance Network Management");
         UIStyles.applyHeadingStyle(titleLabel);
-        add(titleLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(COLUMN_NAMES, 0) {
             @Override
@@ -82,24 +122,10 @@ public class InsuranceNetworkManagementPanel extends JPanel {
                 return false;
             }
         };
-        networkTable = new JTable(tableModel);
-        networkTable.setRowHeight(24);
+        networkTable.setModel(tableModel);
         networkTable.setFont(Theme.DEFAULT_FONT);
-        add(new JScrollPane(networkTable), BorderLayout.CENTER);
 
-        add(createButtonPanel(), BorderLayout.SOUTH);
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
         buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JButton addButton = new JButton("Add Network");
-        JButton editButton = new JButton("Edit Selected");
-        JButton toggleButton = new JButton("Toggle Active");
-        JButton deleteButton = new JButton("Delete Selected");
-        JButton backButton = new JButton("Back to Dashboard");
-
         for (JButton button : new JButton[]{addButton, editButton, toggleButton, deleteButton, backButton}) {
             UIStyles.applyPrimaryButtonStyle(button);
         }
@@ -116,13 +142,6 @@ public class InsuranceNetworkManagementPanel extends JPanel {
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
                 sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 mainFrame, onLogout)));
-
-        buttonPanel.add(addButton);
-        buttonPanel.add(editButton);
-        buttonPanel.add(toggleButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(backButton);
-        return buttonPanel;
     }
 
     private void refreshTable() {
@@ -254,4 +273,16 @@ public class InsuranceNetworkManagementPanel extends JPanel {
         dialog.add(field, gbc);
         gbc.gridy++;
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JScrollPane networkScrollPane;
+    private javax.swing.JTable networkTable;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton addButton;
+    private javax.swing.JButton editButton;
+    private javax.swing.JButton toggleButton;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JButton backButton;
+    // End of variables declaration//GEN-END:variables
 }
