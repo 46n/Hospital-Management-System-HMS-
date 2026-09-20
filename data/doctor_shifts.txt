@@ -1,2 +1,3 @@
 #shiftId|doctorId|shiftDate|startTime|endTime|createdByManagerId
 SH001|DR001|2026-09-14|09:00|17:00|MM001
+SH002|DR001|2026-10-01|07:15|12:30|MM001
