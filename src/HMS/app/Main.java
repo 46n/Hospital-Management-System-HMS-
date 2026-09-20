@@ -17,7 +17,7 @@ import hms.ui.common.LoginFrame;
 import hms.ui.common.MainFrame;
 import hms.ui.doctor.DoctorDashboardPanel;
 import hms.ui.medicalmanager.MedicalManagerDashboardPanel;
-import hms.ui.patient.PatientDashboardPanel;
+import hms.ui.patient.PatientDashboardNew;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -103,7 +103,7 @@ public final class Main {
                     typeManager, frame, onLogout);
         }
         if (sessionManager.hasRole("PATIENT")) {
-            return new PatientDashboardPanel(sessionManager, userManager, appointmentManager, shiftManager,
+            return new PatientDashboardNew(sessionManager, userManager, appointmentManager, shiftManager,
                     clinicalManager, billingManager, frame, onLogout);
         }
         throw new IllegalStateException("No dashboard available for this user's role");
