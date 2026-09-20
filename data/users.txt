@@ -6,3 +6,4 @@ PT001|PATIENT|patient|patient123|0111000004|patient@hms.com|PT001|1995-06-15|tru
 AS002|ADMIN_STAFF|ali|ali123|01368200|ali@mail.com|AS002||true|
 AS003|ADMIN_STAFF|123|123|0550066624|email@mail.com|AS003||true|
 AS004|ADMIN_STAFF|12032h|123|12312231|123@mail.com|AS004||true|
+DR002|DOCTOR|ahmed123|123|0123456789|ahmed@hms.com|DR002|Emergency Medicine|false|
