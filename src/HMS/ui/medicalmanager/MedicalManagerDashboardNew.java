@@ -2,7 +2,20 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
-package HMS.ui.medicalmanager;
+package hms.ui.medicalmanager;
+import hms.ui.common.*;
+
+
+import hms.manager.AppointmentManager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.BillingManager;
+import hms.manager.ClinicalDepartmentManager;
+import hms.manager.ClinicalManager;
+import hms.manager.DoctorShiftManager;
+import hms.manager.ReportManager;
+import hms.manager.SessionManager;
+import hms.manager.UserManager;
+import hms.ui.common.MainFrame;
 
 /**
  *
@@ -13,9 +26,76 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     /**
      * Creates new form MedicalManagerDashboardNew
      */
+    
+    private SessionManager sessionManager;
+    private UserManager userManager;
+    private AppointmentManager appointmentManager;
+    private BillingManager billingManager;
+    private ReportManager reportManager;
+    private AssessmentTypeManager typeManager;
+    private DoctorShiftManager shiftManager;
+    private ClinicalDepartmentManager departmentManager;
+    private ClinicalManager clinicalManager;
+    private MainFrame mainFrame;
+    private Runnable onLogout;
+    
+    
+    
+    private void openClinicalDepartments() {
+    mainFrame.showPanel(
+        new ClinicalDepartmentManagementNew(
+            departmentManager,
+            userManager,
+            () -> mainFrame.showPanel(this)
+        )
+    );
+}
+
+
     public MedicalManagerDashboardNew() {
         initComponents();
     }
+    
+    
+    private void applyButtonStyles() {
+    UIStyles.applyPrimaryButtonStyle(btnDepartments);
+    UIStyles.applyPrimaryButtonStyle(btnAssessmentTypes);
+    UIStyles.applyPrimaryButtonStyle(btnDoctorShifts);
+    UIStyles.applyPrimaryButtonStyle(btnReports);
+    UIStyles.applyPrimaryButtonStyle(btnProfile);
+    UIStyles.applyPrimaryButtonStyle(btnLogout);
+    }
+    
+    public MedicalManagerDashboardNew(
+        SessionManager sessionManager,
+        UserManager userManager,
+        AppointmentManager appointmentManager,
+        BillingManager billingManager,
+        ReportManager reportManager,
+        AssessmentTypeManager typeManager,
+        DoctorShiftManager shiftManager,
+        ClinicalDepartmentManager departmentManager,
+        ClinicalManager clinicalManager,
+        MainFrame mainFrame,
+        Runnable onLogout) {
+
+    initComponents();
+    applyButtonStyles();
+
+    this.sessionManager = sessionManager;
+    this.userManager = userManager;
+    this.appointmentManager = appointmentManager;
+    this.billingManager = billingManager;
+    this.reportManager = reportManager;
+    this.typeManager = typeManager;
+    this.shiftManager = shiftManager;
+    this.departmentManager = departmentManager;
+    this.clinicalManager = clinicalManager;
+    this.mainFrame = mainFrame;
+    this.onLogout = onLogout;
+}
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -30,9 +110,9 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         lblPageTitle = new javax.swing.JLabel();
         btnAssessmentTypes = new javax.swing.JButton();
         btnDepartments = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        btnReports = new javax.swing.JButton();
         btnDoctorShifts = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
+        btnLogout = new javax.swing.JButton();
         btnProfile = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(204, 204, 204));
@@ -50,21 +130,22 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         btnDepartments.setForeground(new java.awt.Color(255, 255, 255));
         btnDepartments.setText("Clinical Departments ");
 
-        jButton3.setBackground(new java.awt.Color(51, 51, 51));
-        jButton3.setForeground(new java.awt.Color(255, 255, 255));
-        jButton3.setText("Reports");
+        btnReports.setBackground(new java.awt.Color(51, 51, 51));
+        btnReports.setForeground(new java.awt.Color(255, 255, 255));
+        btnReports.setText("Reports");
 
         btnDoctorShifts.setBackground(new java.awt.Color(51, 51, 51));
         btnDoctorShifts.setForeground(new java.awt.Color(255, 255, 255));
         btnDoctorShifts.setText("Doctor Shifts");
 
-        jButton5.setBackground(new java.awt.Color(51, 51, 51));
-        jButton5.setForeground(new java.awt.Color(255, 255, 255));
-        jButton5.setText("LOGOUT");
+        btnLogout.setBackground(new java.awt.Color(51, 51, 51));
+        btnLogout.setForeground(new java.awt.Color(255, 255, 255));
+        btnLogout.setText("LOGOUT");
 
         btnProfile.setBackground(new java.awt.Color(51, 51, 51));
         btnProfile.setForeground(new java.awt.Color(255, 255, 255));
         btnProfile.setText("My Profile");
+        btnProfile.addActionListener(this::btnProfileActionPerformed);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -84,14 +165,14 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(btnProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(109, 109, 109)
-                                .addComponent(jButton5))
+                                .addComponent(btnLogout))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnDepartments, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnDoctorShifts, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(47, 47, 47)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(btnReports, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnAssessmentTypes, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))))))
                 .addContainerGap(86, Short.MAX_VALUE))
         );
@@ -101,31 +182,35 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(lblPageTitle)
                 .addGap(50, 50, 50)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAssessmentTypes, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnAssessmentTypes, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDepartments, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnDoctorShifts, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnReports, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnLogout, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(165, 165, 165))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProfileActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnProfileActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAssessmentTypes;
     private javax.swing.JButton btnDepartments;
     private javax.swing.JButton btnDoctorShifts;
+    private javax.swing.JButton btnLogout;
     private javax.swing.JButton btnProfile;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton5;
+    private javax.swing.JButton btnReports;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblPageTitle;
     // End of variables declaration//GEN-END:variables

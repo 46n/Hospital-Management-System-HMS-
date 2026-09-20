@@ -61,6 +61,16 @@ public class ClinicalDepartmentManager {
         department.setActive(active);
         save();
     }
+    
+    public void assignManager(String departmentId, String managerId) {
+    ClinicalDepartment department = requireDepartment(departmentId);
+    MedicalManager manager = requireMedicalManager(managerId);
+
+    department.setMedicalManager(manager);
+    save();
+    }
+    
+    
 
     public void deleteDepartment(String departmentId) {
         ClinicalDepartment department = requireDepartment(departmentId);
