@@ -16,7 +16,7 @@ import hms.ui.admin.AdminDashboardPanel;
 import hms.ui.common.LoginFrame;
 import hms.ui.common.MainFrame;
 import hms.ui.doctor.DoctorDashboardPanel;
-import hms.ui.medicalmanager.MedicalManagerDashboardPanel;
+import hms.ui.medicalmanager.MedicalManagerDashboardNew;
 import hms.ui.patient.PatientDashboardPanel;
 
 import javax.swing.JPanel;
@@ -94,10 +94,10 @@ public final class Main {
                     assetManager, rateManager, insuranceManager, frame, onLogout);
         }
         if (sessionManager.hasRole("MEDICAL_MANAGER")) {
-            return new MedicalManagerDashboardPanel(sessionManager, userManager, appointmentManager,
-                    billingManager, reportManager, typeManager, shiftManager, departmentManager,
-                    clinicalManager, frame, onLogout);
-        }
+            return new MedicalManagerDashboardNew(sessionManager, userManager, appointmentManager,
+            billingManager, reportManager, typeManager, shiftManager, departmentManager,
+            clinicalManager, frame, onLogout);
+            }
         if (sessionManager.hasRole("DOCTOR")) {
             return new DoctorDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
                     typeManager, frame, onLogout);
