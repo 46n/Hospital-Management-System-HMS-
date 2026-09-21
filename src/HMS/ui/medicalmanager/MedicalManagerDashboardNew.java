@@ -41,6 +41,26 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     
     
     
+    
+    private void openAssessmentTypes() {
+    mainFrame.showPanel(new AssessmentTypeManagementNew());
+    }
+
+    private void openDoctorShifts() {
+     mainFrame.showPanel(
+         new DoctorShiftManagementNew(
+             sessionManager,
+             userManager,
+             shiftManager,
+             () -> mainFrame.showPanel(this)
+         )
+     );
+ }
+
+    private void openReports() {mainFrame.showPanel(new ReportViewNew());
+    }
+    
+    
     private void openClinicalDepartments() {
     mainFrame.showPanel(
         new ClinicalDepartmentManagementNew(
@@ -125,18 +145,22 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         btnAssessmentTypes.setBackground(new java.awt.Color(51, 51, 51));
         btnAssessmentTypes.setForeground(new java.awt.Color(255, 255, 255));
         btnAssessmentTypes.setText("Assessment Types");
+        btnAssessmentTypes.addActionListener(this::btnAssessmentTypesActionPerformed);
 
         btnDepartments.setBackground(new java.awt.Color(51, 51, 51));
         btnDepartments.setForeground(new java.awt.Color(255, 255, 255));
         btnDepartments.setText("Clinical Departments ");
+        btnDepartments.addActionListener(this::btnDepartmentsActionPerformed);
 
         btnReports.setBackground(new java.awt.Color(51, 51, 51));
         btnReports.setForeground(new java.awt.Color(255, 255, 255));
         btnReports.setText("Reports");
+        btnReports.addActionListener(this::btnReportsActionPerformed);
 
         btnDoctorShifts.setBackground(new java.awt.Color(51, 51, 51));
         btnDoctorShifts.setForeground(new java.awt.Color(255, 255, 255));
         btnDoctorShifts.setText("Doctor Shifts");
+        btnDoctorShifts.addActionListener(this::btnDoctorShiftsActionPerformed);
 
         btnLogout.setBackground(new java.awt.Color(51, 51, 51));
         btnLogout.setForeground(new java.awt.Color(255, 255, 255));
@@ -202,6 +226,26 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     private void btnProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProfileActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnProfileActionPerformed
+
+    private void btnDepartmentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDepartmentsActionPerformed
+        // TODO add your handling code here:
+        openClinicalDepartments();
+    }//GEN-LAST:event_btnDepartmentsActionPerformed
+
+    private void btnAssessmentTypesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAssessmentTypesActionPerformed
+        // TODO add your handling code here:
+        openAssessmentTypes();
+    }//GEN-LAST:event_btnAssessmentTypesActionPerformed
+
+    private void btnDoctorShiftsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDoctorShiftsActionPerformed
+        // TODO add your handling code here:
+        openDoctorShifts();
+    }//GEN-LAST:event_btnDoctorShiftsActionPerformed
+
+    private void btnReportsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReportsActionPerformed
+        // TODO add your handling code here:
+        openReports();
+    }//GEN-LAST:event_btnReportsActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

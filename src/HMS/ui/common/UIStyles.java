@@ -9,11 +9,16 @@ import javax.swing.JLabel;
  * Reusable styling methods for consistent HMS interfaces.
  */
 public final class UIStyles {
+    
 
     private UIStyles() {
     }
 
     public static void applyPrimaryButtonStyle(AbstractButton button) {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("mac")) {
+            button.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        }
         button.setOpaque(true);
         button.setContentAreaFilled(true);
         button.setBorderPainted(false);

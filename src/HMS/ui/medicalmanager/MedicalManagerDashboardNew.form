@@ -107,6 +107,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Assessment Types"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAssessmentTypesActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDepartments">
       <Properties>
@@ -118,6 +121,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Clinical Departments "/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDepartmentsActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnReports">
       <Properties>
@@ -129,6 +135,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Reports"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnReportsActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDoctorShifts">
       <Properties>
@@ -140,6 +149,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Doctor Shifts"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDoctorShiftsActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnLogout">
       <Properties>
