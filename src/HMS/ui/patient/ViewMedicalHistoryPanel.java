@@ -118,7 +118,7 @@ public class ViewMedicalHistoryPanel extends JPanel {
         buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
         JButton backButton = new JButton("Back to Dashboard");
         UIStyles.applyPrimaryButtonStyle(backButton);
-        backButton.addActionListener(e -> mainFrame.showPanel(new PatientDashboardPanel(
+        backButton.addActionListener(e -> mainFrame.showPanel(new PatientDashboardNew(
                 sessionManager, userManager, appointmentManager, shiftManager, clinicalManager, billingManager,
                 mainFrame, onLogout)));
         buttonPanel.add(backButton);

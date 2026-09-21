@@ -1,1 +1,3 @@
 #departmentId|departmentName|description|active|managedByManagerId
+CD001|X-ray|A new department published|true|MM001
+CD002|Lab|Blood lab|true|MM001
