@@ -1,1 +1,2 @@
 #recordId|appointmentId|patientId|doctorId|vitalSigns|consultationNotes|diagnosis|recordDate
+MR001|AP006|PT001|DR001|BP 120/80, Temp 36.8C|Patient reports mild chest discomfort.|Mild chest pain|2026-10-03

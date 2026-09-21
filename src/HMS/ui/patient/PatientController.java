@@ -100,16 +100,17 @@ public class PatientController {
 
 
     public void openMedicalHistory() {
+
         mainFrame.showPanel(
-                new ViewMedicalHistoryPanel(
-                        clinicalManager,
-                        appointmentManager,
-                        shiftManager,
-                        billingManager,
-                        userManager,
-                        sessionManager,
-                        mainFrame,
-                        onLogout
+            new ViewMedicalHistoryNew(
+                    clinicalManager,
+                    appointmentManager,
+                    shiftManager,
+                    billingManager,
+                    sessionManager,
+                    userManager,
+                    mainFrame,
+                    onLogout
                 )
         );
     }
