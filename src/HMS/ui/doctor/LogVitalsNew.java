@@ -121,16 +121,37 @@ public class LogVitalsNew extends javax.swing.JPanel {
     
     private void saveVitals() {
 
-        if (doctorAppointments.isEmpty()) {
+         if (doctorAppointments == null || doctorAppointments.isEmpty()) {
             showError("You have no appointments.");
             return;
         }
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        if (txtVitalSigns.getText().trim().isEmpty()) {
+            showError("Please enter vital signs.");
+            return;
+        }
+
+        if (txtConsultationNotes.getText().trim().isEmpty()) {
+            showError("Please enter consultation notes.");
+            return;
+        }
+
+        if (txtDiagnosis.getText().trim().isEmpty()) {
+            showError("Please enter a diagnosis.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
 
         try {
-             MedicalRecord record = clinicalManager.getOrOpenRecord(
+            MedicalRecord record = clinicalManager.getOrOpenRecord(
                 appointment.getAppointmentId(),
                 currentDoctor().getDoctorId());
 
@@ -140,28 +161,49 @@ public class LogVitalsNew extends javax.swing.JPanel {
                 txtDiagnosis.getText().trim(),
                 txtConsultationNotes.getText().trim());
 
-        JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(this,
                 "Vitals and notes saved.",
                 "Success",
                 JOptionPane.INFORMATION_MESSAGE);
 
-            } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
-            }
-    }
+        }
+}
     
     private void finalizeRecord() {
 
-        if (doctorAppointments.isEmpty()) {
-        showError("You have no appointments.");
-        return;
+        if (doctorAppointments == null || doctorAppointments.isEmpty()) {
+            showError("You have no appointments.");
+            return;
         }
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
 
         if ("COMPLETED".equals(appointment.getStatus())) {
             showError("This appointment is already completed.");
+            return;
+        }
+
+        if (txtVitalSigns.getText().trim().isEmpty()) {
+            showError("Please enter vital signs before finalizing.");
+            return;
+        }
+
+        if (txtConsultationNotes.getText().trim().isEmpty()) {
+            showError("Please enter consultation notes before finalizing.");
+            return;
+        }
+
+        if (txtDiagnosis.getText().trim().isEmpty()) {
+            showError("Please enter a diagnosis before finalizing.");
             return;
         }
 
@@ -174,7 +216,7 @@ public class LogVitalsNew extends javax.swing.JPanel {
             JOptionPane.YES_NO_OPTION);
 
         if (confirm != JOptionPane.YES_OPTION) {
-        return;
+            return;
         }
 
         try {
@@ -198,9 +240,9 @@ public class LogVitalsNew extends javax.swing.JPanel {
             refreshAppointmentCombo();
 
         } catch (IllegalArgumentException | IllegalStateException ex) {
-                showError(ex.getMessage());
+            showError(ex.getMessage());
         }
-    }
+}
     
     private void refreshAppointmentCombo() {
 
