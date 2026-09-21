@@ -53,21 +53,51 @@ public class PatientController {
                 )
         );
     }
-
     public void openAppointments() {
-        mainFrame.showPanel(
-                new AppointmentBookingPanel(
-                        userManager,
-                        appointmentManager,
-                        shiftManager,
-                        clinicalManager,
-                        billingManager,
-                        sessionManager,
-                        mainFrame,
-                        onLogout
-                )
-        );
-    }
+
+    AppointmentBookingNew bookingPanel =
+            new AppointmentBookingNew(
+                    userManager,
+                    appointmentManager,
+                    shiftManager,
+                    clinicalManager,
+                    billingManager,
+                    sessionManager,
+                    mainFrame,
+                    onLogout
+            );
+
+    javax.swing.JScrollPane scrollPane =
+            new javax.swing.JScrollPane(bookingPanel);
+
+    scrollPane.setBorder(null);
+
+    scrollPane.setVerticalScrollBarPolicy(
+            javax.swing.JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+    );
+
+    scrollPane.setHorizontalScrollBarPolicy(
+            javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+    );
+
+    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+    javax.swing.JPanel wrapper =
+            new javax.swing.JPanel(new java.awt.BorderLayout());
+
+    wrapper.setBackground(
+            new java.awt.Color(204, 204, 204)
+    );
+
+    wrapper.add(
+            scrollPane,
+            java.awt.BorderLayout.CENTER
+    );
+
+    mainFrame.showPanel(wrapper);
+}
+
+
 
     public void openMedicalHistory() {
         mainFrame.showPanel(
