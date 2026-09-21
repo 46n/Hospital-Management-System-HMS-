@@ -16,12 +16,15 @@ import hms.model.User;
 import hms.ui.common.MainFrame;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
+
 import java.time.format.DateTimeParseException;
 
 import javax.swing.JComboBox;
@@ -29,6 +32,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 
 public class AppointmentBookingController {
+    private static final int SLOT_MINUTES = 30;
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm");
 
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
@@ -280,5 +287,154 @@ public class AppointmentBookingController {
                 JOptionPane.ERROR_MESSAGE
         );
     }
+}
+    public List<DoctorShift> getFutureShiftsForDoctor(String doctorId) {
+
+    List<DoctorShift> futureShifts = new ArrayList<>();
+
+    LocalDate today = LocalDate.now();
+
+    for (DoctorShift shift : shiftManager.getShiftsForDoctor(doctorId)) {
+
+        LocalDate shiftDate = shift.getShiftDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        if (!shiftDate.isBefore(today)) {
+            futureShifts.add(shift);
+        }
+    }
+
+    return futureShifts;
+}
+    public List<String> getTimeSlotsForDate(
+        String doctorId,
+        String selectedDate) {
+
+    if (doctorId == null || doctorId.trim().isEmpty()) {
+        throw new IllegalArgumentException(
+                "Please select a doctor first."
+        );
+    }
+
+    if (selectedDate == null || selectedDate.trim().isEmpty()) {
+        throw new IllegalArgumentException(
+                "Please select an appointment date."
+        );
+    }
+
+    LocalDate date;
+
+    try {
+        date = LocalDate.parse(selectedDate);
+    } catch (Exception ex) {
+        throw new IllegalArgumentException(
+                "Invalid appointment date."
+        );
+    }
+
+    if (date.isBefore(LocalDate.now())) {
+        throw new IllegalArgumentException(
+                "Cannot choose a date in the past."
+        );
+    }
+
+    List<String> availableSlots = new ArrayList<>();
+
+    for (DoctorShift shift : getFutureShiftsForDoctor(doctorId)) {
+
+        LocalDate shiftDate = shift.getShiftDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        if (!shiftDate.equals(date)) {
+            continue;
+        }
+
+        LocalTime slot =
+                roundUpToNextHalfHour(shift.getStartTime());
+
+        LocalTime end = shift.getEndTime();
+
+        while (slot.isBefore(end)) {
+
+            long remainingMinutes =
+                    java.time.Duration.between(
+                            slot,
+                            end
+                    ).toMinutes();
+
+            if (remainingMinutes < SLOT_MINUTES) {
+                break;
+            }
+
+            if (!isDoctorSlotBooked(
+                    doctorId,
+                    date,
+                    slot)) {
+
+                if (!date.equals(LocalDate.now())
+                        || slot.isAfter(LocalTime.now())) {
+
+                    availableSlots.add(
+                            slot.format(TIME_FORMAT)
+                    );
+                }
+            }
+
+            slot = slot.plusMinutes(SLOT_MINUTES);
+        }
+    }
+
+    return availableSlots;
+}
+
+    private LocalTime roundUpToNextHalfHour(LocalTime time) {
+
+    int minute = time.getMinute();
+
+    if (minute == 0 || minute == 30) {
+        return time.withSecond(0).withNano(0);
+    }
+
+    if (minute < 30) {
+        return time.withMinute(30)
+                .withSecond(0)
+                .withNano(0);
+    }
+
+    return time.plusHours(1)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0);
+}
+    private boolean isDoctorSlotBooked(
+        String doctorId,
+        LocalDate date,
+        LocalTime time) {
+
+    for (Appointment appointment
+            : appointmentManager.listForDoctor(doctorId)) {
+
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            continue;
+        }
+
+        LocalDate appointmentDate =
+                appointment.getAppointmentDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+
+        if (appointmentDate.equals(date)
+                && appointment.getAppointmentTime().equals(time)) {
+
+            return true;
+        }
+    }
+
+    return false;
 }
 }

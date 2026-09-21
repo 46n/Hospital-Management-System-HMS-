@@ -110,7 +110,7 @@
                   <Component id="cmbAvailableTime" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblAvailableTime" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="btnBookAppointment" min="-2" pref="30" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
               <Component id="lblMyAppointments" min="-2" max="-2" attributes="0"/>
@@ -184,6 +184,9 @@
               <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="tblDoctorsMouseClicked"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

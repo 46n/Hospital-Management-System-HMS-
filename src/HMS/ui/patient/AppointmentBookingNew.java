@@ -9,13 +9,19 @@ import hms.manager.ClinicalManager;
 import hms.manager.DoctorShiftManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
-import hms.ui.common.MainFrame;
+
 import hms.model.Appointment;
 import hms.model.Doctor;
 import hms.model.DoctorShift;
 
-import javax.swing.table.DefaultTableModel;
 import hms.ui.common.AppointmentTableUtil;
+import hms.ui.common.MainFrame;
+
+import java.text.SimpleDateFormat;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -33,6 +39,8 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
     private Runnable onLogout;
 
     private AppointmentBookingController appointmentController;
+    private final SimpleDateFormat dateFormat =
+        new SimpleDateFormat("yyyy-MM-dd");
 
     public AppointmentBookingNew() {
         initComponents();
@@ -94,7 +102,7 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
         });
     }
 }
-    private void loadMyAppointments() {
+private void loadMyAppointments() {
 
     DefaultTableModel model =
             (DefaultTableModel) tblAppointments.getModel();
@@ -109,6 +117,68 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
         );
     }
 }
+    private void loadSelectedDoctorShifts() {
+
+    DefaultTableModel shiftModel =
+            (DefaultTableModel) tblDoctorShifts.getModel();
+
+    shiftModel.setRowCount(0);
+
+    cmbAppointmentDate.removeAllItems();
+    cmbAvailableTime.removeAllItems();
+
+    int selectedRow = tblDoctors.getSelectedRow();
+
+    if (selectedRow < 0) {
+        return;
+    }
+
+    String doctorId =
+            tblDoctors.getValueAt(selectedRow, 0).toString();
+
+    java.util.List<DoctorShift> shifts =
+            appointmentController.getFutureShiftsForDoctor(doctorId);
+
+    if (shifts.isEmpty()) {
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "This doctor has no future working shifts available.",
+                "No Available Shifts",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE
+        );
+
+        return;
+    }
+
+    Set<String> availableDates = new LinkedHashSet<>();
+
+    for (DoctorShift shift : shifts) {
+
+        String date =
+                dateFormat.format(shift.getShiftDate());
+
+        String start =
+                shift.getStartTime().toString();
+
+        String end =
+                shift.getEndTime().toString();
+
+        shiftModel.addRow(new Object[]{
+            date,
+            start,
+            end
+        });
+
+        availableDates.add(date);
+    }
+    for (String date : availableDates) {
+    cmbAppointmentDate.addItem(date);
+    }
+
+    }
+
+
   
 
     /**
@@ -158,6 +228,11 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
                 "ID", "Username", "Specialty"
             }
         ));
+        tblDoctors.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblDoctorsMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblDoctors);
 
         lblDoctorShifts.setFont(new java.awt.Font("Dialog", 0, 15)); // NOI18N
@@ -290,7 +365,7 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cmbAvailableTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblAvailableTime))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnBookAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(2, 2, 2)
                 .addComponent(lblMyAppointments)
@@ -311,7 +386,7 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
     }//GEN-LAST:event_cmbAvailableTimeActionPerformed
 
     private void cmbAppointmentDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAppointmentDateActionPerformed
-        // TODO add your handling code here:
+        loadAvailableTimes();
     }//GEN-LAST:event_cmbAppointmentDateActionPerformed
 
     private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackActionPerformed
@@ -334,6 +409,64 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
 );
     }//GEN-LAST:event_btnRescheduleAppointmentActionPerformed
 
+    private void tblDoctorsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDoctorsMouseClicked
+
+        loadSelectedDoctorShifts();
+    }//GEN-LAST:event_tblDoctorsMouseClicked
+    private void loadAvailableTimes() {
+
+    cmbAvailableTime.removeAllItems();
+
+    int selectedRow = tblDoctors.getSelectedRow();
+
+    if (selectedRow < 0) {
+        return;
+    }
+
+    Object selectedDate =
+            cmbAppointmentDate.getSelectedItem();
+
+    if (selectedDate == null) {
+        return;
+    }
+
+    String doctorId =
+            tblDoctors.getValueAt(selectedRow, 0).toString();
+
+    try {
+
+        java.util.List<String> slots =
+                appointmentController.getTimeSlotsForDate(
+                        doctorId,
+                        selectedDate.toString()
+                );
+
+        if (slots.isEmpty()) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "No consultation times are available for this date.",
+                    "No Available Times",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE
+            );
+
+            return;
+        }
+
+        for (String slot : slots) {
+            cmbAvailableTime.addItem(slot);
+        }
+
+    } catch (IllegalArgumentException ex) {
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Unable to Load Times",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBack;
