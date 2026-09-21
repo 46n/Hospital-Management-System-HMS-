@@ -87,6 +87,107 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
     
     
     
+    private void loadSelectedDepartment() {
+
+    int selectedRow = tblDepartments.getSelectedRow();
+
+    if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Please select a department first."
+        );
+        return;
+    }
+
+    int modelRow = tblDepartments.convertRowIndexToModel(selectedRow);
+
+    String departmentId =
+            tblDepartments.getModel()
+                    .getValueAt(modelRow, 0)
+                    .toString();
+
+    ClinicalDepartment department =
+            departmentManager.findById(departmentId);
+
+    if (department == null) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Department could not be found."
+        );
+        return;
+    }
+
+    editingDepartmentId = department.getDepartmentId();
+
+    DepartmentNameTf.setText(
+            department.getDepartmentName()
+    );
+
+    DescriptionTa.setText(
+            department.getDescription()
+    );
+
+    if (department.getMedicalManager() != null) {
+
+        String managerItem =
+                department.getMedicalManager().getManagerId()
+                + " - "
+                + department.getMedicalManager().getUsername();
+
+        cmbManager.setSelectedItem(managerItem);
+
+    } else {
+        cmbManager.setSelectedIndex(-1);
+    }
+
+    if (department.isActive()) {
+        rbActiveYes.setSelected(true);
+    } else {
+        rbActiveNo.setSelected(true);
+    }
+
+    DepartmentNameTf.requestFocus();
+}
+    
+    
+    
+    private void deleteSelectedDepartment() {
+    int selectedRow = tblDepartments.getSelectedRow();
+    if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Please select a department first."
+        );
+        return;
+    }
+    int modelRow = tblDepartments.convertRowIndexToModel(selectedRow);
+    String departmentId = tblDepartments.getModel().getValueAt(modelRow, 0).toString();
+    int choice = javax.swing.JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this department?", "Confirm Delete", javax.swing.JOptionPane.YES_NO_OPTION
+    );
+    if (choice != javax.swing.JOptionPane.YES_OPTION) {
+        return;
+    }
+    try {
+        departmentManager.deleteDepartment(departmentId);
+        editingDepartmentId = null;
+        clearDepartmentFields();
+        refreshDepartmentTable();
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Department deleted successfully."
+        );
+    }catch(IllegalArgumentException ex) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Error",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
+    
+    
+    
     private void saveDepartment() {
         try {
             String name = DepartmentNameTf.getText().trim();
@@ -376,10 +477,12 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
         btnEditSelected.setBackground(new java.awt.Color(51, 51, 51));
         btnEditSelected.setForeground(new java.awt.Color(255, 255, 255));
         btnEditSelected.setText("Edit Selected");
+        btnEditSelected.addActionListener(this::btnEditSelectedActionPerformed);
 
         btnDeleteDepartment.setBackground(new java.awt.Color(51, 51, 51));
         btnDeleteDepartment.setForeground(new java.awt.Color(255, 255, 255));
         btnDeleteDepartment.setText("Delete Department");
+        btnDeleteDepartment.addActionListener(this::btnDeleteDepartmentActionPerformed);
 
         btnBackDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackDashboard.setForeground(new java.awt.Color(255, 255, 255));
@@ -475,6 +578,16 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
         // TODO add your handling code here:
         saveDepartment();
     }//GEN-LAST:event_btnSaveDepartmentActionPerformed
+
+    private void btnEditSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditSelectedActionPerformed
+        // TODO add your handling code here:
+        loadSelectedDepartment();
+    }//GEN-LAST:event_btnEditSelectedActionPerformed
+
+    private void btnDeleteDepartmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteDepartmentActionPerformed
+        // TODO add your handling code here:
+        deleteSelectedDepartment();
+    }//GEN-LAST:event_btnDeleteDepartmentActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
