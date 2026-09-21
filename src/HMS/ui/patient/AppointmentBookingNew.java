@@ -264,6 +264,7 @@ private void loadMyAppointments() {
         cmbAvailableTime.addActionListener(this::cmbAvailableTimeActionPerformed);
 
         btnBookAppointment.setText("Book Appointment");
+        btnBookAppointment.addActionListener(this::btnBookAppointmentActionPerformed);
 
         lblMyAppointments.setFont(new java.awt.Font("Dialog", 0, 15)); // NOI18N
         lblMyAppointments.setText("My Appointments");
@@ -405,7 +406,8 @@ private void loadMyAppointments() {
         tblAppointments,
         cmbAppointmentDate,
         cmbAvailableTime,
-        this::loadMyAppointments
+        this::loadMyAppointments,
+        this::loadAvailableTimes
 );
     }//GEN-LAST:event_btnRescheduleAppointmentActionPerformed
 
@@ -413,6 +415,16 @@ private void loadMyAppointments() {
 
         loadSelectedDoctorShifts();
     }//GEN-LAST:event_tblDoctorsMouseClicked
+
+    private void btnBookAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBookAppointmentActionPerformed
+        appointmentController.bookSelectedAppointment(
+        tblDoctors,
+        cmbAppointmentDate,
+        cmbAvailableTime,
+        this::loadMyAppointments,
+        this::loadAvailableTimes
+);
+    }//GEN-LAST:event_btnBookAppointmentActionPerformed
     private void loadAvailableTimes() {
 
     cmbAvailableTime.removeAllItems();

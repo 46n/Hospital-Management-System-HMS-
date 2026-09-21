@@ -32,7 +32,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 
 public class AppointmentBookingController {
-    private static final int SLOT_MINUTES = 30;
+    
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm");
@@ -205,10 +205,12 @@ public class AppointmentBookingController {
         JTable appointmentTable,
         JComboBox<String> dateCombo,
         JComboBox<String> timeCombo,
-        Runnable refreshTable) {
+        Runnable refreshTable,
+        Runnable refreshAvailableTimes) {
 
     int row = appointmentTable.getSelectedRow();
 
+    // Validation 1: appointment must be selected
     if (row < 0) {
         JOptionPane.showMessageDialog(
                 mainFrame,
@@ -219,41 +221,171 @@ public class AppointmentBookingController {
         return;
     }
 
-    if (dateCombo.getSelectedItem() == null
-            || timeCombo.getSelectedItem() == null) {
-
-        JOptionPane.showMessageDialog(
-                mainFrame,
-                "Please choose a new appointment date and time.",
-                "Missing Date or Time",
-                JOptionPane.WARNING_MESSAGE
-        );
-        return;
-    }
-
     String appointmentId =
             appointmentTable.getValueAt(row, 0).toString();
 
-    String dateText =
-            dateCombo.getSelectedItem().toString();
-
-    String timeText =
-            timeCombo.getSelectedItem().toString();
-
     try {
+
+        // Find the REAL appointment from AppointmentManager
+        Appointment appointment =
+                appointmentManager.findById(appointmentId);
+
+        if (appointment == null) {
+            throw new IllegalArgumentException(
+                    "Appointment could not be found."
+            );
+        }
+
+        // Validation 2: make sure this appointment belongs
+        // to the currently logged-in patient
+        Patient currentPatient = getCurrentPatient();
+
+        if (appointment.getPatient() == null
+                || !currentPatient.getPatientId().equals(
+                        appointment.getPatient().getPatientId())) {
+
+            throw new IllegalArgumentException(
+                    "You can only reschedule your own appointments."
+            );
+        }
+
+        // Validation 3: closed appointments cannot be rescheduled
+        if ("CANCELLED".equalsIgnoreCase(appointment.getStatus())) {
+
+            JOptionPane.showMessageDialog(
+                    mainFrame,
+                    "A cancelled appointment cannot be rescheduled.",
+                    "Appointment Cancelled",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        if ("COMPLETED".equalsIgnoreCase(appointment.getStatus())) {
+
+            JOptionPane.showMessageDialog(
+                    mainFrame,
+                    "A completed appointment cannot be rescheduled.",
+                    "Appointment Completed",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // Validation 4: new date and time required
+        if (dateCombo.getSelectedItem() == null
+                || timeCombo.getSelectedItem() == null) {
+
+            JOptionPane.showMessageDialog(
+                    mainFrame,
+                    "Please choose a new appointment date and time.",
+                    "Missing Date or Time",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        String dateText =
+                dateCombo.getSelectedItem().toString();
+
+        String timeText =
+                timeCombo.getSelectedItem().toString();
 
         SimpleDateFormat dateFormat =
                 new SimpleDateFormat("yyyy-MM-dd");
 
         dateFormat.setLenient(false);
 
-        Date newDate = dateFormat.parse(dateText);
+        Date newDate =
+                dateFormat.parse(dateText);
 
-        LocalTime newTime = LocalTime.parse(
-                timeText,
-                DateTimeFormatter.ofPattern("HH:mm")
+        LocalTime newTime =
+                LocalTime.parse(
+                        timeText,
+                        TIME_FORMAT
+                );
+
+        String oldDateText =
+                dateFormat.format(
+                        appointment.getAppointmentDate()
+                );
+
+        String oldTimeText =
+                appointment.getAppointmentTime()
+                        .format(TIME_FORMAT);
+
+        // Validation 5: must actually change something
+        if (oldDateText.equals(dateText)
+                && oldTimeText.equals(timeText)) {
+
+            JOptionPane.showMessageDialog(
+                    mainFrame,
+                    "Please choose a different date or time.",
+                    "No Changes Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        if (appointment.getDoctor() == null) {
+            throw new IllegalArgumentException(
+                    "The doctor for this appointment could not be found."
+            );
+        }
+
+        // Important:
+        // Rescheduling keeps the SAME doctor.
+        String doctorId =
+                appointment.getDoctor().getDoctorId();
+
+        // Validation 6:
+        // verify that the new slot is really still available
+        List<LocalTime> availableSlots =
+                appointmentManager.getAvailableSlots(
+                        doctorId,
+                        newDate
+                );
+
+        if (!availableSlots.contains(newTime)) {
+
+            JOptionPane.showMessageDialog(
+                    mainFrame,
+                    "The selected consultation time is no longer available.\n"
+                    + "Please choose another available time.",
+                    "Time Not Available",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // Show OLD -> NEW before changing anything
+        int confirm = JOptionPane.showConfirmDialog(
+                mainFrame,
+                "Reschedule appointment "
+                        + appointmentId
+                        + "?\n\n"
+                        + "Doctor: "
+                        + appointment.getDoctor().getUsername()
+                        + "\n\n"
+                        + "Current:\n"
+                        + oldDateText
+                        + " at "
+                        + oldTimeText
+                        + "\n\n"
+                        + "New:\n"
+                        + dateText
+                        + " at "
+                        + timeText,
+                "Confirm Reschedule",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
         );
 
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // Actual backend operation
         rescheduleAppointment(
                 appointmentId,
                 newDate,
@@ -262,19 +394,28 @@ public class AppointmentBookingController {
 
         JOptionPane.showMessageDialog(
                 mainFrame,
-                "Appointment rescheduled successfully."
+                "Appointment rescheduled successfully.",
+                "Reschedule Successful",
+                JOptionPane.INFORMATION_MESSAGE
         );
 
+        // Refresh appointment table
         if (refreshTable != null) {
             refreshTable.run();
+        }
+
+        // Refresh available times:
+        // new slot disappears, old slot becomes available again
+        if (refreshAvailableTimes != null) {
+            refreshAvailableTimes.run();
         }
 
     } catch (ParseException | DateTimeParseException ex) {
 
         JOptionPane.showMessageDialog(
                 mainFrame,
-                "Invalid date or time.",
-                "Error",
+                "Invalid appointment date or time.",
+                "Invalid Date or Time",
                 JOptionPane.ERROR_MESSAGE
         );
 
@@ -283,11 +424,12 @@ public class AppointmentBookingController {
         JOptionPane.showMessageDialog(
                 mainFrame,
                 ex.getMessage(),
-                "Error",
+                "Unable to Reschedule Appointment",
                 JOptionPane.ERROR_MESSAGE
         );
     }
 }
+
     public List<DoctorShift> getFutureShiftsForDoctor(String doctorId) {
 
     List<DoctorShift> futureShifts = new ArrayList<>();
@@ -324,117 +466,189 @@ public class AppointmentBookingController {
         );
     }
 
-    LocalDate date;
+    Date date;
 
     try {
-        date = LocalDate.parse(selectedDate);
-    } catch (Exception ex) {
+        SimpleDateFormat dateFormat =
+                new SimpleDateFormat("yyyy-MM-dd");
+
+        dateFormat.setLenient(false);
+
+        date = dateFormat.parse(selectedDate);
+
+    } catch (ParseException ex) {
         throw new IllegalArgumentException(
                 "Invalid appointment date."
         );
     }
 
-    if (date.isBefore(LocalDate.now())) {
-        throw new IllegalArgumentException(
-                "Cannot choose a date in the past."
+    List<LocalTime> slots =
+            appointmentManager.getAvailableSlots(
+                    doctorId,
+                    date
+            );
+
+    List<String> formattedSlots = new ArrayList<>();
+
+    for (LocalTime slot : slots) {
+        formattedSlots.add(
+                slot.format(TIME_FORMAT)
         );
     }
 
-    List<String> availableSlots = new ArrayList<>();
-
-    for (DoctorShift shift : getFutureShiftsForDoctor(doctorId)) {
-
-        LocalDate shiftDate = shift.getShiftDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-
-        if (!shiftDate.equals(date)) {
-            continue;
-        }
-
-        LocalTime slot =
-                roundUpToNextHalfHour(shift.getStartTime());
-
-        LocalTime end = shift.getEndTime();
-
-        while (slot.isBefore(end)) {
-
-            long remainingMinutes =
-                    java.time.Duration.between(
-                            slot,
-                            end
-                    ).toMinutes();
-
-            if (remainingMinutes < SLOT_MINUTES) {
-                break;
-            }
-
-            if (!isDoctorSlotBooked(
-                    doctorId,
-                    date,
-                    slot)) {
-
-                if (!date.equals(LocalDate.now())
-                        || slot.isAfter(LocalTime.now())) {
-
-                    availableSlots.add(
-                            slot.format(TIME_FORMAT)
-                    );
-                }
-            }
-
-            slot = slot.plusMinutes(SLOT_MINUTES);
-        }
-    }
-
-    return availableSlots;
+    return formattedSlots;
 }
+    public void bookSelectedAppointment(
+        JTable doctorsTable,
+        JComboBox<String> dateCombo,
+        JComboBox<String> timeCombo,
+        Runnable refreshAppointments,
+        Runnable refreshAvailableTimes) {
 
-    private LocalTime roundUpToNextHalfHour(LocalTime time) {
+    // Validation 1: doctor selected
+    int doctorRow = doctorsTable.getSelectedRow();
 
-    int minute = time.getMinute();
-
-    if (minute == 0 || minute == 30) {
-        return time.withSecond(0).withNano(0);
+    if (doctorRow < 0) {
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Please select a doctor first.",
+                "Doctor Required",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return;
     }
 
-    if (minute < 30) {
-        return time.withMinute(30)
-                .withSecond(0)
-                .withNano(0);
+    // Validation 2: date selected
+    if (dateCombo.getSelectedItem() == null) {
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Please select an appointment date.",
+                "Date Required",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return;
     }
 
-    return time.plusHours(1)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0);
-}
-    private boolean isDoctorSlotBooked(
-        String doctorId,
-        LocalDate date,
-        LocalTime time) {
+    // Validation 3: time selected
+    if (timeCombo.getSelectedItem() == null) {
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Please select an available consultation time.",
+                "Time Required",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return;
+    }
 
-    for (Appointment appointment
-            : appointmentManager.listForDoctor(doctorId)) {
+    String doctorId =
+            doctorsTable.getValueAt(doctorRow, 0).toString();
 
-        if ("CANCELLED".equals(appointment.getStatus())) {
-            continue;
+    String dateText =
+            dateCombo.getSelectedItem().toString();
+
+    String timeText =
+            timeCombo.getSelectedItem().toString();
+
+    try {
+
+        SimpleDateFormat dateFormat =
+                new SimpleDateFormat("yyyy-MM-dd");
+
+        dateFormat.setLenient(false);
+
+        Date appointmentDate =
+                dateFormat.parse(dateText);
+
+        LocalTime appointmentTime =
+                LocalTime.parse(
+                        timeText,
+                        TIME_FORMAT
+                );
+
+        // Validation 4:
+        // Re-check availability at the moment Book is pressed.
+        List<LocalTime> availableSlots =
+                appointmentManager.getAvailableSlots(
+                        doctorId,
+                        appointmentDate
+                );
+
+        if (!availableSlots.contains(appointmentTime)) {
+            throw new IllegalArgumentException(
+                    "This consultation time is no longer available. "
+                    + "Please select another time."
+            );
         }
 
-        LocalDate appointmentDate =
-                appointment.getAppointmentDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+        // Confirmation
+        int confirm = JOptionPane.showConfirmDialog(
+                mainFrame,
+                "Book appointment with doctor "
+                        + doctorId
+                        + "\nDate: "
+                        + dateText
+                        + "\nTime: "
+                        + timeText
+                        + "?",
+                "Confirm Appointment",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
 
-        if (appointmentDate.equals(date)
-                && appointment.getAppointmentTime().equals(time)) {
-
-            return true;
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
         }
-    }
 
-    return false;
+        // Actual booking goes through existing backend
+        bookAppointment(
+                doctorId,
+                appointmentDate,
+                appointmentTime
+        );
+
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Appointment booked successfully.",
+                "Booking Successful",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        // Refresh My Appointments
+        if (refreshAppointments != null) {
+            refreshAppointments.run();
+        }
+
+        // Refresh slots so booked time disappears
+        if (refreshAvailableTimes != null) {
+            refreshAvailableTimes.run();
+        }
+
+    } catch (ParseException ex) {
+
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Invalid appointment date.",
+                "Invalid Date",
+                JOptionPane.ERROR_MESSAGE
+        );
+
+    } catch (DateTimeParseException ex) {
+
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                "Invalid appointment time.",
+                "Invalid Time",
+                JOptionPane.ERROR_MESSAGE
+        );
+
+    } catch (IllegalArgumentException ex) {
+
+        JOptionPane.showMessageDialog(
+                mainFrame,
+                ex.getMessage(),
+                "Unable to Book Appointment",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
 }
 }
