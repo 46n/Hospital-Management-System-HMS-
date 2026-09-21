@@ -13,6 +13,9 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -290,4 +293,120 @@ public class AppointmentManager {
                 appointment.getAppointmentTime().format(TIME_FORMAT),
                 appointment.getStatus());
     }
+    public List<LocalTime> getAvailableSlots(
+        String doctorId,
+        Date selectedDate) {
+
+    if (doctorId == null || doctorId.trim().isEmpty()) {
+        throw new IllegalArgumentException(
+                "Doctor is required."
+        );
+    }
+
+    if (selectedDate == null) {
+        throw new IllegalArgumentException(
+                "Appointment date is required."
+        );
+    }
+
+    final int SLOT_MINUTES = 30;
+
+    LocalDate targetDate = selectedDate
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate();
+
+    if (targetDate.isBefore(LocalDate.now())) {
+        throw new IllegalArgumentException(
+                "Appointments cannot be booked in the past."
+        );
+    }
+
+    List<LocalTime> availableSlots = new ArrayList<>();
+
+    for (DoctorShift shift
+            : shiftManager.getShiftsForDoctor(doctorId)) {
+
+        LocalDate shiftDate = shift.getShiftDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        if (!shiftDate.equals(targetDate)) {
+            continue;
+        }
+
+        LocalTime slot = roundUpToHalfHour(
+                shift.getStartTime()
+        );
+
+        LocalTime end = shift.getEndTime();
+
+        while (slot.isBefore(end)) {
+
+            long remainingMinutes =
+                    Duration.between(slot, end).toMinutes();
+
+            if (remainingMinutes < SLOT_MINUTES) {
+                break;
+            }
+
+            if (targetDate.equals(LocalDate.now())
+                    && !slot.isAfter(LocalTime.now())) {
+
+                slot = slot.plusMinutes(SLOT_MINUTES);
+                continue;
+            }
+
+            boolean taken = false;
+
+            for (Appointment appointment
+                    : listForDoctor(doctorId)) {
+
+                boolean cancelled =
+                        appointment.getStatus() != null
+                        && "CANCELLED".equalsIgnoreCase(
+                                appointment.getStatus().toString()
+                        );
+
+                if (!cancelled
+                        && isSameSlot(
+                                appointment,
+                                selectedDate,
+                                slot)) {
+
+                    taken = true;
+                    break;
+                }
+            }
+
+            if (!taken) {
+                availableSlots.add(slot);
+            }
+
+            slot = slot.plusMinutes(SLOT_MINUTES);
+        }
+    }
+
+    return availableSlots;
+}
+    private LocalTime roundUpToHalfHour(LocalTime time) {
+
+    int minute = time.getMinute();
+
+    if (minute == 0 || minute == 30) {
+        return time.withSecond(0).withNano(0);
+    }
+
+    if (minute < 30) {
+        return time.withMinute(30)
+                .withSecond(0)
+                .withNano(0);
+    }
+
+    return time.plusHours(1)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0);
+}
 }
