@@ -35,7 +35,7 @@
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="btnToggleActive" min="-2" pref="113" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="btnDeleteSelected" min="-2" max="-2" attributes="0"/>
+                      <Component id="btnDeleteSelected" min="-2" pref="143" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="btnBackDashboard" min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -180,6 +180,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Toggle Active"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnToggleActiveActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDeleteSelected">
       <Properties>
@@ -191,6 +194,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Delete Assessment"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDeleteSelectedActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnBackDashboard">
       <Properties>
@@ -202,6 +208,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Back to Dashboard"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnBackDashboardActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="pnlAssessmentDetails">
 
@@ -411,6 +420,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="Clear"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnClearFieldsActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btnSaveAssessment">
           <Properties>
@@ -422,6 +434,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="Save Assessment"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSaveAssessmentActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

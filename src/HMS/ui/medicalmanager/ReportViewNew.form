@@ -122,6 +122,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Hospital Metrics"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnHospitalMetricsActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDoctorShiftsReport">
       <Properties>
@@ -133,6 +136,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Doctor Shifts"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDoctorShiftsReportActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnAssessmentUsage">
       <Properties>
@@ -144,6 +150,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Assessment Usage"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAssessmentUsageActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnRevenue">
       <Properties>
@@ -155,6 +164,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Revenue"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRevenueActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnBackDashboard">
       <Properties>
@@ -166,6 +178,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Back to Dashboard"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnBackDashboardActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="reportScrollPane">
 

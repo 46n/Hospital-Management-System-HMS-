@@ -4,6 +4,15 @@
  */
 package hms.ui.medicalmanager;
 import hms.ui.common.UIStyles;
+import hms.manager.AppointmentManager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.BillingManager;
+import hms.manager.ClinicalManager;
+import hms.manager.DoctorShiftManager;
+import hms.manager.ReportManager;
+import hms.manager.UserManager;
+import hms.model.HospitalReport;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -11,12 +20,116 @@ import hms.ui.common.UIStyles;
  */
 public class ReportViewNew extends javax.swing.JPanel {
 
+    private ReportManager reportManager;
+    private AppointmentManager appointmentManager;
+    private BillingManager billingManager;
+    private ClinicalManager clinicalManager;
+    private AssessmentTypeManager typeManager;
+    private DoctorShiftManager shiftManager;
+    private UserManager userManager;
+
+    private Runnable onBack;
     /**
      * Creates new form ReportViewNew
      */
     public ReportViewNew() {
         initComponents();
+        applyButtonStyles();
     }
+
+    public ReportViewNew(
+        ReportManager reportManager,
+        AppointmentManager appointmentManager,
+        BillingManager billingManager,
+        ClinicalManager clinicalManager,
+        AssessmentTypeManager typeManager,
+        DoctorShiftManager shiftManager,
+        UserManager userManager,
+        Runnable onBack) {
+
+    initComponents();
+    applyButtonStyles();
+
+    this.reportManager = reportManager;
+    this.appointmentManager = appointmentManager;
+    this.billingManager = billingManager;
+    this.clinicalManager = clinicalManager;
+    this.typeManager = typeManager;
+    this.shiftManager = shiftManager;
+    this.userManager = userManager;
+    this.onBack = onBack;
+}
+    
+    
+    private void applyButtonStyles() {
+
+    UIStyles.applyPrimaryButtonStyle(btnHospitalMetrics);
+    UIStyles.applyPrimaryButtonStyle(btnRevenue);
+    UIStyles.applyPrimaryButtonStyle(btnAssessmentUsage);
+    UIStyles.applyPrimaryButtonStyle(btnDoctorShiftsReport);
+    UIStyles.applyPrimaryButtonStyle(btnBackDashboard);
+}
+    
+    private void displayReport(HospitalReport report) {
+    ReportOutputTa.setText(
+            String.join(
+                    System.lineSeparator(),
+                    reportManager.generate(report)
+            )
+    );
+    ReportOutputTa.setCaretPosition(0);
+}
+    
+    private void showHospitalMetrics() {
+
+    HospitalReport report =
+            reportManager.buildMetricsReport(
+                    appointmentManager
+            );
+
+    displayReport(report);
+}
+
+    private void showRevenueReport() {
+
+        HospitalReport report =
+                reportManager.buildRevenueReport(
+                        billingManager
+                );
+
+        displayReport(report);
+    }
+
+    private void showAssessmentUsageReport() {
+
+        HospitalReport report =
+                reportManager.buildAssessmentUsageReport(
+                        clinicalManager,
+                        typeManager
+                );
+
+        displayReport(report);
+    }
+
+    private void showDoctorShiftReport() {
+
+        HospitalReport report =
+                reportManager.buildDoctorShiftReport(
+                        shiftManager,
+                        userManager
+                );
+
+        displayReport(report);
+    }
+
+    private void goBack() {
+
+        if (onBack != null) {
+            onBack.run();
+        }
+    }
+
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -50,22 +163,27 @@ public class ReportViewNew extends javax.swing.JPanel {
         btnHospitalMetrics.setBackground(new java.awt.Color(51, 51, 51));
         btnHospitalMetrics.setForeground(new java.awt.Color(255, 255, 255));
         btnHospitalMetrics.setText("Hospital Metrics");
+        btnHospitalMetrics.addActionListener(this::btnHospitalMetricsActionPerformed);
 
         btnDoctorShiftsReport.setBackground(new java.awt.Color(51, 51, 51));
         btnDoctorShiftsReport.setForeground(new java.awt.Color(255, 255, 255));
         btnDoctorShiftsReport.setText("Doctor Shifts");
+        btnDoctorShiftsReport.addActionListener(this::btnDoctorShiftsReportActionPerformed);
 
         btnAssessmentUsage.setBackground(new java.awt.Color(51, 51, 51));
         btnAssessmentUsage.setForeground(new java.awt.Color(255, 255, 255));
         btnAssessmentUsage.setText("Assessment Usage");
+        btnAssessmentUsage.addActionListener(this::btnAssessmentUsageActionPerformed);
 
         btnRevenue.setBackground(new java.awt.Color(51, 51, 51));
         btnRevenue.setForeground(new java.awt.Color(255, 255, 255));
         btnRevenue.setText("Revenue");
+        btnRevenue.addActionListener(this::btnRevenueActionPerformed);
 
         btnBackDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackDashboard.setText("Back to Dashboard");
+        btnBackDashboard.addActionListener(this::btnBackDashboardActionPerformed);
 
         ReportOutputTa.setEditable(false);
         ReportOutputTa.setColumns(20);
@@ -134,6 +252,31 @@ public class ReportViewNew extends javax.swing.JPanel {
                 .addGap(91, 91, 91))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnHospitalMetricsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHospitalMetricsActionPerformed
+        // TODO add your handling code here:
+        showHospitalMetrics();
+    }//GEN-LAST:event_btnHospitalMetricsActionPerformed
+
+    private void btnRevenueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRevenueActionPerformed
+        // TODO add your handling code here:
+        showRevenueReport();
+    }//GEN-LAST:event_btnRevenueActionPerformed
+
+    private void btnAssessmentUsageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAssessmentUsageActionPerformed
+        // TODO add your handling code here:
+        showAssessmentUsageReport();
+    }//GEN-LAST:event_btnAssessmentUsageActionPerformed
+
+    private void btnDoctorShiftsReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDoctorShiftsReportActionPerformed
+        // TODO add your handling code here:
+        showDoctorShiftReport();
+    }//GEN-LAST:event_btnDoctorShiftsReportActionPerformed
+
+    private void btnBackDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackDashboardActionPerformed
+        // TODO add your handling code here:
+        goBack();
+    }//GEN-LAST:event_btnBackDashboardActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

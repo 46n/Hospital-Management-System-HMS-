@@ -57,7 +57,10 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
 }
     
     private void clearShiftFields() {
-    cmbDoctor.setSelectedIndex(-1);
+    cmbDoctor.setEnabled(true);
+    if (cmbDoctor.getItemCount() > 0) {
+        cmbDoctor.setSelectedIndex(0);
+    }
     Date now = new Date();
     DateSpinner.setValue(now);
     StartTimeSpinner.setValue(now);
@@ -289,26 +292,28 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
 }
     
     private void loadDoctors() {
-    cmbDoctor.removeAllItems();
-    MedicalManager manager = getCurrentManager();
-    for (User user : userManager.getUsers()) {
-        if (user instanceof Doctor) {
-            Doctor doctor = (Doctor) user;
-            if (doctor.getShiftManager() != null
-                    && manager.getManagerId().equals(
-                            doctor.getShiftManager().getManagerId())) {
-                cmbDoctor.addItem(
-                        doctor.getDoctorId()
-                        + " - "
-                        + doctor.getUsername()
-                );
+        cmbDoctor.removeAllItems();
+        MedicalManager manager = getCurrentManager();
+        for (User user : userManager.getUsers()) {
+            if (user instanceof Doctor) {
+                Doctor doctor = (Doctor) user;
+                if (doctor.getShiftManager() != null
+                        && manager.getManagerId().equals(
+                                doctor.getShiftManager().getManagerId())) {
+
+                    cmbDoctor.addItem(
+                            doctor.getDoctorId()
+                            + " - "
+                            + doctor.getUsername()
+                    );
+                }
             }
         }
+        // Automatically show the first assigned doctor
+        if (cmbDoctor.getItemCount() > 0) {
+            cmbDoctor.setSelectedIndex(0);
+        }
     }
-    if (cmbDoctor.getItemCount() > 0) {
-    cmbDoctor.setSelectedIndex(0);
-}
-}
     
     
     private void applyButtonStyles() {
