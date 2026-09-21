@@ -4,18 +4,48 @@
  */
 package HMS.ui.doctor;
 
+import hms.manager.AppointmentManager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.ClinicalManager;
+import hms.manager.SessionManager;
+import hms.manager.UserManager;
+import hms.ui.common.MainFrame;
 /**
  *
  * @author waleed
  */
 public class DoctorDashboardNew extends javax.swing.JPanel {
+    
+    private SessionManager sessionManager;
+    private UserManager userManager;
+    private AppointmentManager appointmentManager;
+    private ClinicalManager clinicalManager;
+    private AssessmentTypeManager typeManager;
+    private MainFrame mainFrame;
+    private Runnable onLogout;
 
     /**
      * Creates new form DoctorDashboardNew
      */
-    public DoctorDashboardNew() {
-        initComponents();
-    }
+    public DoctorDashboardNew(
+        SessionManager sessionManager,
+        UserManager userManager,
+        AppointmentManager appointmentManager,
+        ClinicalManager clinicalManager,
+        AssessmentTypeManager typeManager,
+        MainFrame mainFrame,
+        Runnable onLogout) {
+
+    initComponents();
+
+    this.sessionManager = sessionManager;
+    this.userManager = userManager;
+    this.appointmentManager = appointmentManager;
+    this.clinicalManager = clinicalManager;
+    this.typeManager = typeManager;
+    this.mainFrame = mainFrame;
+    this.onLogout = onLogout;
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -41,14 +71,17 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
         btnViewMyAppointments.setBackground(new java.awt.Color(51, 51, 51));
         btnViewMyAppointments.setForeground(new java.awt.Color(255, 255, 255));
         btnViewMyAppointments.setText("View My Appointments");
+        btnViewMyAppointments.addActionListener(this::btnViewMyAppointmentsActionPerformed);
 
         btnLogVitalsConsultationNotes.setBackground(new java.awt.Color(51, 51, 51));
         btnLogVitalsConsultationNotes.setForeground(new java.awt.Color(255, 255, 255));
         btnLogVitalsConsultationNotes.setText("Log Vitals & Consultation Notes");
+        btnLogVitalsConsultationNotes.addActionListener(this::btnLogVitalsConsultationNotesActionPerformed);
 
         btnRequestLabImaging.setBackground(new java.awt.Color(51, 51, 51));
         btnRequestLabImaging.setForeground(new java.awt.Color(255, 255, 255));
         btnRequestLabImaging.setText("Request Lab / Imaging");
+        btnRequestLabImaging.addActionListener(this::btnRequestLabImagingActionPerformed);
 
         btnIssuePrescriptions.setBackground(new java.awt.Color(51, 51, 51));
         btnIssuePrescriptions.setForeground(new java.awt.Color(255, 255, 255));
@@ -63,8 +96,10 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
         btnRecordAssessmentResult.setBackground(new java.awt.Color(51, 51, 51));
         btnRecordAssessmentResult.setForeground(new java.awt.Color(255, 255, 255));
         btnRecordAssessmentResult.setText("Record Assessment Result");
+        btnRecordAssessmentResult.addActionListener(this::btnRecordAssessmentResultActionPerformed);
 
         btnLogOut.setText("Log Out");
+        btnLogOut.addActionListener(this::btnLogOutActionPerformed);
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         jLabel1.setText("Welcome, doctor (Doctor)");
@@ -124,12 +159,58 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
 
     private void btnIssuePrescriptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIssuePrescriptionsActionPerformed
         // TODO add your handling code here:
+        mainFrame.showPanel(new IssuePrescriptionNew(
+            clinicalManager, appointmentManager, typeManager, userManager,
+            sessionManager, mainFrame, onLogout));
         
     }//GEN-LAST:event_btnIssuePrescriptionsActionPerformed
 
     private void btnEditMyProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditMyProfileActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnEditMyProfileActionPerformed
+
+    private void btnViewMyAppointmentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewMyAppointmentsActionPerformed
+        // TODO add your handling code here:
+        mainFrame.showPanel(
+        new MyAppointmentsNew(
+        appointmentManager,
+        clinicalManager,
+        typeManager,
+        userManager,
+        sessionManager,
+        mainFrame,
+        onLogout
+    )
+    );
+    }//GEN-LAST:event_btnViewMyAppointmentsActionPerformed
+
+    private void btnRecordAssessmentResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordAssessmentResultActionPerformed
+        // TODO add your handling code here:
+        mainFrame.showPanel(new RecordAssessmentNew(
+            clinicalManager, appointmentManager, typeManager, userManager,
+            sessionManager, mainFrame, onLogout));
+    }//GEN-LAST:event_btnRecordAssessmentResultActionPerformed
+
+    private void btnLogVitalsConsultationNotesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogVitalsConsultationNotesActionPerformed
+        // TODO add your handling code here:
+        mainFrame.showPanel(new LogVitalsNew(
+            clinicalManager, appointmentManager, typeManager, userManager,
+            sessionManager, mainFrame, onLogout));
+    }//GEN-LAST:event_btnLogVitalsConsultationNotesActionPerformed
+
+    private void btnRequestLabImagingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRequestLabImagingActionPerformed
+        // TODO add your handling code here:
+         mainFrame.showPanel(new RequestLabImagingNew(
+            clinicalManager, appointmentManager, typeManager, userManager,
+            sessionManager, mainFrame, onLogout));
+    }//GEN-LAST:event_btnRequestLabImagingActionPerformed
+
+    private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
+        // TODO add your handling code here:
+        if (onLogout != null) {
+        onLogout.run();
+        }
+    }//GEN-LAST:event_btnLogOutActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -141,8 +222,6 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
     private javax.swing.JButton btnRequestLabImaging;
     private javax.swing.JButton btnViewMyAppointments;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     // End of variables declaration//GEN-END:variables
 }

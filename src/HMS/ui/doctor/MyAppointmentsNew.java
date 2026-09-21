@@ -4,11 +4,29 @@
  */
 package HMS.ui.doctor;
 
+import hms.manager.AppointmentManager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.ClinicalManager;
+import hms.manager.SessionManager;
+import hms.manager.UserManager;
+import hms.model.Appointment;
+import hms.model.Doctor;
+import hms.ui.common.AppointmentTableUtil;
+import hms.ui.common.MainFrame;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author waleed
  */
 public class MyAppointmentsNew extends javax.swing.JPanel {
+    private AppointmentManager appointmentManager;
+    private ClinicalManager clinicalManager;
+    private AssessmentTypeManager typeManager;
+    private UserManager userManager;
+    private SessionManager sessionManager;
+    private MainFrame mainFrame;
+    private Runnable onLogout;
 
     /**
      * Creates new form DoctorProfileNew
@@ -16,6 +34,52 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
     public MyAppointmentsNew() {
         initComponents();
     }
+    
+    public MyAppointmentsNew(
+        AppointmentManager appointmentManager,
+        ClinicalManager clinicalManager,
+        AssessmentTypeManager typeManager,
+        UserManager userManager,
+        SessionManager sessionManager,
+        MainFrame mainFrame,
+        Runnable onLogout) {
+
+            initComponents();
+
+            this.appointmentManager = appointmentManager;
+            this.clinicalManager = clinicalManager;
+            this.typeManager = typeManager;
+            this.userManager = userManager;
+            this.sessionManager = sessionManager;
+            this.mainFrame = mainFrame;
+            this.onLogout = onLogout;
+
+            loadAppointments();
+    }
+     
+    
+     private void loadAppointments() {
+
+        DefaultTableModel model
+                = (DefaultTableModel) tblMyAppointments.getModel();
+
+        // Remove the empty rows created by NetBeans
+        model.setRowCount(0);
+
+        // Get the currently logged-in Doctor
+        Doctor doctor
+                = (Doctor) sessionManager.getCurrentUser();
+
+        // Load only this doctor's appointments
+        for (Appointment appointment
+                : appointmentManager.listForDoctor(doctor.getDoctorId())) {
+
+            model.addRow(
+                    AppointmentTableUtil.toRow(appointment)
+            );
+        }
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -63,6 +127,7 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         btnBackToDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackToDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackToDashboard.setText("Back to Dashboard");
+        btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -79,7 +144,7 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
                         .addGap(82, 82, 82)
                         .addComponent(lblMyAppointments))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(346, 346, 346)
+                        .addGap(318, 318, 318)
                         .addComponent(btnBackToDashboard)))
                 .addContainerGap(67, Short.MAX_VALUE))
         );
@@ -94,11 +159,19 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
                 .addComponent(lblMyAppointments)
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 329, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(16, 16, 16))
+                .addGap(22, 22, 22))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
+        // TODO add your handling code here:
+       mainFrame.showPanel(new DoctorDashboardNew(
+            sessionManager, userManager, appointmentManager,
+            clinicalManager, typeManager, mainFrame, onLogout));
+
+    }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

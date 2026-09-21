@@ -65,9 +65,9 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
                       <Component id="lblLogVitalsConsultationNotes" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
                       <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="lblVitalSigns" min="-2" max="-2" attributes="0"/>
@@ -149,6 +149,9 @@
           </StringArray>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmbAppointmentActionPerformed"/>
+      </Events>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
       </AuxValues>
@@ -167,6 +170,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Save Vitals &amp; Notes"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSaveVitalsNotesActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnFinalizeRecord">
       <Properties>
@@ -178,6 +184,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Finalize Record (Mark Completed)"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnFinalizeRecordActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnBackToDashboard">
       <Properties>
@@ -189,6 +198,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Back to Dashboard"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnBackToDashboardActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="scrConsultationNotes">
 
