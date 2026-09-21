@@ -112,7 +112,7 @@ public class EditProfilePanel extends JPanel {
         panel.setBackground(Theme.BACKGROUND_COLOR);
         JButton backButton = new JButton("Back to Dashboard");
         UIStyles.applyPrimaryButtonStyle(backButton);
-        backButton.addActionListener(e -> mainFrame.showPanel(new PatientDashboardPanel(
+        backButton.addActionListener(e -> mainFrame.showPanel(new PatientDashboardNew(
                 sessionManager, userManager, appointmentManager, shiftManager, clinicalManager, billingManager,
                 mainFrame, onLogout)));
         panel.add(backButton);
