@@ -42,9 +42,15 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     
     
     
-    private void openAssessmentTypes() {
-    mainFrame.showPanel(new AssessmentTypeManagementNew());
-    }
+   private void openAssessmentTypes() {
+    mainFrame.showPanel(
+        new AssessmentTypeManagementNew(
+            sessionManager,
+            typeManager,
+            () -> mainFrame.showPanel(this)
+        )
+    );
+}
 
     private void openDoctorShifts() {
      mainFrame.showPanel(
@@ -57,8 +63,20 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
      );
  }
 
-    private void openReports() {mainFrame.showPanel(new ReportViewNew());
-    }
+    private void openReports() {
+    mainFrame.showPanel(
+        new ReportViewNew(
+            reportManager,
+            appointmentManager,
+            billingManager,
+            clinicalManager,
+            typeManager,
+            shiftManager,
+            userManager,
+            () -> mainFrame.showPanel(this)
+        )
+    );
+}
     
     
     private void openClinicalDepartments() {

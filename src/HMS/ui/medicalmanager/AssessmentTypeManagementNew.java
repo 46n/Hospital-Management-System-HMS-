@@ -3,20 +3,389 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package hms.ui.medicalmanager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.SessionManager;
+import hms.model.AssessmentType;
+import hms.model.MedicalManager;
+import hms.model.User;
+import hms.ui.common.UIStyles;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author abd
  */
 public class AssessmentTypeManagementNew extends javax.swing.JPanel {
+    
+    private SessionManager sessionManager;
+    private AssessmentTypeManager typeManager;
+    private Runnable onBack;
+
+    private String editingAssessmentId = null;
 
     /**
      * Creates new form AssessmentTypeManagementNew
      */
     public AssessmentTypeManagementNew() {
+      initComponents();
+      applyButtonStyles();
+  }
+
+    public AssessmentTypeManagementNew(
+            SessionManager sessionManager,
+            AssessmentTypeManager typeManager,
+            Runnable onBack) {
+
         initComponents();
+        applyButtonStyles();
+
+        this.sessionManager = sessionManager;
+        this.typeManager = typeManager;
+        this.onBack = onBack;
+
+        loadCategories();
+        loadGradingRules();
+        refreshAssessmentTable();
     }
 
+    private void applyButtonStyles() {
+    UIStyles.applyPrimaryButtonStyle(btnAddType);
+    UIStyles.applyPrimaryButtonStyle(btnEditSelected);
+    UIStyles.applyPrimaryButtonStyle(btnToggleActive);
+    UIStyles.applyPrimaryButtonStyle(btnDeleteSelected);
+    UIStyles.applyPrimaryButtonStyle(btnBackDashboard);
+    UIStyles.applyPrimaryButtonStyle(btnClearFields);
+    UIStyles.applyPrimaryButtonStyle(btnSaveAssessment);
+}
+
+    private void loadCategories() {
+
+    cmbCategory.removeAllItems();
+
+    for (String category
+            : AssessmentTypeManager.getValidCategories()) {
+
+        cmbCategory.addItem(category);
+    }
+
+    cmbCategory.setSelectedIndex(-1);
+}
+    
+    private void loadGradingRules() {
+
+    cmbGradingRule.removeAllItems();
+
+    for (String rule
+            : AssessmentTypeManager.getValidGradingRules()) {
+
+        cmbGradingRule.addItem(rule);
+    }
+
+    cmbGradingRule.setSelectedIndex(-1);
+}
+    
+    private void clearAssessmentFields() {
+    AssessmentNameTf.setText("");
+    BaseChargeTf.setText("");
+    cmbCategory.setSelectedIndex(-1);
+    cmbGradingRule.setSelectedIndex(-1);
+    bgActive.clearSelection();
+    }
+    
+    
+    
+    private void prepareNewAssessment() {
+    editingAssessmentId = null;
+    clearAssessmentFields();
+    // New assessment types are active by default
+    rbActiveYes.setSelected(true);
+    AssessmentNameTf.requestFocus();
+    }
+    
+    private void saveAssessment() {
+    try {
+        String name = AssessmentNameTf.getText().trim();
+        Object selectedCategory = cmbCategory.getSelectedItem();
+        Object selectedRule = cmbGradingRule.getSelectedItem();
+        if (selectedCategory == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a category."
+            );
+            return;
+        }
+
+        if (selectedRule == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a grading rule."
+            );
+            return;
+        }
+
+        if (!rbActiveYes.isSelected()
+                && !rbActiveNo.isSelected()) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please select Active: Yes or No."
+            );
+            return;
+        }
+
+        String chargeText =
+                BaseChargeTf.getText().trim();
+
+        if (chargeText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter the base charge."
+            );
+            return;
+        }
+        double baseCharge = Double.parseDouble(chargeText);
+        String category = selectedCategory.toString();
+        String gradingRule =
+                selectedRule.toString();
+        boolean active = rbActiveYes.isSelected();
+        if (editingAssessmentId == null) {
+            MedicalManager manager = getCurrentManager();
+            AssessmentType created = typeManager.createType( name, category,gradingRule, baseCharge, manager.getManagerId());
+            typeManager.setActive( created.getAssessmentTypeId(),active
+            );
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Assessment type created successfully."
+            );
+        } else {
+            typeManager.updateType(
+                    editingAssessmentId,
+                    name,
+                    category,
+                    gradingRule,
+                    baseCharge
+            );
+            typeManager.setActive(
+                    editingAssessmentId,
+                    active
+            );
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Assessment type updated successfully."
+            );
+        }
+        refreshAssessmentTable();
+        prepareNewAssessment();
+    } catch (NumberFormatException ex) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Base charge must be a valid number.",
+                "Error",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+        );
+    } catch (IllegalArgumentException ex) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Error",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
+    
+    
+    private void loadSelectedAssessment() {
+    int selectedRow = tblAssessmentTypes.getSelectedRow();
+    if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Please select an assessment type first."
+        );
+        return;
+    }
+    int modelRow =
+            tblAssessmentTypes.convertRowIndexToModel(
+                    selectedRow
+            );
+    String typeId =
+            tblAssessmentTypes.getModel()
+                    .getValueAt(modelRow, 0)
+                    .toString();
+    AssessmentType type =
+            typeManager.findById(typeId);
+    if (type == null) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Assessment type could not be found."
+        );
+        return;
+    }
+    editingAssessmentId =
+            type.getAssessmentTypeId();
+
+    AssessmentNameTf.setText(
+            type.getName()
+    );
+    cmbCategory.setSelectedItem(
+            type.getCategory()
+    );
+    cmbGradingRule.setSelectedItem(
+            type.getGradingRule()
+    );
+    BaseChargeTf.setText(
+            String.valueOf(type.getBaseCharge())
+    );
+    if (type.isActive()) {
+        rbActiveYes.setSelected(true);
+    } else {
+        rbActiveNo.setSelected(true);
+    }
+    AssessmentNameTf.requestFocus();
+}
+    
+    
+    
+    
+    private void deleteSelectedAssessment() {
+
+    int selectedRow =
+            tblAssessmentTypes.getSelectedRow();
+
+    if (selectedRow == -1) {
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Please select an assessment type first."
+        );
+
+        return;
+    }
+
+    int modelRow =
+            tblAssessmentTypes.convertRowIndexToModel(
+                    selectedRow
+            );
+
+    String typeId =
+            tblAssessmentTypes.getModel()
+                    .getValueAt(modelRow, 0)
+                    .toString();
+
+    int choice =
+            javax.swing.JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete this assessment type?",
+                    "Confirm Delete",
+                    javax.swing.JOptionPane.YES_NO_OPTION
+            );
+
+    if (choice != javax.swing.JOptionPane.YES_OPTION) {
+        return;
+    }
+
+    try {
+
+        typeManager.deleteType(typeId);
+
+        editingAssessmentId = null;
+
+        prepareNewAssessment();
+        refreshAssessmentTable();
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Assessment type deleted successfully."
+        );
+
+    } catch (IllegalArgumentException ex) {
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Error",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
+    
+    private void toggleSelectedAssessmentActive() {
+    int selectedRow =
+            tblAssessmentTypes.getSelectedRow();
+    if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Please select an assessment type first."
+        );
+
+        return;
+    }
+    int modelRow =
+            tblAssessmentTypes.convertRowIndexToModel(
+                    selectedRow
+            );
+    String typeId =
+            tblAssessmentTypes.getModel()
+                    .getValueAt(modelRow, 0)
+                    .toString();
+    AssessmentType type =
+            typeManager.findById(typeId);
+
+    if (type == null) {
+        return;
+    }
+    typeManager.setActive(
+            typeId,
+            !type.isActive()
+    );
+    refreshAssessmentTable();
+}
+    
+    
+    private void goBack() {
+
+    if (onBack != null) {
+        onBack.run();
+    }
+}
+    
+    private MedicalManager getCurrentManager() {
+
+    User currentUser = sessionManager.getCurrentUser();
+
+    if (!(currentUser instanceof MedicalManager)) {
+        throw new IllegalStateException(
+                "Current user is not a Medical Manager"
+        );
+    }
+
+    return (MedicalManager) currentUser;
+}
+    
+    
+    private void refreshAssessmentTable() {
+        
+
+    DefaultTableModel model =
+            (DefaultTableModel) tblAssessmentTypes.getModel();
+
+    model.setRowCount(0);
+
+    for (AssessmentType type : typeManager.getTypes()) {
+
+        model.addRow(new Object[]{
+            type.getAssessmentTypeId(),
+            type.getName(),
+            type.getCategory(),
+            type.getGradingRule(),
+            type.getBaseCharge(),
+            type.isActive() ? "Yes" : "No"
+        });
+    }
+}
+    
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -90,14 +459,17 @@ public class AssessmentTypeManagementNew extends javax.swing.JPanel {
         btnToggleActive.setBackground(new java.awt.Color(51, 51, 51));
         btnToggleActive.setForeground(new java.awt.Color(255, 255, 255));
         btnToggleActive.setText("Toggle Active");
+        btnToggleActive.addActionListener(this::btnToggleActiveActionPerformed);
 
         btnDeleteSelected.setBackground(new java.awt.Color(51, 51, 51));
         btnDeleteSelected.setForeground(new java.awt.Color(255, 255, 255));
         btnDeleteSelected.setText("Delete Assessment");
+        btnDeleteSelected.addActionListener(this::btnDeleteSelectedActionPerformed);
 
         btnBackDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackDashboard.setText("Back to Dashboard");
+        btnBackDashboard.addActionListener(this::btnBackDashboardActionPerformed);
 
         lblDetailsTitle.setFont(new java.awt.Font("Helvetica Neue", 0, 14)); // NOI18N
         lblDetailsTitle.setText("Assessment Type Details");
@@ -127,10 +499,12 @@ public class AssessmentTypeManagementNew extends javax.swing.JPanel {
         btnClearFields.setBackground(new java.awt.Color(51, 51, 51));
         btnClearFields.setForeground(new java.awt.Color(255, 255, 255));
         btnClearFields.setText("Clear");
+        btnClearFields.addActionListener(this::btnClearFieldsActionPerformed);
 
         btnSaveAssessment.setBackground(new java.awt.Color(51, 51, 51));
         btnSaveAssessment.setForeground(new java.awt.Color(255, 255, 255));
         btnSaveAssessment.setText("Save Assessment");
+        btnSaveAssessment.addActionListener(this::btnSaveAssessmentActionPerformed);
 
         javax.swing.GroupLayout pnlAssessmentDetailsLayout = new javax.swing.GroupLayout(pnlAssessmentDetails);
         pnlAssessmentDetails.setLayout(pnlAssessmentDetailsLayout);
@@ -168,11 +542,12 @@ public class AssessmentTypeManagementNew extends javax.swing.JPanel {
                                     .addComponent(jLabel1))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(pnlAssessmentDetailsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(BaseChargeTf)
                                     .addGroup(pnlAssessmentDetailsLayout.createSequentialGroup()
-                                        .addComponent(rbActiveNo)
-                                        .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(rbActiveYes)
-                                    .addComponent(BaseChargeTf))))))
+                                        .addGroup(pnlAssessmentDetailsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(rbActiveNo)
+                                            .addComponent(rbActiveYes))
+                                        .addGap(0, 0, Short.MAX_VALUE)))))))
                 .addGap(77, 77, 77))
             .addGroup(pnlAssessmentDetailsLayout.createSequentialGroup()
                 .addGap(35, 35, 35)
@@ -229,7 +604,7 @@ public class AssessmentTypeManagementNew extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnToggleActive, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(btnDeleteSelected)
+                        .addComponent(btnDeleteSelected, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnBackDashboard))
                     .addComponent(lblTitle)
@@ -261,15 +636,42 @@ public class AssessmentTypeManagementNew extends javax.swing.JPanel {
 
     private void btnAddTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddTypeActionPerformed
         // TODO add your handling code here:
+        prepareNewAssessment();
     }//GEN-LAST:event_btnAddTypeActionPerformed
 
     private void btnEditSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditSelectedActionPerformed
         // TODO add your handling code here:
+        loadSelectedAssessment();
     }//GEN-LAST:event_btnEditSelectedActionPerformed
 
     private void AssessmentNameTfActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AssessmentNameTfActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_AssessmentNameTfActionPerformed
+
+    private void btnClearFieldsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearFieldsActionPerformed
+        // TODO add your handling code here:
+        clearAssessmentFields();
+    }//GEN-LAST:event_btnClearFieldsActionPerformed
+
+    private void btnSaveAssessmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveAssessmentActionPerformed
+        // TODO add your handling code here:
+        saveAssessment();
+    }//GEN-LAST:event_btnSaveAssessmentActionPerformed
+
+    private void btnDeleteSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteSelectedActionPerformed
+        // TODO add your handling code here:
+        deleteSelectedAssessment();
+    }//GEN-LAST:event_btnDeleteSelectedActionPerformed
+
+    private void btnToggleActiveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnToggleActiveActionPerformed
+        // TODO add your handling code here:
+        toggleSelectedAssessmentActive();
+    }//GEN-LAST:event_btnToggleActiveActionPerformed
+
+    private void btnBackDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackDashboardActionPerformed
+        // TODO add your handling code here:
+        goBack();
+    }//GEN-LAST:event_btnBackDashboardActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

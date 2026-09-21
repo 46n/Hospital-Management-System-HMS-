@@ -6,7 +6,8 @@ import hms.model.DoctorShift;
 import hms.model.MedicalManager;
 import hms.model.User;
 import hms.util.IdGenerator;
-
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * Coordinates doctor shift/roster scheduling, backed by doctor_shifts.txt.
@@ -44,16 +46,52 @@ public class DoctorShiftManager {
         this.dataFile = dataFile;
         load();
     }
+    
+    
+    private void validateShiftDateTime(Date shiftDate, LocalTime startTime) {
+    if (shiftDate == null) {
+        throw new IllegalArgumentException("Shift date is required");
+    }if (startTime == null) {throw new IllegalArgumentException("Start time is required");
+    }
+    LocalDate selectedDate = shiftDate.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate();
+    LocalDateTime selectedDateTime =
+            LocalDateTime.of(selectedDate, startTime);
+    LocalDateTime now = LocalDateTime.now();
+    if (selectedDateTime.isBefore(now)) {
+        throw new IllegalArgumentException(
+                "Shift start date and time cannot be in the past"
+        );
+    }
+}
+    
+    private void validateShiftStartTime(Date shiftDate, LocalTime startTime) {
+    LocalDate selectedDate = shiftDate.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate();
+    LocalDate today = LocalDate.now();
+    LocalTime currentTime = LocalTime.now()
+            .withSecond(0)
+            .withNano(0);
+    if (selectedDate.equals(today)
+            && startTime.isBefore(currentTime)) {
+        throw new IllegalArgumentException(
+                "Start time cannot be in the past"
+        );
+    }
+}
 
     public DoctorShift createShift(String managerId, String doctorId, Date shiftDate,
             LocalTime startTime, LocalTime endTime) {
-        MedicalManager manager = requireMedicalManager(managerId);
-        Doctor doctor = requireSupervisedDoctor(manager, doctorId);
-        validateTimes(startTime, endTime);
+            MedicalManager manager = requireMedicalManager(managerId);
+            Doctor doctor = requireSupervisedDoctor(manager, doctorId);
+            validateShiftDateTime(shiftDate, startTime);
+            validateTimes(startTime, endTime);
         if (hasConflict(doctorId, shiftDate, startTime, endTime, null)) {
             throw new IllegalArgumentException("This doctor already has a shift that overlaps that time");
         }
-
+        
         DoctorShift shift = new DoctorShift(IdGenerator.next("SH", collectIds()), shiftDate, startTime, endTime);
         shift.setDoctor(doctor);
         shift.setCreatedBy(manager);
@@ -62,17 +100,19 @@ public class DoctorShiftManager {
         return shift;
     }
 
-    public void updateShift(String shiftId, Date shiftDate, LocalTime startTime, LocalTime endTime) {
-        DoctorShift shift = requireShift(shiftId);
-        validateTimes(startTime, endTime);
-        if (hasConflict(shift.getDoctor().getDoctorId(), shiftDate, startTime, endTime, shiftId)) {
-            throw new IllegalArgumentException("This doctor already has a shift that overlaps that time");
-        }
-        shift.setShiftDate(shiftDate);
-        shift.setStartTime(startTime);
-        shift.setEndTime(endTime);
-        save();
+    public void updateShift( String shiftId,Date shiftDate,LocalTime startTime, LocalTime endTime) {
+    DoctorShift shift = requireShift(shiftId);
+    validateShiftDateTime(shiftDate, startTime);
+    validateTimes(startTime, endTime);
+    if (hasConflict(shift.getDoctor().getDoctorId(),shiftDate,startTime,endTime,shiftId)) {
+        throw new IllegalArgumentException( "This doctor already has a shift that overlaps that time" );
     }
+    shift.setShiftDate(shiftDate);
+    shift.setStartTime(startTime);
+    shift.setEndTime(endTime);
+    save();
+}
+    
 
     public void removeShift(String shiftId) {
         DoctorShift shift = requireShift(shiftId);
@@ -115,13 +155,13 @@ public class DoctorShiftManager {
     }
 
     private void validateTimes(LocalTime startTime, LocalTime endTime) {
-        if (startTime == null || endTime == null) {
-            throw new IllegalArgumentException("Start and end time are required");
-        }
-        if (!startTime.isBefore(endTime)) {
-            throw new IllegalArgumentException("Start time must be before end time");
-        }
+    if (startTime == null || endTime == null) {
+        throw new IllegalArgumentException("Start and end time are required" );
     }
+    if (startTime.equals(endTime)) {
+        throw new IllegalArgumentException( "Start time and end time cannot be the same" );
+    }
+}
 
     private boolean hasConflict(String doctorId, Date shiftDate, LocalTime startTime, LocalTime endTime,
             String excludingShiftId) {

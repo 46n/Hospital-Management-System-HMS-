@@ -11,6 +11,7 @@ import hms.manager.UserManager;
 import hms.model.MedicalManager;
 import hms.model.User;
 import hms.model.ClinicalDepartment;
+import hms.ui.common.UIStyles;
 
 
 /**
@@ -26,6 +27,18 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
     private UserManager userManager;
     private Runnable onBack;
     private String editingDepartmentId = null;
+    
+    private void applyButtonStyles() {
+
+    UIStyles.applyPrimaryButtonStyle(btnSearch);
+    UIStyles.applyPrimaryButtonStyle(btnClear);
+    UIStyles.applyPrimaryButtonStyle(btnClearFields);
+    UIStyles.applyPrimaryButtonStyle(btnSaveDepartment);
+    UIStyles.applyPrimaryButtonStyle(btnNewDepartment);
+    UIStyles.applyPrimaryButtonStyle(btnEditSelected);
+    UIStyles.applyPrimaryButtonStyle(btnDeleteDepartment);
+    UIStyles.applyPrimaryButtonStyle(btnBackDashboard);
+    }
 
     public ClinicalDepartmentManagementNew() {
         initComponents();
@@ -56,6 +69,7 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
     public ClinicalDepartmentManagementNew(ClinicalDepartmentManager departmentManager,UserManager userManager,Runnable onBack) {
 
     initComponents();
+    applyButtonStyles();
 
     this.departmentManager = departmentManager;
     this.userManager = userManager;
@@ -186,6 +200,46 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
     }
 }
     
+    
+    private void searchDepartments() {
+    String keyword = SearchTf.getText().trim().toLowerCase();
+    if (keyword.isEmpty()) {
+        refreshDepartmentTable();
+        return;
+    }
+    DefaultTableModel model =
+            (DefaultTableModel) tblDepartments.getModel();
+    model.setRowCount(0);
+    for (ClinicalDepartment department
+            : departmentManager.getDepartments()) {
+        String name =
+                department.getDepartmentName() == null
+                ? ""
+                : department.getDepartmentName().toLowerCase();
+        String description =
+                department.getDescription() == null
+                ? ""
+                : department.getDescription().toLowerCase();
+        if (name.contains(keyword)
+                || description.contains(keyword)) {
+            model.addRow(new Object[]{
+                department.getDepartmentId(),
+                department.getDepartmentName(),
+                department.getDescription(),
+                department.getMedicalManager() == null
+                        ? ""
+                        : department.getMedicalManager().getUsername(),
+                department.isActive() ? "Yes" : "No"
+            });
+        }
+    }
+}
+    
+    private void clearSearch() {
+    SearchTf.setText("");
+    refreshDepartmentTable();
+    SearchTf.requestFocus();
+    }
     
     
     private void saveDepartment() {
@@ -443,10 +497,12 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
         btnSearch.setBackground(new java.awt.Color(51, 51, 51));
         btnSearch.setForeground(new java.awt.Color(255, 255, 255));
         btnSearch.setText("Search");
+        btnSearch.addActionListener(this::btnSearchActionPerformed);
 
         btnClear.setBackground(new java.awt.Color(51, 51, 51));
         btnClear.setForeground(new java.awt.Color(255, 255, 255));
         btnClear.setText("Clear");
+        btnClear.addActionListener(this::btnClearActionPerformed);
 
         tblDepartments.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -562,6 +618,7 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
 
     private void btnBackDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackDashboardActionPerformed
         // TODO add your handling code here:
+        goBack();
     }//GEN-LAST:event_btnBackDashboardActionPerformed
 
     private void btnNewDepartmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewDepartmentActionPerformed
@@ -588,6 +645,16 @@ public class ClinicalDepartmentManagementNew extends javax.swing.JPanel {
         // TODO add your handling code here:
         deleteSelectedDepartment();
     }//GEN-LAST:event_btnDeleteDepartmentActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        // TODO add your handling code here:
+        searchDepartments();
+    }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+        // TODO add your handling code here:
+        clearSearch();
+    }//GEN-LAST:event_btnClearActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
