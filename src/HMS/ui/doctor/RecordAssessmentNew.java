@@ -4,18 +4,173 @@
  */
 package HMS.ui.doctor;
 
+import hms.manager.AppointmentManager;
+import hms.manager.AssessmentTypeManager;
+import hms.manager.ClinicalManager;
+import hms.manager.SessionManager;
+import hms.manager.UserManager;
+
+import hms.model.Appointment;
+import hms.model.AssessmentResult;
+import hms.model.AssessmentType;
+import hms.model.Doctor;
+import hms.model.MedicalRecord;
+
+import hms.ui.common.MainFrame;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author waleed
  */
-public class DoctorAssessmentResultNew extends javax.swing.JPanel {
+public class RecordAssessmentNew extends javax.swing.JPanel {
+    
+    private ClinicalManager clinicalManager;
+    private AppointmentManager appointmentManager;
+    private AssessmentTypeManager typeManager;
+    private UserManager userManager;
+    private SessionManager sessionManager;
+    private MainFrame mainFrame;
+    private Runnable onLogout;
+
+    private List<Appointment> doctorAppointments;
+    private List<AssessmentType> activeTypes;
 
     /**
      * Creates new form DoctorAssessmentResultNew
      */
-    public DoctorAssessmentResultNew() {
+    public RecordAssessmentNew() {
         initComponents();
     }
+    
+    public RecordAssessmentNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
+            AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
+            MainFrame mainFrame, Runnable onLogout) {
+        initComponents();
+
+        this.clinicalManager = clinicalManager;
+        this.appointmentManager = appointmentManager;
+        this.typeManager = typeManager;
+        this.userManager = userManager;
+        this.sessionManager = sessionManager;
+        this.mainFrame = mainFrame;
+        this.onLogout = onLogout;
+
+        loadData();
+    
+    }
+
+        
+
+    private Doctor currentDoctor() {
+        return (Doctor) sessionManager.getCurrentUser();
+    }
+    
+    
+    
+    
+    private void loadData() {
+        doctorAppointments = appointmentManager.listForDoctor(currentDoctor().getDoctorId());
+
+        cmbAppointment.removeAllItems();
+
+        for (Appointment appointment : doctorAppointments) {
+                cmbAppointment.addItem(
+                appointment.getAppointmentId() + " - "
+                + appointment.getPatient().getUsername()
+                + " (" + appointment.getStatus() + ")");
+        }
+        
+    
+
+    activeTypes = new ArrayList<>();
+
+    for (AssessmentType type : typeManager.getTypes()) {
+        if (type.isActive()) {
+            activeTypes.add(type);
+        }
+    }
+
+    cmbAssessmentType.removeAllItems();
+
+    for (AssessmentType type : activeTypes) {
+        cmbAssessmentType.addItem(
+                type.getName() + " ("
+                + type.getCategory() + ", "
+                + type.getGradingRule() + ")"
+        );
+    }
+    }
+    
+    
+    
+    private void recordResult() {
+        if (doctorAppointments.isEmpty()) {
+        showError("You have no appointments to record a result against.");
+        return;
+    }
+
+    if (activeTypes.isEmpty()) {
+        showError("No active assessment types are available. Ask a Medical Manager to add one.");
+        return;
+    }
+
+    Appointment appointment = doctorAppointments.get(cmbAppointment.getSelectedIndex());
+    AssessmentType type = activeTypes.get(cmbAssessmentType.getSelectedIndex());
+
+    try {
+        MedicalRecord record = clinicalManager.getOrOpenRecord(
+                appointment.getAppointmentId(), currentDoctor().getDoctorId());
+
+        clinicalManager.addAssessmentResult(
+                record.getRecordId(), type.getAssessmentTypeId(),
+                txtValue.getText().trim(), txtGradeInterpretation.getText().trim());
+
+        txtValue.setText("");
+        txtGradeInterpretation.setText("");
+
+        refreshResultsTable(record);
+
+        JOptionPane.showMessageDialog(this, "Assessment result recorded.",
+                "Success", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        }
+            
+}
+    
+    
+    private void refreshResultsTable(MedicalRecord record) {
+        DefaultTableModel model =
+            (DefaultTableModel) tblAssessmentResults.getModel();
+
+            model.setRowCount(0);
+
+        for (AssessmentResult result : record.getAssessmentResults()) {
+        model.addRow(new Object[]{
+            result.getResultId(),
+            result.getAssessmentName(),
+            result.getValue(),
+            result.getGrade(),
+            result.getResultDate()
+        });
+    }
+        
+    }
+    
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message,
+            "Error", JOptionPane.ERROR_MESSAGE);
+    }
+            
+
+
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -82,10 +237,12 @@ public class DoctorAssessmentResultNew extends javax.swing.JPanel {
         btnBackToDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackToDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackToDashboard.setText("Back to Dashboard");
+        btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
 
         btnRecordResult.setBackground(new java.awt.Color(51, 51, 51));
         btnRecordResult.setForeground(new java.awt.Color(255, 255, 255));
         btnRecordResult.setText("Record Result");
+        btnRecordResult.addActionListener(this::btnRecordResultActionPerformed);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -153,12 +310,8 @@ public class DoctorAssessmentResultNew extends javax.swing.JPanel {
                         .addComponent(cmbAssessmentType, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(5, 5, 5)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
@@ -166,6 +319,19 @@ public class DoctorAssessmentResultNew extends javax.swing.JPanel {
                 .addGap(15, 15, 15))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnRecordResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordResultActionPerformed
+        // TODO add your handling code here:
+        recordResult();
+    }//GEN-LAST:event_btnRecordResultActionPerformed
+
+    private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
+        // TODO add your handling code here:
+        mainFrame.showPanel(new DoctorDashboardNew(
+            sessionManager, userManager, appointmentManager,
+            clinicalManager, typeManager, mainFrame, onLogout));
+
+    }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

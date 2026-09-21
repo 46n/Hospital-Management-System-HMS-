@@ -93,6 +93,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="View My Appointments"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnViewMyAppointmentsActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnLogVitalsConsultationNotes">
       <Properties>
@@ -104,6 +107,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Log Vitals &amp; Consultation Notes"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLogVitalsConsultationNotesActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnRequestLabImaging">
       <Properties>
@@ -115,6 +121,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Request Lab / Imaging"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRequestLabImagingActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnIssuePrescriptions">
       <Properties>
@@ -154,11 +163,17 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Record Assessment Result"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRecordAssessmentResultActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnLogOut">
       <Properties>
         <Property name="text" type="java.lang.String" value="Log Out"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLogOutActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>

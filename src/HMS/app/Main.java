@@ -15,7 +15,7 @@ import hms.manager.UserManager;
 import hms.ui.admin.AdminDashboardPanel;
 import hms.ui.common.LoginFrame;
 import hms.ui.common.MainFrame;
-import hms.ui.doctor.DoctorDashboardPanel;
+import HMS.ui.doctor.DoctorDashboardNew;
 import hms.ui.medicalmanager.MedicalManagerDashboardPanel;
 import hms.ui.patient.PatientDashboardPanel;
 
@@ -99,8 +99,8 @@ public final class Main {
                     clinicalManager, frame, onLogout);
         }
         if (sessionManager.hasRole("DOCTOR")) {
-            return new DoctorDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
-                    typeManager, frame, onLogout);
+            return new DoctorDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
+            typeManager, frame, onLogout);
         }
         if (sessionManager.hasRole("PATIENT")) {
             return new PatientDashboardPanel(sessionManager, userManager, appointmentManager, shiftManager,
