@@ -105,7 +105,13 @@ public class ReportManager {
                 if (!shifts.isEmpty()) {
                     long totalMinutes = 0;
                     for (DoctorShift shift : shifts) {
-                        totalMinutes += shift.getStartTime().until(shift.getEndTime(), ChronoUnit.MINUTES);
+                        long minutes = shift.getStartTime()
+                                .until(shift.getEndTime(), ChronoUnit.MINUTES);
+                        // Overnight shift, e.g. 19:30 -> 01:30
+                        if (minutes < 0) {
+                            minutes += 24 * 60;
+                        }
+                        totalMinutes += minutes;
                     }
                     report.addEntry(doctor.getUsername() + " (" + doctor.getDoctorId() + ")",
                             shifts.size(), totalMinutes / 60.0);
