@@ -18,7 +18,8 @@ public class MainFrame extends JFrame {
     private static final Color CONTENT_BACKGROUND = new Color(244, 247, 250);
     private static final Color BORDER_COLOR = new Color(220, 225, 230);
     private static final Color MUTED_TEXT_COLOR = new Color(96, 108, 120);
-
+    public static final int WINDOW_WIDTH = 1000;
+    public static final int WINDOW_HEIGHT = 650;
     private final JPanel contentPanel = new JPanel();
     private CardLayout contentLayout;
 
@@ -27,10 +28,17 @@ public class MainFrame extends JFrame {
      * login - it holds no login logic of its own.
      */
     public MainFrame() {
-        initializeFrame();
-        createContentPanel();
-        setContentPane(contentPanel);
-        setLocationRelativeTo(null);
+    initializeFrame();
+    createContentPanel();
+    setContentPane(contentPanel);
+
+    setSize(
+            Theme.WINDOW_WIDTH,
+            Theme.WINDOW_HEIGHT
+    );
+
+    setLocationRelativeTo(null);
+    setResizable(false);
     }
 
     /**
