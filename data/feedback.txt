@@ -1,2 +1,1 @@
-#feedbackId|patientId|doctorId|rating|comment|feedbackDate|appointmentId
-FB001|PT001|DR001|3|thxxx|2026-09-22|AP004
+#feedbackId|patientId|doctorId|rating|comment|feedbackDate

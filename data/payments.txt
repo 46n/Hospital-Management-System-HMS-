@@ -1,2 +1,1 @@
 #paymentId|patientId|appointmentId|amount|paymentDate|status
-PM001|PT001|AP004|2.0|2026-09-22|PENDING
