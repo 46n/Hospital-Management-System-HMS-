@@ -1,1 +1,2 @@
 #recordId|appointmentId|patientId|doctorId|vitalSigns|consultationNotes|diagnosis|recordDate
+MR001|AP005|PT001|DR001||||2026-09-22
