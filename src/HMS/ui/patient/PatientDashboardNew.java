@@ -7,6 +7,7 @@ import hms.manager.DoctorShiftManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.common.MainFrame;
+import hms.ui.common.UIStyles;
 
 public class PatientDashboardNew extends javax.swing.JPanel {
 
@@ -26,6 +27,7 @@ public class PatientDashboardNew extends javax.swing.JPanel {
      */
     public PatientDashboardNew() {
         initComponents();
+         applyStyles();
     }
 
     /**
@@ -42,6 +44,7 @@ public PatientDashboardNew(
         Runnable onLogout) {
 
     initComponents();
+    applyStyles();
 
 
 
@@ -73,6 +76,18 @@ public PatientDashboardNew(
                 + sessionManager.getCurrentUser().getUsername()
         );
     }
+}
+private void applyStyles() {
+
+    UIStyles.applyHeadingStyle(lblTitle);
+    UIStyles.applyHeadingStyle(lblWelcome);
+
+    UIStyles.applyPrimaryButtonStyle(btnProfile);
+    UIStyles.applyPrimaryButtonStyle(btnAppointments);
+    UIStyles.applyPrimaryButtonStyle(btnMedicalHistory);
+    UIStyles.applyPrimaryButtonStyle(btnPrescriptionsBills);
+    UIStyles.applyPrimaryButtonStyle(btnFeedback);
+    UIStyles.applyPrimaryButtonStyle(btnLogout);
 }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

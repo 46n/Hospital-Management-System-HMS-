@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JOptionPane;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -34,6 +35,7 @@ public class SubmitFeedbackNew extends javax.swing.JPanel {
      */
 public SubmitFeedbackNew() {
     initComponents();
+    applyStyles();
 }
 
 public SubmitFeedbackNew(
@@ -47,6 +49,7 @@ public SubmitFeedbackNew(
         Runnable onLogout) {
 
     initComponents();
+    applyStyles();
 
     this.feedbackController =
             new FeedbackController(
@@ -208,7 +211,13 @@ public SubmitFeedbackNew(
 }
        
     
+private void applyStyles() {
 
+    UIStyles.applyHeadingStyle(lblTitle);
+
+    UIStyles.applyPrimaryButtonStyle(btnSubmit);
+    UIStyles.applyPrimaryButtonStyle(btnBack);
+}    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
