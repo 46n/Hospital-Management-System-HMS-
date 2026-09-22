@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import hms.model.ConsultationRate;
 
 /**
  * Coordinates clinical documentation: medical records, prescriptions,
@@ -52,6 +53,8 @@ public class ClinicalManager {
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
     private final AssessmentTypeManager typeManager;
+    private BillingManager billingManager;
+    private ConsultationRateManager consultationRateManager;
 
     private final File recordsFile;
     private final File prescriptionsFile;
@@ -86,6 +89,18 @@ public class ClinicalManager {
         loadResults();
         loadFeedback();
     }
+    public void configureBilling(
+        BillingManager billingManager,
+        ConsultationRateManager consultationRateManager) {
+
+    if (billingManager == null || consultationRateManager == null) {
+        throw new IllegalArgumentException(
+                "Billing manager and consultation rate manager are required");
+    }
+
+    this.billingManager = billingManager;
+    this.consultationRateManager = consultationRateManager;
+}
 
     public MedicalRecord openRecord(String appointmentId, String doctorId) {
         Appointment appointment = appointmentManager.findById(appointmentId);
@@ -179,13 +194,38 @@ public class ClinicalManager {
         }
         return type;
     }
-
+    
     public void finalizeRecord(String recordId) {
-        MedicalRecord record = requireRecord(recordId);
-        record.finalizeRecord();
-        saveRecords();
-        appointmentManager.persistStatusChange();
+
+    MedicalRecord record = requireRecord(recordId);
+
+    record.finalizeRecord();
+
+    saveRecords();
+    appointmentManager.persistStatusChange();
+
+    if (billingManager != null
+            && consultationRateManager != null
+            && record.getAppointment() != null
+            && record.getPatient() != null) {
+
+        ConsultationRate rate =
+                consultationRateManager.getCurrentActiveRate();
+
+        if (rate == null) {
+            throw new IllegalStateException(
+                    "No active consultation rate is configured.");
+        }
+
+        billingManager.createBill(
+                record.getPatient().getPatientId(),
+                record.getAppointment().getAppointmentId(),
+                rate.getBaseAmount()
+        );
     }
+}
+
+
 
     public Feedback submitFeedback(String patientId, String appointmentId, int rating, String comment) {
         if (rating < 1 || rating > 5) {

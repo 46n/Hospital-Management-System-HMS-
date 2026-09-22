@@ -55,6 +55,30 @@ public class ConsultationRateManager {
         save();
         return rate;
     }
+    public ConsultationRate getCurrentActiveRate() {
+
+    ConsultationRate selected = null;
+
+    for (ConsultationRate rate : rates) {
+
+        if (!rate.isActive()) {
+            continue;
+        }
+
+        if (rate.getEffectiveDate().after(new Date())) {
+            continue;
+        }
+
+        if (selected == null
+                || rate.getEffectiveDate()
+                        .after(selected.getEffectiveDate())) {
+
+            selected = rate;
+        }
+    }
+
+    return selected;
+}
 
     public void updateRate(String rateId, String consultationType, double baseAmount, Date effectiveDate) {
         ConsultationRate rate = requireRate(rateId);

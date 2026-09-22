@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -44,6 +45,7 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
 
     public AppointmentBookingNew() {
         initComponents();
+        applyStyles();
     }
 
     public AppointmentBookingNew(
@@ -57,6 +59,7 @@ public class AppointmentBookingNew extends javax.swing.JPanel {
             Runnable onLogout) {
 
         initComponents();
+        applyStyles();
 
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
@@ -178,9 +181,15 @@ private void loadMyAppointments() {
 
     }
 
+private void applyStyles() {
 
-  
+    UIStyles.applyHeadingStyle(lblTitle);
 
+    UIStyles.applyPrimaryButtonStyle(btnBookAppointment);
+    UIStyles.applyPrimaryButtonStyle(btnCancelAppointment);
+    UIStyles.applyPrimaryButtonStyle(btnRescheduleAppointment);
+    UIStyles.applyPrimaryButtonStyle(btnBack);
+}
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

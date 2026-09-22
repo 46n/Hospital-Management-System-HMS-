@@ -119,4 +119,61 @@ public class BillingManager {
         }
         TextFileUtil.writeLines(dataFile, HEADER, lines);
     }
+    public Payment createBill(
+        String patientId,
+        String appointmentId,
+        double amount) {
+
+    ValidationUtil.requireNonBlank(patientId, "Patient");
+    ValidationUtil.requireNonBlank(appointmentId, "Appointment");
+
+    if (amount < 0) {
+        throw new IllegalArgumentException(
+                "Bill amount cannot be negative");
+    }
+
+    Appointment appointment =
+            appointmentManager.findById(appointmentId);
+
+    if (appointment == null) {
+        throw new IllegalArgumentException(
+                "Appointment not found: " + appointmentId);
+    }
+
+    if (appointment.getPatient() == null
+            || !patientId.equals(
+                    appointment.getPatient().getPatientId())) {
+
+        throw new IllegalArgumentException(
+                "Appointment does not belong to this patient");
+    }
+
+    for (Payment payment : payments) {
+
+        if (appointmentId.equals(
+                payment.getAppointmentId())) {
+
+            throw new IllegalArgumentException(
+                    "A bill already exists for this appointment");
+        }
+    }
+
+    Payment bill =
+            new Payment(
+                    nextId(),
+                    patientId,
+                    appointmentId,
+                    amount,
+                    new Date()
+            );
+
+    // Do NOT markPaid().
+    // Payment constructor already gives it PENDING status.
+
+    payments.add(bill);
+
+    save();
+
+    return bill;
+}
 }
