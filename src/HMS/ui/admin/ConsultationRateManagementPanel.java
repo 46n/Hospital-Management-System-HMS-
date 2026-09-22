@@ -66,7 +66,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
         initComponents();
-        customizeComponents();
+        initializeBehavior();
         refreshTable();
     }
 
@@ -83,43 +83,79 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         deleteButton = new javax.swing.JButton();
         backButton = new javax.swing.JButton();
 
+        setBackground(new java.awt.Color(255, 255, 255));
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
         setLayout(new java.awt.BorderLayout());
 
+        titleLabel.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        titleLabel.setForeground(new java.awt.Color(33, 33, 33));
         titleLabel.setText("Consultation Rate Management");
         add(titleLabel, java.awt.BorderLayout.NORTH);
 
+        rateTable.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
         rateTable.setRowHeight(24);
         rateScrollPane.setViewportView(rateTable);
+
         add(rateScrollPane, java.awt.BorderLayout.CENTER);
 
-        buttonPanel.setLayout(new java.awt.GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
+        buttonPanel.setBackground(new java.awt.Color(255, 255, 255));
+        buttonPanel.setLayout(new java.awt.GridLayout(1, 5));
 
+        addButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        addButton.setForeground(new java.awt.Color(255, 255, 255));
+        addButton.setBackground(new java.awt.Color(31, 78, 121));
         addButton.setText("Add Rate");
+        addButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        addButton.setBorderPainted(false);
+        addButton.setFocusPainted(false);
+        addButton.setOpaque(true);
         buttonPanel.add(addButton);
 
+        editButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        editButton.setForeground(new java.awt.Color(255, 255, 255));
+        editButton.setBackground(new java.awt.Color(31, 78, 121));
         editButton.setText("Edit Selected");
+        editButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        editButton.setBorderPainted(false);
+        editButton.setFocusPainted(false);
+        editButton.setOpaque(true);
         buttonPanel.add(editButton);
 
+        toggleButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        toggleButton.setForeground(new java.awt.Color(255, 255, 255));
+        toggleButton.setBackground(new java.awt.Color(31, 78, 121));
         toggleButton.setText("Toggle Active");
+        toggleButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        toggleButton.setBorderPainted(false);
+        toggleButton.setFocusPainted(false);
+        toggleButton.setOpaque(true);
         buttonPanel.add(toggleButton);
 
+        deleteButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        deleteButton.setForeground(new java.awt.Color(255, 255, 255));
+        deleteButton.setBackground(new java.awt.Color(31, 78, 121));
         deleteButton.setText("Delete Selected");
+        deleteButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        deleteButton.setBorderPainted(false);
+        deleteButton.setFocusPainted(false);
+        deleteButton.setOpaque(true);
         buttonPanel.add(deleteButton);
 
+        backButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        backButton.setForeground(new java.awt.Color(255, 255, 255));
+        backButton.setBackground(new java.awt.Color(31, 78, 121));
         backButton.setText("Back to Dashboard");
+        backButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.setBorderPainted(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(true);
         buttonPanel.add(backButton);
 
         add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    /** Applies HMS theming, builds the table model, and wires listeners. */
-    private void customizeComponents() {
-        setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(
-                Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
-
-        UIStyles.applyHeadingStyle(titleLabel);
-
+    /** Builds the table model and wires screen behavior. */
+    private void initializeBehavior() {
         tableModel = new DefaultTableModel(COLUMN_NAMES, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -127,13 +163,6 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
             }
         };
         rateTable.setModel(tableModel);
-        rateTable.setFont(Theme.DEFAULT_FONT);
-
-        buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-        for (JButton button : new JButton[]{addButton, editButton, toggleButton, deleteButton, backButton}) {
-            UIStyles.applyPrimaryButtonStyle(button);
-        }
-
         addButton.addActionListener(e -> openRateDialog(null));
         editButton.addActionListener(e -> {
             ConsultationRate rate = requireSelection();
@@ -286,14 +315,14 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel titleLabel;
+    private javax.swing.JButton addButton;
+    private javax.swing.JButton backButton;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JButton editButton;
     private javax.swing.JScrollPane rateScrollPane;
     private javax.swing.JTable rateTable;
-    private javax.swing.JPanel buttonPanel;
-    private javax.swing.JButton addButton;
-    private javax.swing.JButton editButton;
+    private javax.swing.JLabel titleLabel;
     private javax.swing.JButton toggleButton;
-    private javax.swing.JButton deleteButton;
-    private javax.swing.JButton backButton;
     // End of variables declaration//GEN-END:variables
 }

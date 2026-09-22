@@ -9,8 +9,6 @@ import hms.manager.UserManager;
 import hms.model.Appointment;
 import hms.ui.common.AppointmentTableUtil;
 import hms.ui.common.MainFrame;
-import hms.ui.common.Theme;
-import hms.ui.common.UIStyles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +50,7 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
         initComponents();
-        customizeComponents();
+        initializeBehavior();
         refreshTable(appointmentManager.getAppointments());
     }
 
@@ -71,12 +69,19 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
         buttonPanel = new javax.swing.JPanel();
         backButton = new javax.swing.JButton();
 
+        setBackground(new java.awt.Color(255, 255, 255));
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
         setLayout(new java.awt.BorderLayout());
 
+        topPanel.setBackground(new java.awt.Color(255, 255, 255));
         topPanel.setLayout(new java.awt.BorderLayout());
 
+        titleLabel.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        titleLabel.setForeground(new java.awt.Color(33, 33, 33));
         titleLabel.setText("Appointment Management");
         topPanel.add(titleLabel, java.awt.BorderLayout.WEST);
+
+        searchPanel.setBackground(new java.awt.Color(255, 255, 255));
 
         searchLabel.setText("Search (patient, doctor, or status):");
         searchPanel.add(searchLabel);
@@ -84,37 +89,53 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
         searchField.setColumns(16);
         searchPanel.add(searchField);
 
+        searchButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        searchButton.setForeground(new java.awt.Color(255, 255, 255));
+        searchButton.setBackground(new java.awt.Color(31, 78, 121));
         searchButton.setText("Search");
+        searchButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        searchButton.setBorderPainted(false);
+        searchButton.setFocusPainted(false);
+        searchButton.setOpaque(true);
         searchPanel.add(searchButton);
 
+        clearButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        clearButton.setForeground(new java.awt.Color(255, 255, 255));
+        clearButton.setBackground(new java.awt.Color(31, 78, 121));
         clearButton.setText("Clear");
+        clearButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        clearButton.setBorderPainted(false);
+        clearButton.setFocusPainted(false);
+        clearButton.setOpaque(true);
         searchPanel.add(clearButton);
 
         topPanel.add(searchPanel, java.awt.BorderLayout.EAST);
 
         add(topPanel, java.awt.BorderLayout.NORTH);
 
+        appointmentTable.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
         appointmentTable.setRowHeight(24);
         tableScrollPane.setViewportView(appointmentTable);
+
         add(tableScrollPane, java.awt.BorderLayout.CENTER);
 
+        buttonPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        backButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        backButton.setForeground(new java.awt.Color(255, 255, 255));
+        backButton.setBackground(new java.awt.Color(31, 78, 121));
         backButton.setText("Back to Dashboard");
+        backButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.setBorderPainted(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(true);
         buttonPanel.add(backButton);
+
         add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    /** Applies HMS theming, builds the table model, and wires listeners. */
-    private void customizeComponents() {
-        setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(
-                Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
-
-        topPanel.setBackground(Theme.BACKGROUND_COLOR);
-        UIStyles.applyHeadingStyle(titleLabel);
-
-        searchPanel.setBackground(Theme.BACKGROUND_COLOR);
-        UIStyles.applyPrimaryButtonStyle(searchButton);
-        UIStyles.applyPrimaryButtonStyle(clearButton);
+    /** Builds the table model and wires screen behavior. */
+    private void initializeBehavior() {
         searchButton.addActionListener(e -> applySearch());
         clearButton.addActionListener(e -> {
             searchField.setText("");
@@ -128,10 +149,6 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
             }
         };
         appointmentTable.setModel(tableModel);
-        appointmentTable.setFont(Theme.DEFAULT_FONT);
-
-        buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-        UIStyles.applyPrimaryButtonStyle(backButton);
         backButton.addActionListener(e -> mainFrame.showPanel(
                 new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
                         rateManager, insuranceManager, mainFrame, onLogout)));
@@ -162,16 +179,16 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel topPanel;
-    private javax.swing.JLabel titleLabel;
-    private javax.swing.JPanel searchPanel;
-    private javax.swing.JLabel searchLabel;
-    private javax.swing.JTextField searchField;
-    private javax.swing.JButton searchButton;
-    private javax.swing.JButton clearButton;
-    private javax.swing.JScrollPane tableScrollPane;
     private javax.swing.JTable appointmentTable;
-    private javax.swing.JPanel buttonPanel;
     private javax.swing.JButton backButton;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton clearButton;
+    private javax.swing.JButton searchButton;
+    private javax.swing.JTextField searchField;
+    private javax.swing.JLabel searchLabel;
+    private javax.swing.JPanel searchPanel;
+    private javax.swing.JScrollPane tableScrollPane;
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JPanel topPanel;
     // End of variables declaration//GEN-END:variables
 }

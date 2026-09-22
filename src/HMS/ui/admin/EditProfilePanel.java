@@ -55,7 +55,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
         initComponents();
-        customizeComponents();
+        initializeBehavior();
     }
 
     private User currentUser() {
@@ -64,6 +64,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
         titleLabel = new javax.swing.JLabel();
         formPanel = new javax.swing.JPanel();
@@ -82,28 +83,30 @@ public class EditProfilePanel extends javax.swing.JPanel {
         buttonPanel = new javax.swing.JPanel();
         backButton = new javax.swing.JButton();
 
+        setBackground(new java.awt.Color(255, 255, 255));
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
         setLayout(new java.awt.BorderLayout());
 
+        titleLabel.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        titleLabel.setForeground(new java.awt.Color(33, 33, 33));
         titleLabel.setText("My Profile");
         add(titleLabel, java.awt.BorderLayout.NORTH);
 
+        formPanel.setBackground(new java.awt.Color(255, 255, 255));
         formPanel.setLayout(new java.awt.GridBagLayout());
-
-        java.awt.GridBagConstraints gridBagConstraints;
 
         userIdLabel.setText("User ID:");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(userIdLabel, gridBagConstraints);
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(userIdValueLabel, gridBagConstraints);
 
         usernameLabel.setText("Username:");
@@ -111,14 +114,13 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(usernameLabel, gridBagConstraints);
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(usernameValueLabel, gridBagConstraints);
 
         roleLabel.setText("Role:");
@@ -126,14 +128,13 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(roleLabel, gridBagConstraints);
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(roleValueLabel, gridBagConstraints);
 
         phoneLabel.setText("Phone:");
@@ -141,7 +142,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(phoneLabel, gridBagConstraints);
 
         phoneField.setColumns(18);
@@ -149,7 +150,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(phoneField, gridBagConstraints);
 
         emailLabel.setText("Email:");
@@ -157,7 +158,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(emailLabel, gridBagConstraints);
 
         emailField.setColumns(18);
@@ -165,43 +166,60 @@ public class EditProfilePanel extends javax.swing.JPanel {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 4;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(emailField, gridBagConstraints);
 
+        saveButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        saveButton.setForeground(new java.awt.Color(255, 255, 255));
+        saveButton.setBackground(new java.awt.Color(31, 78, 121));
         saveButton.setText("Save Changes");
+        saveButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        saveButton.setBorderPainted(false);
+        saveButton.setFocusPainted(false);
+        saveButton.setOpaque(true);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(saveButton, gridBagConstraints);
 
+        changePasswordButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        changePasswordButton.setForeground(new java.awt.Color(255, 255, 255));
+        changePasswordButton.setBackground(new java.awt.Color(31, 78, 121));
         changePasswordButton.setText("Change Password");
+        changePasswordButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        changePasswordButton.setBorderPainted(false);
+        changePasswordButton.setFocusPainted(false);
+        changePasswordButton.setOpaque(true);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 6;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gridBagConstraints.insets = new java.awt.Insets(8, 8, 8, 8);
         formPanel.add(changePasswordButton, gridBagConstraints);
 
         add(formPanel, java.awt.BorderLayout.CENTER);
 
+        buttonPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        backButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        backButton.setForeground(new java.awt.Color(255, 255, 255));
+        backButton.setBackground(new java.awt.Color(31, 78, 121));
         backButton.setText("Back to Dashboard");
+        backButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.setBorderPainted(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(true);
         buttonPanel.add(backButton);
+
         add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    /** Applies HMS theming, fills in the live user data, and wires listeners. */
-    private void customizeComponents() {
-        setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(
-                Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
-
-        UIStyles.applyHeadingStyle(titleLabel);
-        formPanel.setBackground(Theme.BACKGROUND_COLOR);
-
+    /** Fills in live user data and wires screen behavior. */
+    private void initializeBehavior() {
         User user = currentUser();
         userIdValueLabel.setText(user.getUserId());
         usernameValueLabel.setText(user.getUsername());
@@ -209,14 +227,10 @@ public class EditProfilePanel extends javax.swing.JPanel {
         phoneField.setText(user.getPhone());
         emailField.setText(user.getEmail());
 
-        UIStyles.applyPrimaryButtonStyle(saveButton);
         saveButton.addActionListener(e -> saveProfile());
 
-        UIStyles.applyPrimaryButtonStyle(changePasswordButton);
         changePasswordButton.addActionListener(e -> openChangePasswordDialog());
 
-        buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-        UIStyles.applyPrimaryButtonStyle(backButton);
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
                 sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
                 mainFrame, onLogout)));
@@ -299,21 +313,21 @@ public class EditProfilePanel extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel titleLabel;
+    private javax.swing.JButton backButton;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton changePasswordButton;
+    private javax.swing.JTextField emailField;
+    private javax.swing.JLabel emailLabel;
     private javax.swing.JPanel formPanel;
+    private javax.swing.JTextField phoneField;
+    private javax.swing.JLabel phoneLabel;
+    private javax.swing.JLabel roleLabel;
+    private javax.swing.JLabel roleValueLabel;
+    private javax.swing.JButton saveButton;
+    private javax.swing.JLabel titleLabel;
     private javax.swing.JLabel userIdLabel;
     private javax.swing.JLabel userIdValueLabel;
     private javax.swing.JLabel usernameLabel;
     private javax.swing.JLabel usernameValueLabel;
-    private javax.swing.JLabel roleLabel;
-    private javax.swing.JLabel roleValueLabel;
-    private javax.swing.JLabel phoneLabel;
-    private javax.swing.JTextField phoneField;
-    private javax.swing.JLabel emailLabel;
-    private javax.swing.JTextField emailField;
-    private javax.swing.JButton saveButton;
-    private javax.swing.JButton changePasswordButton;
-    private javax.swing.JPanel buttonPanel;
-    private javax.swing.JButton backButton;
     // End of variables declaration//GEN-END:variables
 }
