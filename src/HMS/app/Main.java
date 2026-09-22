@@ -109,11 +109,41 @@ public final class Main {
             return new DoctorDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
                     typeManager, frame, onLogout);
         }
-        
         if (sessionManager.hasRole("PATIENT")) {
-            return new PatientDashboardNew(sessionManager, userManager, appointmentManager, shiftManager,
-                    clinicalManager, billingManager, frame, onLogout);
-        }
-        throw new IllegalStateException("No dashboard available for this user's role");
+
+    PatientDashboardNew dashboard =
+            new PatientDashboardNew(
+                    sessionManager,
+                    userManager,
+                    appointmentManager,
+                    shiftManager,
+                    clinicalManager,
+                    billingManager,
+                    frame,
+                    onLogout
+            );
+
+    dashboard.setPreferredSize(
+            new java.awt.Dimension(850, 500)
+    );
+
+    JPanel wrapper =
+            new JPanel(new java.awt.GridBagLayout());
+
+    wrapper.setBackground(
+            new java.awt.Color(204, 204, 204)
+    );
+
+    wrapper.add(dashboard);
+
+    return wrapper;
+}
+
+throw new IllegalStateException(
+        "No dashboard available for this user's role"
+);
     }
 }
+       
+        
+   
