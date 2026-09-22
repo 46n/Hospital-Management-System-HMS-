@@ -7,6 +7,7 @@ import hms.manager.DoctorShiftManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.common.MainFrame;
+import hms.ui.common.EditProfileNew;
 
 public class PatientController {
 
@@ -116,49 +117,51 @@ public class PatientController {
     }
 
     public void openPrescriptionsBills() {
+
         mainFrame.showPanel(
-                new ViewPrescriptionsBillsPanel(
-                        clinicalManager,
-                        appointmentManager,
-                        shiftManager,
-                        billingManager,
-                        userManager,
-                        sessionManager,
-                        mainFrame,
-                        onLogout
+                new ViewPrescriptionsBillsNew(
+                    clinicalManager,
+                    appointmentManager,
+                    shiftManager,
+                    billingManager,
+                    userManager,
+                    sessionManager,
+                    mainFrame,
+                    onLogout
                 )
         );
     }
-
+    
     public void openFeedback() {
-        mainFrame.showPanel(
-                new SubmitFeedbackPanel(
-                        clinicalManager,
-                        appointmentManager,
-                        shiftManager,
-                        billingManager,
-                        userManager,
-                        sessionManager,
-                        mainFrame,
-                        onLogout
-                )
-        );
-    }
 
+    mainFrame.showPanel(
+            new SubmitFeedbackNew(
+                    clinicalManager,
+                    appointmentManager,
+                    shiftManager,
+                    billingManager,
+                    userManager,
+                    sessionManager,
+                    mainFrame,
+                    onLogout
+            )
+    );
+}
+    
     public void openProfile() {
-        mainFrame.showPanel(
-                new EditProfilePanel(
-                        userManager,
-                        appointmentManager,
-                        shiftManager,
-                        clinicalManager,
-                        billingManager,
-                        sessionManager,
-                        mainFrame,
-                        onLogout
-                )
-        );
-    }
+
+    mainFrame.showPanel(
+            new EditProfileNew(
+                    sessionManager,
+                    userManager,
+                    this::openDashboard
+            )
+    );
+}
+
+
+
+
 
     public void logout() {
         sessionManager.logout();

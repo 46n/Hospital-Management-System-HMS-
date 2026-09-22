@@ -1,1 +1,4 @@
 #prescriptionId|recordId|doctorId|patientId|medicationDetails|dosage|instructions|prescribedDate
+RX001|MR001|DR001|PT001|efggr|e|5r5|2026-09-22
+RX002|MR002|DR001|PT001|otktrokr|grrrrry|trokrjrjlhj|2026-09-22
+RX003|MR002|DR001|PT001|nriikent|nknk3gk3|jlejlnegngle|2026-09-22

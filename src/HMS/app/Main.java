@@ -43,6 +43,12 @@ public final class Main {
         ReportManager reportManager = new ReportManager();
         HospitalAssetManager assetManager = new HospitalAssetManager(userManager);
         ConsultationRateManager rateManager = new ConsultationRateManager(userManager);
+        clinicalManager.configureBilling(
+        billingManager,
+        rateManager
+);
+        
+        
         InsuranceNetworkManager insuranceManager = new InsuranceNetworkManager(userManager);
         ClinicalDepartmentManager departmentManager = new ClinicalDepartmentManager(userManager);
         SessionManager sessionManager = new SessionManager(userManager);

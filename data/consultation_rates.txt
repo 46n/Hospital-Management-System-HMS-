@@ -1,1 +1,2 @@
 #rateId|consultationType|baseAmount|effectiveDate|active|configuredByStaffId
+CR001|zod|2.0|2025-11-20|true|AS001
