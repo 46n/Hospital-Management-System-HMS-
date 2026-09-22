@@ -1,6 +1,6 @@
 #userId|role|username|password|phone|email|extra1|extra2|active|doctorManagerId
 AS001|ADMIN_STAFF|admin|admin123|0111000001|admin@hms.com|AS001||true|
-MM001|MEDICAL_MANAGER|manager|manager123|0111000002|manager@hms.com|MM001||true|
+MM001|MEDICAL_MANAGER|manager|manager123|0111000004|manager@hms.com|MM001||true|
 DR001|DOCTOR|doctor|doctor123|0111000003|doctor@hms.com|DR001|Cardiology|true|MM001
 PT001|PATIENT|patient|patient123|0111000004|patient@hms.com|PT001|1995-06-15|true|
 AS002|ADMIN_STAFF|ali|ali123|01368200|ali@mail.com|AS002||true|

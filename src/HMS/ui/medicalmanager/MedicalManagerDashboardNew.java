@@ -16,6 +16,7 @@ import hms.manager.ReportManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.common.MainFrame;
+import hms.ui.common.EditProfileNew;
 
 /**
  *
@@ -95,6 +96,15 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     }
     
     
+    private void logout() {
+
+    sessionManager.logout();
+
+    if (onLogout != null) {
+        onLogout.run();
+    }
+}
+    
     private void applyButtonStyles() {
     UIStyles.applyPrimaryButtonStyle(btnDepartments);
     UIStyles.applyPrimaryButtonStyle(btnAssessmentTypes);
@@ -131,6 +141,16 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
     this.clinicalManager = clinicalManager;
     this.mainFrame = mainFrame;
     this.onLogout = onLogout;
+}
+    
+    private void openProfile() {
+    mainFrame.showPanel(
+        new EditProfileNew(
+            sessionManager,
+            userManager,
+            () -> mainFrame.showPanel(this)
+        )
+    );
 }
     
     
@@ -183,6 +203,7 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         btnLogout.setBackground(new java.awt.Color(51, 51, 51));
         btnLogout.setForeground(new java.awt.Color(255, 255, 255));
         btnLogout.setText("LOGOUT");
+        btnLogout.addActionListener(this::btnLogoutActionPerformed);
 
         btnProfile.setBackground(new java.awt.Color(51, 51, 51));
         btnProfile.setForeground(new java.awt.Color(255, 255, 255));
@@ -243,6 +264,7 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
 
     private void btnProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProfileActionPerformed
         // TODO add your handling code here:
+        openProfile();
     }//GEN-LAST:event_btnProfileActionPerformed
 
     private void btnDepartmentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDepartmentsActionPerformed
@@ -264,6 +286,11 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         // TODO add your handling code here:
         openReports();
     }//GEN-LAST:event_btnReportsActionPerformed
+
+    private void btnLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogoutActionPerformed
+        // TODO add your handling code here:
+        logout();
+    }//GEN-LAST:event_btnLogoutActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
