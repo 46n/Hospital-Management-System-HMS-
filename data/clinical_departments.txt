@@ -1,3 +1,3 @@
 #departmentId|departmentName|description|active|managedByManagerId
-CD001|X-ray||false|MM001
-CD002|Lab|Blood|true|MM001
+CD002|Lab|Blood lab|true|MM001
+CD003|Cardiology|Level C - 4|true|MM002
