@@ -131,22 +131,22 @@ public class PrescriptionsBillsController {
                 + " | " + date
                 + " " + time;
     }
-
+    
     public void backToDashboard() {
 
-        mainFrame.showPanel(
-                new PatientDashboardNew(
-                        sessionManager,
-                        userManager,
-                        appointmentManager,
-                        shiftManager,
-                        clinicalManager,
-                        billingManager,
-                        mainFrame,
-                        onLogout
-                )
-        );
-    }
+        new PatientController(
+            sessionManager,
+            userManager,
+            appointmentManager,
+            shiftManager,
+            clinicalManager,
+            billingManager,
+            mainFrame,
+            onLogout
+        ).openDashboard();
+}
+
+
 
     private Patient getCurrentPatient() {
 

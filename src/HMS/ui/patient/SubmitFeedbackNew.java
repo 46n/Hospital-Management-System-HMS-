@@ -239,17 +239,31 @@ private void applyStyles() {
         lblComment = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(204, 204, 204));
+        setPreferredSize(new java.awt.Dimension(850, 500));
+        setLayout(null);
 
         lblTitle.setFont(new java.awt.Font("Dialog", 0, 24)); // NOI18N
         lblTitle.setText("Submit Feedback");
+        add(lblTitle);
+        lblTitle.setBounds(320, 50, 189, 32);
 
+        lblAppointment.setFont(new java.awt.Font("Dialog", 0, 13)); // NOI18N
         lblAppointment.setText("Completed Appointment:");
+        add(lblAppointment);
+        lblAppointment.setBounds(200, 140, 143, 18);
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        add(cmbAppointment);
+        cmbAppointment.setBounds(230, 160, 72, 25);
 
+        lblRating.setFont(new java.awt.Font("Dialog", 0, 13)); // NOI18N
         lblRating.setText("Rating (1 - 5):");
+        add(lblRating);
+        lblRating.setBounds(510, 140, 79, 18);
 
         spnRating.setModel(new javax.swing.SpinnerNumberModel(5, 1, 5, 1));
+        add(spnRating);
+        spnRating.setBounds(510, 160, 64, 28);
 
         txtComment.setColumns(20);
         txtComment.setLineWrap(true);
@@ -257,73 +271,25 @@ private void applyStyles() {
         txtComment.setWrapStyleWord(true);
         jScrollPane1.setViewportView(txtComment);
 
+        add(jScrollPane1);
+        jScrollPane1.setBounds(320, 250, 194, 76);
+
         btnSubmit.setForeground(new java.awt.Color(51, 51, 51));
         btnSubmit.setText("Submit Feedback");
         btnSubmit.addActionListener(this::btnSubmitActionPerformed);
+        add(btnSubmit);
+        btnSubmit.setBounds(330, 340, 180, 37);
 
         btnBack.setForeground(new java.awt.Color(51, 51, 51));
         btnBack.setText("Back to Dashboard");
         btnBack.addActionListener(this::btnBackActionPerformed);
+        add(btnBack);
+        btnBack.setBounds(330, 420, 180, 37);
 
+        lblComment.setFont(new java.awt.Font("Dialog", 0, 13)); // NOI18N
         lblComment.setText("Comment:");
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(64, 64, 64)
-                        .addComponent(btnSubmit))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(lblTitle)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(6, 6, 6)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(lblRating)
-                                                .addGap(32, 32, 32)
-                                                .addComponent(spnRating, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(lblAppointment)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addComponent(lblComment))))
-                                .addGap(10, 10, 10))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(45, 45, 45)
-                        .addComponent(btnBack, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(180, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblTitle)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblAppointment)
-                    .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(27, 27, 27)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblRating)
-                    .addComponent(spnRating, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(39, 39, 39)
-                .addComponent(lblComment)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnSubmit)
-                .addGap(30, 30, 30)
-                .addComponent(btnBack)
-                .addContainerGap(68, Short.MAX_VALUE))
-        );
+        add(lblComment);
+        lblComment.setBounds(320, 230, 60, 18);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSubmitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubmitActionPerformed

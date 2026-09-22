@@ -165,9 +165,13 @@ private void applyStyles() {
         btnBack = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(204, 204, 204));
+        setPreferredSize(new java.awt.Dimension(850, 600));
+        setLayout(null);
 
         lblTitle.setFont(new java.awt.Font("Dialog", 0, 24)); // NOI18N
         lblTitle.setText("My Medical History");
+        add(lblTitle);
+        lblTitle.setBounds(190, 20, 201, 32);
 
         tblMedicalRecords.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -187,53 +191,27 @@ private void applyStyles() {
         });
         jScrollPane1.setViewportView(tblMedicalRecords);
 
-        lblRecordDetails.setFont(new java.awt.Font("Dialog", 0, 15)); // NOI18N
+        add(jScrollPane1);
+        jScrollPane1.setBounds(190, 60, 478, 275);
+
+        lblRecordDetails.setFont(new java.awt.Font("Dialog", 0, 24)); // NOI18N
         lblRecordDetails.setText("Record Details");
+        add(lblRecordDetails);
+        lblRecordDetails.setBounds(190, 400, 157, 32);
 
         txtRecordDetails.setEditable(false);
         txtRecordDetails.setColumns(20);
         txtRecordDetails.setRows(5);
         jScrollPane2.setViewportView(txtRecordDetails);
 
+        add(jScrollPane2);
+        jScrollPane2.setBounds(190, 430, 478, 76);
+
         btnBack.setForeground(new java.awt.Color(51, 51, 51));
         btnBack.setText("Back to Dashboard");
         btnBack.addActionListener(this::btnBackActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnBack)
-                .addGap(172, 172, 172))
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblRecordDetails)
-                            .addComponent(lblTitle))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblTitle)
-                .addGap(50, 50, 50)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                .addComponent(lblRecordDetails)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnBack, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(75, Short.MAX_VALUE))
-        );
+        add(btnBack);
+        btnBack.setBounds(340, 520, 180, 30);
     }// </editor-fold>//GEN-END:initComponents
 
     private void tblMedicalRecordsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMedicalRecordsMouseClicked
