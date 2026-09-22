@@ -1,0 +1,453 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ */
+package hms.ui.common;
+import hms.manager.SessionManager;
+import hms.manager.UserManager;
+import hms.model.User;
+import javax.swing.JOptionPane;
+
+/**
+ *
+ * @author abd
+ */
+public class EditProfileNew extends javax.swing.JPanel {
+
+    
+    private char passwordEchoChar;
+    private SessionManager sessionManager;
+    private UserManager userManager;
+    private Runnable onBack;
+    
+    
+    /**
+     * Creates new form EditProfileNew
+     */
+    public EditProfileNew() {
+        initComponents();
+        passwordEchoChar = NewPasswordPf.getEchoChar();
+        applyButtonStyles();
+       
+    }
+    
+    
+    public EditProfileNew(
+        SessionManager sessionManager,
+        UserManager userManager,
+        Runnable onBack) {
+
+    initComponents();
+
+    passwordEchoChar = NewPasswordPf.getEchoChar();
+
+    this.sessionManager = sessionManager;
+    this.userManager = userManager;
+    this.onBack = onBack;
+
+    applyButtonStyles();
+    loadCurrentUser();
+}
+    
+    private void applyButtonStyles() {
+    UIStyles.applyPrimaryButtonStyle(btnSaveProfile);
+    UIStyles.applyPrimaryButtonStyle(btnClearFields);
+    UIStyles.applyPrimaryButtonStyle(btnBackDashboard);
+}
+    
+    private void loadCurrentUser() {
+
+    if (sessionManager == null) {
+        return;
+    }
+
+    User user = sessionManager.getCurrentUser();
+
+    if (user == null) {
+        return;
+    }
+
+    UserIdTf.setText(user.getUserId());
+    RoleTf.setText(user.getUserType());
+    UsernameTf.setText(user.getUsername());
+
+    PhoneTf.setText(user.getPhone());
+    EmailTf.setText(user.getEmail());
+
+    CurrentPasswordPf.setText("");
+    NewPasswordPf.setText("");
+    ConfirmPasswordPf.setText("");
+}
+    
+    
+    
+    private void clearProfileFields() {
+
+    User user = sessionManager.getCurrentUser();
+
+    if (user == null) {
+        return;
+    }
+
+    PhoneTf.setText(user.getPhone());
+    EmailTf.setText(user.getEmail());
+
+    CurrentPasswordPf.setText("");
+    NewPasswordPf.setText("");
+    ConfirmPasswordPf.setText("");
+
+    chkShowPassword.setSelected(false);
+
+    CurrentPasswordPf.setEchoChar(passwordEchoChar);
+    NewPasswordPf.setEchoChar(passwordEchoChar);
+    ConfirmPasswordPf.setEchoChar(passwordEchoChar);
+}
+    
+    
+    
+    
+    private void goBack() {
+    if (onBack != null) {
+        onBack.run();
+    }
+    }
+    
+    
+    
+    private void saveProfile() {
+    try {
+        User user = sessionManager.getCurrentUser();
+        if (user == null) {
+            throw new IllegalStateException(
+                    "No user is currently logged in"
+            );
+        }
+        String phone = PhoneTf.getText().trim();
+        String email = EmailTf.getText().trim();
+        String currentPassword =
+                new String(CurrentPasswordPf.getPassword());
+        String newPassword =
+                new String(NewPasswordPf.getPassword());
+        String confirmPassword =
+                new String(ConfirmPasswordPf.getPassword());
+        boolean changingPassword =
+                !currentPassword.isEmpty()
+                || !newPassword.isEmpty()
+                || !confirmPassword.isEmpty();
+        userManager.updateProfile(
+                user.getUserId(),
+                phone,
+                email
+        );
+        if (changingPassword) {
+            if (currentPassword.isEmpty()
+                    || newPassword.isEmpty()
+                    || confirmPassword.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Please complete all password fields."
+                );
+            }
+            if (!newPassword.equals(confirmPassword)) {
+                throw new IllegalArgumentException(
+                        "New password and confirm password do not match."
+                );
+            }
+            userManager.changePassword(
+                    user.getUserId(),
+                    currentPassword,
+                    newPassword
+            );
+        }
+        JOptionPane.showMessageDialog(
+                this,
+                "Profile updated successfully.",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+        loadCurrentUser();
+    } catch (IllegalArgumentException | IllegalStateException ex) {
+        JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+}
+    
+    
+    
+    
+    private void togglePasswordVisibility() {
+    if (chkShowPassword.isSelected()) {
+        CurrentPasswordPf.setEchoChar((char) 0);
+        NewPasswordPf.setEchoChar((char) 0);
+        ConfirmPasswordPf.setEchoChar((char) 0);
+    } else {
+        CurrentPasswordPf.setEchoChar(passwordEchoChar);
+        NewPasswordPf.setEchoChar(passwordEchoChar);
+        ConfirmPasswordPf.setEchoChar(passwordEchoChar);
+    }
+}
+    
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        lblTitle = new javax.swing.JLabel();
+        lblCurrentPassword = new javax.swing.JPanel();
+        lblUserId = new javax.swing.JLabel();
+        lblRole = new javax.swing.JLabel();
+        lblUsername = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        UserIdTf = new javax.swing.JTextField();
+        RoleTf = new javax.swing.JTextField();
+        UsernameTf = new javax.swing.JTextField();
+        PhoneTf = new javax.swing.JTextField();
+        lblEmail = new javax.swing.JLabel();
+        EmailTf = new javax.swing.JTextField();
+        lblNewPassword = new javax.swing.JLabel();
+        NewPasswordPf = new javax.swing.JPasswordField();
+        ConfirmPasswordPf = new javax.swing.JPasswordField();
+        lblConfirmPassword = new javax.swing.JLabel();
+        chkShowPassword = new javax.swing.JCheckBox();
+        btnSaveProfile = new javax.swing.JButton();
+        btnClearFields = new javax.swing.JButton();
+        btnBackDashboard = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        CurrentPasswordPf = new javax.swing.JPasswordField();
+
+        setBackground(new java.awt.Color(204, 204, 204));
+
+        jPanel1.setLayout(new java.awt.BorderLayout());
+
+        lblTitle.setFont(new java.awt.Font("Helvetica Neue", 0, 24)); // NOI18N
+        lblTitle.setText("Edit My Profile ");
+
+        lblUserId.setText("User ID :");
+
+        lblRole.setText("Role:");
+
+        lblUsername.setText("Username:");
+
+        jLabel4.setText("Phone:");
+
+        UserIdTf.setEditable(false);
+        UserIdTf.setBackground(new java.awt.Color(255, 255, 255));
+
+        RoleTf.setEditable(false);
+        RoleTf.setBackground(new java.awt.Color(255, 255, 255));
+
+        UsernameTf.setEditable(false);
+        UsernameTf.setBackground(new java.awt.Color(255, 255, 255));
+
+        lblEmail.setText("Email:");
+
+        lblNewPassword.setText("New Password:");
+
+        NewPasswordPf.setText("jPasswordField1");
+
+        ConfirmPasswordPf.setText("jPasswordField2");
+
+        lblConfirmPassword.setText("Confirm Password:");
+
+        chkShowPassword.setText("Show Password ");
+        chkShowPassword.addActionListener(this::chkShowPasswordActionPerformed);
+
+        btnSaveProfile.setBackground(new java.awt.Color(51, 51, 51));
+        btnSaveProfile.setForeground(new java.awt.Color(255, 255, 255));
+        btnSaveProfile.setText("Save Changes");
+        btnSaveProfile.addActionListener(this::btnSaveProfileActionPerformed);
+
+        btnClearFields.setBackground(new java.awt.Color(51, 51, 51));
+        btnClearFields.setForeground(new java.awt.Color(255, 255, 255));
+        btnClearFields.setText("Clear");
+        btnClearFields.addActionListener(this::btnClearFieldsActionPerformed);
+
+        btnBackDashboard.setBackground(new java.awt.Color(51, 51, 51));
+        btnBackDashboard.setForeground(new java.awt.Color(255, 255, 255));
+        btnBackDashboard.setText("Back to Dashboard");
+        btnBackDashboard.addActionListener(this::btnBackDashboardActionPerformed);
+
+        jLabel1.setText("Current Password:");
+
+        CurrentPasswordPf.setText("jPasswordField1");
+
+        javax.swing.GroupLayout lblCurrentPasswordLayout = new javax.swing.GroupLayout(lblCurrentPassword);
+        lblCurrentPassword.setLayout(lblCurrentPasswordLayout);
+        lblCurrentPasswordLayout.setHorizontalGroup(
+            lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(lblNewPassword, javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(lblConfirmPassword, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnSaveProfile, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel1))
+                        .addGap(18, 18, 18)
+                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(ConfirmPasswordPf, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+                            .addComponent(NewPasswordPf)
+                            .addComponent(btnClearFields, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(CurrentPasswordPf))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(chkShowPassword)
+                            .addComponent(btnBackDashboard))
+                        .addContainerGap(212, Short.MAX_VALUE))
+                    .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblRole)
+                            .addComponent(lblUserId)
+                            .addComponent(lblUsername)
+                            .addComponent(jLabel4)
+                            .addComponent(lblEmail))
+                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(EmailTf)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, lblCurrentPasswordLayout.createSequentialGroup()
+                                        .addGap(0, 0, Short.MAX_VALUE)
+                                        .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(UserIdTf, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                                            .addComponent(RoleTf)))))
+                            .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(PhoneTf, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                                    .addComponent(UsernameTf))))
+                        .addContainerGap(363, Short.MAX_VALUE))))
+        );
+        lblCurrentPasswordLayout.setVerticalGroup(
+            lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lblCurrentPasswordLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(UserIdTf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblUserId))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblRole)
+                    .addComponent(RoleTf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblUsername)
+                    .addComponent(UsernameTf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(PhoneTf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
+                .addGap(18, 18, 18)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblEmail)
+                    .addComponent(EmailTf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(14, 14, 14)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(CurrentPasswordPf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblNewPassword)
+                    .addComponent(NewPasswordPf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chkShowPassword))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(ConfirmPasswordPf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblConfirmPassword))
+                .addGap(32, 32, 32)
+                .addGroup(lblCurrentPasswordLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnSaveProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnClearFields, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnBackDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(29, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(lblTitle))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(lblCurrentPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(109, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(283, 283, 283)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addComponent(lblTitle)
+                        .addGap(26, 26, 26)
+                        .addComponent(lblCurrentPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void chkShowPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkShowPasswordActionPerformed
+        // TODO add your handling code here:
+        togglePasswordVisibility();
+    }//GEN-LAST:event_chkShowPasswordActionPerformed
+
+    private void btnSaveProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveProfileActionPerformed
+        // TODO add your handling code here:
+        saveProfile();
+    }//GEN-LAST:event_btnSaveProfileActionPerformed
+
+    private void btnClearFieldsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearFieldsActionPerformed
+        // TODO add your handling code here:
+        clearProfileFields();
+    }//GEN-LAST:event_btnClearFieldsActionPerformed
+
+    private void btnBackDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackDashboardActionPerformed
+        // TODO add your handling code here:
+        goBack();
+    }//GEN-LAST:event_btnBackDashboardActionPerformed
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPasswordField ConfirmPasswordPf;
+    private javax.swing.JPasswordField CurrentPasswordPf;
+    private javax.swing.JTextField EmailTf;
+    private javax.swing.JPasswordField NewPasswordPf;
+    private javax.swing.JTextField PhoneTf;
+    private javax.swing.JTextField RoleTf;
+    private javax.swing.JTextField UserIdTf;
+    private javax.swing.JTextField UsernameTf;
+    private javax.swing.JButton btnBackDashboard;
+    private javax.swing.JButton btnClearFields;
+    private javax.swing.JButton btnSaveProfile;
+    private javax.swing.JCheckBox chkShowPassword;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel lblConfirmPassword;
+    private javax.swing.JPanel lblCurrentPassword;
+    private javax.swing.JLabel lblEmail;
+    private javax.swing.JLabel lblNewPassword;
+    private javax.swing.JLabel lblRole;
+    private javax.swing.JLabel lblTitle;
+    private javax.swing.JLabel lblUserId;
+    private javax.swing.JLabel lblUsername;
+    // End of variables declaration//GEN-END:variables
+}

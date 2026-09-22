@@ -13,7 +13,7 @@ import hms.manager.ReportManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.admin.AdminDashboardPanel;
-import hms.ui.common.LoginFrame;
+import hms.ui.common.LoginNew;
 import hms.ui.common.MainFrame;
 import HMS.ui.doctor.DoctorDashboardNew;
 import hms.ui.medicalmanager.MedicalManagerDashboardNew;
@@ -53,15 +53,16 @@ public final class Main {
     }
 
     private static void showLoginFrame(SessionManager sessionManager, UserManager userManager,
-            AppointmentManager appointmentManager, ClinicalManager clinicalManager, BillingManager billingManager,
-            ReportManager reportManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
-            InsuranceNetworkManager insuranceManager, AssessmentTypeManager typeManager,
-            DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager) {
-        LoginFrame loginFrame = new LoginFrame(sessionManager, user -> showMainFrame(sessionManager, userManager,
-                appointmentManager, clinicalManager, billingManager, reportManager, assetManager, rateManager,
-                insuranceManager, typeManager, shiftManager, departmentManager));
-        loginFrame.setVisible(true);
-    }
+        AppointmentManager appointmentManager, ClinicalManager clinicalManager, BillingManager billingManager,
+        ReportManager reportManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
+        InsuranceNetworkManager insuranceManager, AssessmentTypeManager typeManager,
+        DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager) {
+        LoginNew loginFrame = new LoginNew( sessionManager, user -> showMainFrame( sessionManager, userManager, appointmentManager,
+                    clinicalManager, billingManager,  reportManager,assetManager,rateManager, insuranceManager,typeManager,shiftManager,departmentManager
+            )
+    );
+    loginFrame.setVisible(true);
+}
 
     private static void showMainFrame(SessionManager sessionManager, UserManager userManager,
             AppointmentManager appointmentManager, ClinicalManager clinicalManager, BillingManager billingManager,
