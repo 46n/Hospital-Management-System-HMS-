@@ -153,7 +153,7 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         btnBackToDashboard.setText("Back to Dashboard");
         btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
         add(btnBackToDashboard);
-        btnBackToDashboard.setBounds(420, 400, 145, 40);
+        btnBackToDashboard.setBounds(420, 400, 160, 45);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
