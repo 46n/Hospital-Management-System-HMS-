@@ -1,3 +1,6 @@
 #assessmentTypeId|name|category|gradingRule|baseCharge|active|createdByManagerId
-AT001|Full Blood Count|LAB|NUMERIC_RANGE|45.0|true|MM001
-AT002|Blood Pressure Check|VITALS|DESCRIPTIVE|15.0|true|MM001
+AT001|Complete Blood Count (CBC)|LAB|NUMERIC_RANGE|45.00|true|MM001
+AT002|Chest X-Ray Examination|RADIOLOGY|DESCRIPTIVE|120.00|true|MM001
+AT003|Electrocardiogram (ECG)|CARDIOLOGY|NUMERIC_RANGE|80.00|true|MM002
+AT004|Magnetic Resonance Imaging (MRI)|RADIOLOGY|DESCRIPTIVE|450.00|true|MM001
+AT005|Blood Glucose Test|LAB|NUMERIC_RANGE|35.00|true|MM003

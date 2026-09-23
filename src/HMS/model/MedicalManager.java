@@ -16,6 +16,12 @@ public class MedicalManager extends User {
     public MedicalManager() {
         super();
     }
+    
+    
+    @Override
+    public String getUserType() {
+        return "MEDICAL_MANAGER";
+    }
 
     public MedicalManager(String userId, String username, String password, String phone, String email, String role, String managerId) {
         super(userId, username, password, phone, email, role);
@@ -52,11 +58,6 @@ public class MedicalManager extends User {
 
     public void setManagedDoctors(List<Doctor> managedDoctors) {
         this.managedDoctors = managedDoctors;
-    }
-
-    @Override
-    public String getUserType() {
-        return "MEDICAL_MANAGER";
     }
 
     public void addDoctor(Doctor doctor) {
