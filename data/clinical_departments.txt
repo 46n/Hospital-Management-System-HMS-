@@ -1,3 +1,7 @@
 #departmentId|departmentName|description|active|managedByManagerId
-CD002|Lab|Blood lab|true|MM001
-CD003|Cardiology|Level C - 4|true|MM002
+CD001|Cardiology|Diagnosis and treatment of cardiovascular diseases|true|MM001
+CD002|Emergency Medicine|Immediate medical care for critical cases|true|MM002
+CD003|Radiology|Medical imaging including X-Ray and MRI services|true|MM001
+CD004|Clinical Laboratory|Blood tests and pathology analysis|true|MM003
+CD005|Pediatrics|Healthcare services for children and adolescents|true|MM002
+CD006|Orthopedics|Treatment of bone and joint disorders|true|MM001
