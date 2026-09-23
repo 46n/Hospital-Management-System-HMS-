@@ -86,22 +86,22 @@ public class FeedbackController {
                 comment
         );
     }
-
+    
     public void backToDashboard() {
 
-        mainFrame.showPanel(
-                new PatientDashboardNew(
-                        sessionManager,
-                        userManager,
-                        appointmentManager,
-                        shiftManager,
-                        clinicalManager,
-                        billingManager,
-                        mainFrame,
-                        onLogout
-                )
-        );
-    }
+        new PatientController(
+            sessionManager,
+            userManager,
+            appointmentManager,
+            shiftManager,
+            clinicalManager,
+            billingManager,
+            mainFrame,
+            onLogout
+        ).openDashboard();
+}
+
+
 
     private Patient getCurrentPatient() {
 

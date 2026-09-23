@@ -39,24 +39,26 @@ public class PatientController {
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
     }
-
+    
     public void openDashboard() {
-        mainFrame.showPanel(
-                new PatientDashboardNew(
-                        sessionManager,
-                        userManager,
-                        appointmentManager,
-                        shiftManager,
-                        clinicalManager,
-                        billingManager,
-                        mainFrame,
-                        onLogout
-                )
+
+        showPatientPanel(
+            new PatientDashboardNew(
+                    sessionManager,
+                    userManager,
+                    appointmentManager,
+                    shiftManager,
+                    clinicalManager,
+                    billingManager,
+                    mainFrame,
+                    onLogout
+            )
         );
     }
+    
     public void openAppointments() {
 
-    AppointmentBookingNew bookingPanel =
+        AppointmentBookingNew bookingPanel =
             new AppointmentBookingNew(
                     userManager,
                     appointmentManager,
@@ -67,6 +69,9 @@ public class PatientController {
                     mainFrame,
                     onLogout
             );
+        bookingPanel.setPreferredSize(
+            new java.awt.Dimension(1100, 750)
+        );
 
     javax.swing.JScrollPane scrollPane =
             new javax.swing.JScrollPane(bookingPanel);
@@ -83,26 +88,34 @@ public class PatientController {
 
     scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-    javax.swing.JPanel wrapper =
-            new javax.swing.JPanel(new java.awt.BorderLayout());
+    javax.swing.JPanel bookingWrapper =
+            new javax.swing.JPanel(
+                    new java.awt.BorderLayout()
+            );
 
-    wrapper.setBackground(
+    bookingWrapper.setBackground(
             new java.awt.Color(204, 204, 204)
     );
 
-    wrapper.add(
+    bookingWrapper.setPreferredSize(
+            new java.awt.Dimension(1100, 600)
+    );
+
+    bookingWrapper.add(
             scrollPane,
             java.awt.BorderLayout.CENTER
     );
 
-    mainFrame.showPanel(wrapper);
+    showPatientPanel(bookingWrapper);
 }
 
 
 
+    
+    
     public void openMedicalHistory() {
 
-        mainFrame.showPanel(
+    showPatientPanel(
             new ViewMedicalHistoryNew(
                     clinicalManager,
                     appointmentManager,
@@ -112,14 +125,18 @@ public class PatientController {
                     userManager,
                     mainFrame,
                     onLogout
-                )
+            )
         );
     }
 
+
+
+
+
     public void openPrescriptionsBills() {
 
-        mainFrame.showPanel(
-                new ViewPrescriptionsBillsNew(
+        showPatientPanel(
+            new ViewPrescriptionsBillsNew(
                     clinicalManager,
                     appointmentManager,
                     shiftManager,
@@ -134,7 +151,7 @@ public class PatientController {
     
     public void openFeedback() {
 
-    mainFrame.showPanel(
+    showPatientPanel(
             new SubmitFeedbackNew(
                     clinicalManager,
                     appointmentManager,
@@ -150,13 +167,28 @@ public class PatientController {
     
     public void openProfile() {
 
-    mainFrame.showPanel(
+    showPatientPanel(
             new EditProfileNew(
                     sessionManager,
                     userManager,
                     this::openDashboard
             )
     );
+}
+    
+
+    
+
+    private void showPatientPanel(javax.swing.JPanel panel) {
+
+    javax.swing.JPanel wrapper =
+            new javax.swing.JPanel(new java.awt.GridBagLayout());
+
+    wrapper.setBackground(new java.awt.Color(204, 204, 204));
+
+    wrapper.add(panel);
+
+    mainFrame.showPanel(wrapper);
 }
 
 
