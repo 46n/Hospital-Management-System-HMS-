@@ -123,6 +123,11 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
     }
 
     Appointment appointment = doctorAppointments.get(cmbAppointment.getSelectedIndex());
+    
+    if ("CANCELLED".equals(appointment.getStatus())) {
+        showError("Cannot record an assessment result for a cancelled appointment.");
+        return;
+    }
     AssessmentType type = activeTypes.get(cmbAssessmentType.getSelectedIndex());
 
     try {
@@ -248,9 +253,9 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         add(lblValue);
         lblValue.setBounds(540, 100, 90, 40);
         add(txtGradeInterpretation);
-        txtGradeInterpretation.setBounds(650, 50, 170, 32);
+        txtGradeInterpretation.setBounds(680, 50, 170, 32);
         add(txtValue);
-        txtValue.setBounds(650, 110, 170, 32);
+        txtValue.setBounds(680, 110, 170, 32);
 
         tblAssessmentResults.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
