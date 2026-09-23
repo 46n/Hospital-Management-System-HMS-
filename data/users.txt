@@ -3,8 +3,7 @@ AS001|ADMIN_STAFF|admin|admin123|0111000001|admin@hms.com|AS001||true|
 MM001|MEDICAL_MANAGER|manager|manager123|0111000004|manager@hms.com|MM001||true|
 DR001|DOCTOR|doctor|doctor123|0111000003|doctor@hms.com|DR001|Cardiology|true|MM001
 PT001|PATIENT|patient|patient123|0111000004|patient@hms.com|PT001|1995-06-15|true|
-AS002|ADMIN_STAFF|ali|ali123|01368200|ali@mail.com|AS002||true|
-AS003|ADMIN_STAFF|123|123|0550066624|email@mail.com|AS003||true|
-AS004|ADMIN_STAFF|12032h|123|12312231|123@mail.com|AS004||true|
-DR002|DOCTOR|ahmed123|123|0123456789|ahmed@hms.com|DR002|Emergency Medicine|false|MM002
-MM002|MEDICAL_MANAGER|abdalla|abdalla123|0123456789|abdalla@hms.com|MM002||true|
+AS002|ADMIN_STAFF|aisha|aisha123|0123456701|aisha@hms.com|AS002||true|
+MM002|MEDICAL_MANAGER|farid|farid123|0123456702|farid@hms.com|MM002||true|
+DR002|DOCTOR|drlee|lee123|0123456703|drlee@hms.com|DR002|General Medicine|true|MM002
+PT002|PATIENT|nurul|nurul123|0123456704|nurul@hms.com|PT002|2001-11-02|true|

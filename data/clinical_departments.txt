@@ -1,3 +1,9 @@
 #departmentId|departmentName|description|active|managedByManagerId
-CD002|Lab|Blood lab|true|MM001
-CD003|Cardiology|Level C - 4|true|MM002
+CD001|Cardiology|Diagnosis and treatment of cardiovascular conditions|true|MM001
+CD002|General Medicine|Primary assessment and general adult medical care|true|MM002
+CD003|Emergency Medicine|Immediate assessment and emergency treatment services|true|MM002
+CD004|Diagnostic Imaging|Radiology X-ray and medical imaging services|true|MM001
+CD005|Clinical Laboratory|Blood testing and pathology diagnostic services|true|MM002
+CD006|Preventive Medicine|Health screening and preventive care services|true|MM001
+CD007|Outpatient Clinic|Scheduled consultations and follow-up care|true|MM002
+CD008|Health Assessment Unit|Routine health assessments and monitoring|true|MM001

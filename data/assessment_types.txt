@@ -1,3 +1,9 @@
 #assessmentTypeId|name|category|gradingRule|baseCharge|active|createdByManagerId
-AT001|Full Blood Count|LAB|NUMERIC_RANGE|45.0|true|MM001
-AT002|Blood Pressure Check|VITALS|DESCRIPTIVE|15.0|true|MM001
+AT001|Blood Pressure Check|VITALS|DESCRIPTIVE|15.0|true|MM001
+AT002|Blood Glucose Test|LAB|NUMERIC|20.0|true|MM002
+AT003|Body Mass Index|VITALS|DESCRIPTIVE|10.0|true|MM001
+AT004|Cholesterol Test|LAB|NUMERIC|25.0|true|MM002
+AT005|Electrocardiogram|CARDIAC|DESCRIPTIVE|60.0|true|MM001
+AT006|Full Blood Count|LAB|NUMERIC_RANGE|45.0|true|MM002
+AT007|Oxygen Saturation|VITALS|NUMERIC|10.0|true|MM001
+AT008|Body Temperature|VITALS|NUMERIC|10.0|true|MM002

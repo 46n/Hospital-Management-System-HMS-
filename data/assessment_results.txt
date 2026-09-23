@@ -1,1 +1,9 @@
 #resultId|recordId|assessmentName|value|grade|resultDate|recordedByDoctorId|assessmentTypeId
+AR001|MR001|Blood Pressure Check|128/82 mmHg|NORMAL|2026-09-15|DR001|AT001
+AR002|MR002|Body Temperature|37.8 C|ELEVATED|2026-09-16|DR002|AT008
+AR003|MR003|Blood Glucose Test|6.2 mmol/L|BORDERLINE|2026-09-17|DR002|AT002
+AR004|MR004|Electrocardiogram|Sinus rhythm 84 bpm|NORMAL|2026-09-18|DR001|AT005
+AR005|MR005|Cholesterol Test|4.8 mmol/L|NORMAL|2026-09-19|DR001|AT004
+AR006|MR006|Full Blood Count|Within reference range|NORMAL|2026-09-20|DR002|AT006
+AR007|MR007|Body Mass Index|27.3|OVERWEIGHT|2026-09-21|DR002|AT003
+AR008|MR008|Oxygen Saturation|98 percent|NORMAL|2026-09-22|DR001|AT007
