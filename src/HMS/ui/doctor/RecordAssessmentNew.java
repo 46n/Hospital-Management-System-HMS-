@@ -217,7 +217,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
         jPanel1.setLayout(new java.awt.BorderLayout());
         add(jPanel1);
-        jPanel1.setBounds(196, 139, 0, 0);
+        jPanel1.setBounds(320, 430, 10, 0);
 
         lblRecordAssessmentResult.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lblRecordAssessmentResult.setText("Record Assessment Result");
@@ -226,31 +226,31 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
         lblAppointment.setText("Appointment:");
         add(lblAppointment);
-        lblAppointment.setBounds(27, 64, 74, 16);
+        lblAppointment.setBounds(40, 60, 120, 16);
 
         lblGradeInterpretation.setText("Grade / Interpretation (optional):");
         add(lblGradeInterpretation);
-        lblGradeInterpretation.setBounds(340, 110, 180, 16);
+        lblGradeInterpretation.setBounds(450, 40, 240, 40);
 
         lblAssessmentType.setText("Assessment Type:");
         add(lblAssessmentType);
-        lblAssessmentType.setBounds(6, 115, 94, 16);
+        lblAssessmentType.setBounds(20, 100, 170, 16);
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         add(cmbAppointment);
-        cmbAppointment.setBounds(118, 53, 210, 30);
+        cmbAppointment.setBounds(170, 50, 210, 30);
 
         cmbAssessmentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         add(cmbAssessmentType);
-        cmbAssessmentType.setBounds(118, 106, 210, 28);
+        cmbAssessmentType.setBounds(160, 100, 330, 28);
 
         lblValue.setText("Value:");
         add(lblValue);
-        lblValue.setBounds(470, 60, 32, 16);
+        lblValue.setBounds(540, 100, 90, 40);
         add(txtGradeInterpretation);
-        txtGradeInterpretation.setBounds(530, 100, 170, 32);
+        txtGradeInterpretation.setBounds(650, 50, 170, 32);
         add(txtValue);
-        txtValue.setBounds(530, 50, 170, 32);
+        txtValue.setBounds(650, 110, 170, 32);
 
         tblAssessmentResults.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -288,7 +288,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         btnRecordResult.setText("Record Result");
         btnRecordResult.addActionListener(this::btnRecordResultActionPerformed);
         add(btnRecordResult);
-        btnRecordResult.setBounds(202, 139, 122, 37);
+        btnRecordResult.setBounds(202, 139, 155, 37);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRecordResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordResultActionPerformed
