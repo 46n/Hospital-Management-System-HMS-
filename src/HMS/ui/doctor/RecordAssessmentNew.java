@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -39,6 +40,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
     private List<Appointment> doctorAppointments;
     private List<AssessmentType> activeTypes;
+    
 
     /**
      * Creates new form DoctorAssessmentResultNew
@@ -51,6 +53,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
             AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
             MainFrame mainFrame, Runnable onLogout) {
         initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -163,11 +166,25 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         
     }
     
+    
+    
+    private void backToDashboard() {
+        mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+            appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
-            
+    
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblRecordAssessmentResult);
+
+        UIStyles.applyPrimaryButtonStyle(btnRecordResult);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }   
 
 
     
@@ -196,22 +213,44 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         btnBackToDashboard = new javax.swing.JButton();
         btnRecordResult = new javax.swing.JButton();
 
+        setLayout(null);
+
         jPanel1.setLayout(new java.awt.BorderLayout());
+        add(jPanel1);
+        jPanel1.setBounds(196, 139, 0, 0);
 
         lblRecordAssessmentResult.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lblRecordAssessmentResult.setText("Record Assessment Result");
+        add(lblRecordAssessmentResult);
+        lblRecordAssessmentResult.setBounds(6, 6, 277, 32);
 
         lblAppointment.setText("Appointment:");
+        add(lblAppointment);
+        lblAppointment.setBounds(27, 64, 74, 16);
 
         lblGradeInterpretation.setText("Grade / Interpretation (optional):");
+        add(lblGradeInterpretation);
+        lblGradeInterpretation.setBounds(340, 110, 180, 16);
 
         lblAssessmentType.setText("Assessment Type:");
+        add(lblAssessmentType);
+        lblAssessmentType.setBounds(6, 115, 94, 16);
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        add(cmbAppointment);
+        cmbAppointment.setBounds(118, 53, 210, 30);
 
         cmbAssessmentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        add(cmbAssessmentType);
+        cmbAssessmentType.setBounds(118, 106, 210, 28);
 
         lblValue.setText("Value:");
+        add(lblValue);
+        lblValue.setBounds(470, 60, 32, 16);
+        add(txtGradeInterpretation);
+        txtGradeInterpretation.setBounds(530, 100, 170, 32);
+        add(txtValue);
+        txtValue.setBounds(530, 50, 170, 32);
 
         tblAssessmentResults.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -234,90 +273,22 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         });
         jScrollPane1.setViewportView(tblAssessmentResults);
 
+        add(jScrollPane1);
+        jScrollPane1.setBounds(0, 194, 760, 209);
+
         btnBackToDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackToDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackToDashboard.setText("Back to Dashboard");
         btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
+        add(btnBackToDashboard);
+        btnBackToDashboard.setBounds(370, 420, 150, 37);
 
         btnRecordResult.setBackground(new java.awt.Color(51, 51, 51));
         btnRecordResult.setForeground(new java.awt.Color(255, 255, 255));
         btnRecordResult.setText("Record Result");
         btnRecordResult.addActionListener(this::btnRecordResultActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(btnBackToDashboard)
-                .addGap(288, 288, 288))
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(157, 157, 157)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(lblAppointment)
-                            .addComponent(lblAssessmentType))
-                        .addGap(86, 86, 86)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(130, 130, 130))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cmbAssessmentType, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cmbAppointment, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(135, 135, 135)
-                                        .addComponent(lblValue))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(59, 59, 59)
-                                        .addComponent(lblGradeInterpretation, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(25, 25, 25)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtGradeInterpretation, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
-                            .addComponent(txtValue)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 690, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(28, 28, 28)
-                        .addComponent(lblRecordAssessmentResult)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblRecordAssessmentResult)
-                .addGap(38, 38, 38)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblAppointment)
-                    .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblValue)
-                    .addComponent(txtValue, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(lblGradeInterpretation)
-                        .addComponent(lblAssessmentType)
-                        .addComponent(txtGradeInterpretation, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(cmbAssessmentType, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(5, 5, 5)))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15))
-        );
+        add(btnRecordResult);
+        btnRecordResult.setBounds(202, 139, 122, 37);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRecordResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordResultActionPerformed
@@ -327,9 +298,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
 
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 

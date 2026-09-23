@@ -20,6 +20,7 @@ import hms.ui.common.MainFrame;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -58,6 +59,7 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         MainFrame mainFrame, Runnable onLogout) {
 
         initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -163,13 +165,22 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         }
     }
     
+    private void backToDashboard() {
+        mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+            appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
     
-    
+    private void applyStyles() {
+        UIStyles.applyHeadingStyle(lblRequestLabImaging);
+
+        UIStyles.applyPrimaryButtonStyle(btnSubmitRequest);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }
     
     
     
@@ -316,9 +327,7 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 

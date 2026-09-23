@@ -22,6 +22,7 @@ import hms.ui.common.MainFrame;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 /**
  *
  * @author waleed
@@ -51,9 +52,10 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
     }
     
     public IssuePrescriptionNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
-        AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
-        MainFrame mainFrame, Runnable onLogout) {
+            AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
+            MainFrame mainFrame, Runnable onLogout) {
         initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -161,10 +163,22 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
         }
     }
     
+    private void backToDashboard() {
+    mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+        appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblIssuePrescription);
+
+        UIStyles.applyPrimaryButtonStyle(btnIssuePrescription);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
     }
     
     
@@ -256,7 +270,7 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnIssuePrescription, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(btnIssuePrescription)
                                 .addGap(130, 130, 130))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
@@ -332,9 +346,7 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 

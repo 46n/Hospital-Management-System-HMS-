@@ -17,6 +17,7 @@ import hms.ui.common.MainFrame;
 
 import java.util.List;
 import javax.swing.JOptionPane;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -48,9 +49,10 @@ public class LogVitalsNew extends javax.swing.JPanel {
     }
     
     public LogVitalsNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
-        AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
-        MainFrame mainFrame, Runnable onLogout) {
-         initComponents();
+            AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
+            MainFrame mainFrame, Runnable onLogout) {
+        initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -260,12 +262,24 @@ public class LogVitalsNew extends javax.swing.JPanel {
         }
     }
     
+    private void backToDashboard() {
+    mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+        appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
     
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblLogVitalsConsultationNotes);
+
+        UIStyles.applyPrimaryButtonStyle(btnSaveVitalsNotes);
+        UIStyles.applyPrimaryButtonStyle(btnFinalizeRecord);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }
     
 
     /**
@@ -420,9 +434,7 @@ public class LogVitalsNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-         mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 
