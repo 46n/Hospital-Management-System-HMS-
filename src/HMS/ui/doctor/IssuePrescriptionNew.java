@@ -102,6 +102,11 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
 
         Appointment appointment =
             doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            showError("Cannot issue a prescription for a cancelled appointment.");
+            return;
+        }
 
         try {
             MedicalRecord record = clinicalManager.getOrOpenRecord(
@@ -271,16 +276,13 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
                         .addComponent(btnIssuePrescription)
                         .addGap(118, 118, 118))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(lblInstructions, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(txtMedication))
-                                .addGap(103, 103, 103)
-                                .addComponent(lblValue, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtMedication))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(lblValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(lblInstructions, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
                         .addGap(25, 25, 25)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(txtInstructions, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
