@@ -13,19 +13,10 @@ import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
 
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -35,8 +26,12 @@ import javax.swing.table.DefaultTableModel;
  * prepares the doctor information those workflows will later depend on.
  * All rules (existence checks, role checks, consistent manager linkage)
  * live in UserManager; this panel only collects input and displays results.
+ *
+ * Visual structure is managed by the NetBeans GUI Builder (see
+ * DoctorManagementPanel.form). Only initComponents() is generated/guarded;
+ * the table model, search, dialogs, and navigation stay hand-written.
  */
-public class DoctorManagementPanel extends JPanel {
+public class DoctorManagementPanel extends javax.swing.JPanel {
 
     private static final String[] COLUMN_NAMES =
             {"ID", "Username", "Specialty", "Assigned Manager", "Phone", "Email", "Active"};
@@ -52,8 +47,6 @@ public class DoctorManagementPanel extends JPanel {
     private final Runnable onLogout;
 
     private DefaultTableModel tableModel;
-    private JTable doctorTable;
-    private JTextField searchField;
 
     public DoctorManagementPanel(UserManager userManager, AppointmentManager appointmentManager,
             HospitalAssetManager assetManager, ConsultationRateManager rateManager,
@@ -67,84 +60,158 @@ public class DoctorManagementPanel extends JPanel {
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
-        buildLayout();
+        initComponents();
+        initializeBehavior();
         refreshTable(getAllDoctors());
     }
 
-    private void buildLayout() {
-        setLayout(new BorderLayout());
-        setBackground(Theme.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(
-                Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE, Theme.SPACING_LARGE));
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
 
-        add(createTopPanel(), BorderLayout.NORTH);
-        add(createTablePanel(), BorderLayout.CENTER);
-        add(createButtonPanel(), BorderLayout.SOUTH);
-    }
+        topPanel = new javax.swing.JPanel();
+        titleLabel = new javax.swing.JLabel();
+        searchPanel = new javax.swing.JPanel();
+        searchLabel = new javax.swing.JLabel();
+        searchField = new javax.swing.JTextField();
+        searchButton = new javax.swing.JButton();
+        clearButton = new javax.swing.JButton();
+        tableWrapperPanel = new javax.swing.JPanel();
+        doctorScrollPane = new javax.swing.JScrollPane();
+        doctorTable = new javax.swing.JTable();
+        buttonPanel = new javax.swing.JPanel();
+        viewButton = new javax.swing.JButton();
+        assignManagerButton = new javax.swing.JButton();
+        unassignManagerButton = new javax.swing.JButton();
+        updateSpecialtyButton = new javax.swing.JButton();
+        backButton = new javax.swing.JButton();
 
-    private JPanel createTopPanel() {
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(Theme.BACKGROUND_COLOR);
+        setBackground(new java.awt.Color(255, 255, 255));
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        setLayout(new java.awt.BorderLayout());
 
-        JLabel titleLabel = new JLabel("Doctor Management");
-        UIStyles.applyHeadingStyle(titleLabel);
-        topPanel.add(titleLabel, BorderLayout.WEST);
+        topPanel.setBackground(new java.awt.Color(255, 255, 255));
+        topPanel.setLayout(new java.awt.BorderLayout());
 
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBackground(Theme.BACKGROUND_COLOR);
-        searchField = new JTextField(16);
-        JButton searchButton = new JButton("Search");
-        UIStyles.applyPrimaryButtonStyle(searchButton);
+        titleLabel.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        titleLabel.setForeground(new java.awt.Color(33, 33, 33));
+        titleLabel.setText("Doctor Management");
+        topPanel.add(titleLabel, java.awt.BorderLayout.WEST);
+
+        searchPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        searchLabel.setText("Search (username or specialty):");
+        searchPanel.add(searchLabel);
+
+        searchField.setColumns(16);
+        searchPanel.add(searchField);
+
+        searchButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        searchButton.setForeground(new java.awt.Color(255, 255, 255));
+        searchButton.setBackground(new java.awt.Color(31, 78, 121));
+        searchButton.setText("Search");
+        searchButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        searchButton.setBorderPainted(false);
+        searchButton.setFocusPainted(false);
+        searchButton.setOpaque(true);
+        searchPanel.add(searchButton);
+
+        clearButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        clearButton.setForeground(new java.awt.Color(255, 255, 255));
+        clearButton.setBackground(new java.awt.Color(31, 78, 121));
+        clearButton.setText("Clear");
+        clearButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        clearButton.setBorderPainted(false);
+        clearButton.setFocusPainted(false);
+        clearButton.setOpaque(true);
+        searchPanel.add(clearButton);
+
+        topPanel.add(searchPanel, java.awt.BorderLayout.EAST);
+
+        add(topPanel, java.awt.BorderLayout.NORTH);
+
+        tableWrapperPanel.setBackground(new java.awt.Color(255, 255, 255));
+        tableWrapperPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 0, 16, 0));
+        tableWrapperPanel.setLayout(new java.awt.BorderLayout());
+
+        doctorTable.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        doctorTable.setRowHeight(24);
+        doctorScrollPane.setViewportView(doctorTable);
+
+        tableWrapperPanel.add(doctorScrollPane, java.awt.BorderLayout.CENTER);
+
+        add(tableWrapperPanel, java.awt.BorderLayout.CENTER);
+
+        buttonPanel.setBackground(new java.awt.Color(255, 255, 255));
+        buttonPanel.setLayout(new java.awt.GridLayout(1, 5));
+
+        viewButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        viewButton.setForeground(new java.awt.Color(255, 255, 255));
+        viewButton.setBackground(new java.awt.Color(31, 78, 121));
+        viewButton.setText("View Details");
+        viewButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        viewButton.setBorderPainted(false);
+        viewButton.setFocusPainted(false);
+        viewButton.setOpaque(true);
+        buttonPanel.add(viewButton);
+
+        assignManagerButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        assignManagerButton.setForeground(new java.awt.Color(255, 255, 255));
+        assignManagerButton.setBackground(new java.awt.Color(31, 78, 121));
+        assignManagerButton.setText("Assign / Reassign Manager");
+        assignManagerButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        assignManagerButton.setBorderPainted(false);
+        assignManagerButton.setFocusPainted(false);
+        assignManagerButton.setOpaque(true);
+        buttonPanel.add(assignManagerButton);
+
+        unassignManagerButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        unassignManagerButton.setForeground(new java.awt.Color(255, 255, 255));
+        unassignManagerButton.setBackground(new java.awt.Color(31, 78, 121));
+        unassignManagerButton.setText("Unassign Manager");
+        unassignManagerButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        unassignManagerButton.setBorderPainted(false);
+        unassignManagerButton.setFocusPainted(false);
+        unassignManagerButton.setOpaque(true);
+        buttonPanel.add(unassignManagerButton);
+
+        updateSpecialtyButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        updateSpecialtyButton.setForeground(new java.awt.Color(255, 255, 255));
+        updateSpecialtyButton.setBackground(new java.awt.Color(31, 78, 121));
+        updateSpecialtyButton.setText("Update Specialization");
+        updateSpecialtyButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        updateSpecialtyButton.setBorderPainted(false);
+        updateSpecialtyButton.setFocusPainted(false);
+        updateSpecialtyButton.setOpaque(true);
+        buttonPanel.add(updateSpecialtyButton);
+
+        backButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        backButton.setForeground(new java.awt.Color(255, 255, 255));
+        backButton.setBackground(new java.awt.Color(31, 78, 121));
+        backButton.setText("Back to Dashboard");
+        backButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.setBorderPainted(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(true);
+        buttonPanel.add(backButton);
+
+        add(buttonPanel, java.awt.BorderLayout.SOUTH);
+    }// </editor-fold>//GEN-END:initComponents
+
+    /** Builds the table model and wires screen behavior. */
+    private void initializeBehavior() {
         searchButton.addActionListener(e -> applySearch());
-        JButton clearButton = new JButton("Clear");
-        UIStyles.applyPrimaryButtonStyle(clearButton);
         clearButton.addActionListener(e -> {
             searchField.setText("");
             refreshTable(getAllDoctors());
         });
-        searchPanel.add(new JLabel("Search (username or specialty):"));
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(clearButton);
-        topPanel.add(searchPanel, BorderLayout.EAST);
 
-        return topPanel;
-    }
-
-    private JPanel createTablePanel() {
         tableModel = new DefaultTableModel(COLUMN_NAMES, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        doctorTable = new JTable(tableModel);
-        doctorTable.setRowHeight(24);
-        doctorTable.setFont(Theme.DEFAULT_FONT);
-        doctorTable.getTableHeader().setFont(Theme.DEFAULT_FONT);
-
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(Theme.BACKGROUND_COLOR);
-        wrapper.setBorder(BorderFactory.createEmptyBorder(Theme.SPACING_MEDIUM, 0, Theme.SPACING_MEDIUM, 0));
-        wrapper.add(new JScrollPane(doctorTable), BorderLayout.CENTER);
-        return wrapper;
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 5, Theme.SPACING_MEDIUM, Theme.SPACING_MEDIUM));
-        buttonPanel.setBackground(Theme.BACKGROUND_COLOR);
-
-        JButton viewButton = new JButton("View Details");
-        JButton assignManagerButton = new JButton("Assign / Reassign Manager");
-        JButton unassignManagerButton = new JButton("Unassign Manager");
-        JButton updateSpecialtyButton = new JButton("Update Specialization");
-        JButton backButton = new JButton("Back to Dashboard");
-
-        for (JButton button : new JButton[]{viewButton, assignManagerButton, unassignManagerButton,
-                updateSpecialtyButton, backButton}) {
-            UIStyles.applyPrimaryButtonStyle(button);
-        }
-
+        doctorTable.setModel(tableModel);
         viewButton.addActionListener(e -> viewSelectedDoctor());
         assignManagerButton.addActionListener(e -> openAssignManagerDialog());
         unassignManagerButton.addActionListener(e -> unassignSelectedManager());
@@ -152,13 +219,6 @@ public class DoctorManagementPanel extends JPanel {
         backButton.addActionListener(e -> mainFrame.showPanel(
                 new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
                         rateManager, insuranceManager, mainFrame, onLogout)));
-
-        buttonPanel.add(viewButton);
-        buttonPanel.add(assignManagerButton);
-        buttonPanel.add(unassignManagerButton);
-        buttonPanel.add(updateSpecialtyButton);
-        buttonPanel.add(backButton);
-        return buttonPanel;
     }
 
     private List<Doctor> getAllDoctors() {
@@ -337,4 +397,23 @@ public class DoctorManagementPanel extends JPanel {
             showError(ex.getMessage());
         }
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton assignManagerButton;
+    private javax.swing.JButton backButton;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton clearButton;
+    private javax.swing.JScrollPane doctorScrollPane;
+    private javax.swing.JTable doctorTable;
+    private javax.swing.JButton searchButton;
+    private javax.swing.JTextField searchField;
+    private javax.swing.JLabel searchLabel;
+    private javax.swing.JPanel searchPanel;
+    private javax.swing.JPanel tableWrapperPanel;
+    private javax.swing.JLabel titleLabel;
+    private javax.swing.JPanel topPanel;
+    private javax.swing.JButton unassignManagerButton;
+    private javax.swing.JButton updateSpecialtyButton;
+    private javax.swing.JButton viewButton;
+    // End of variables declaration//GEN-END:variables
 }
