@@ -14,6 +14,7 @@ import hms.model.Doctor;
 import hms.ui.common.AppointmentTableUtil;
 import hms.ui.common.MainFrame;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -36,26 +37,29 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
     }
     
     public MyAppointmentsNew(
-        AppointmentManager appointmentManager,
-        ClinicalManager clinicalManager,
-        AssessmentTypeManager typeManager,
-        UserManager userManager,
-        SessionManager sessionManager,
-        MainFrame mainFrame,
-        Runnable onLogout) {
+            AppointmentManager appointmentManager,
+            ClinicalManager clinicalManager,
+            AssessmentTypeManager typeManager,
+            UserManager userManager,
+            SessionManager sessionManager,
+            MainFrame mainFrame,
+            Runnable onLogout) {
+        initComponents();
+        applyStyles();
 
-            initComponents();
+        this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
+        this.typeManager = typeManager;
+        this.userManager = userManager;
+        this.sessionManager = sessionManager;
+        this.mainFrame = mainFrame;
+        this.onLogout = onLogout;
 
-            this.appointmentManager = appointmentManager;
-            this.clinicalManager = clinicalManager;
-            this.typeManager = typeManager;
-            this.userManager = userManager;
-            this.sessionManager = sessionManager;
-            this.mainFrame = mainFrame;
-            this.onLogout = onLogout;
-
-            loadAppointments();
+        loadAppointments();
     }
+
+            
+    
      
     
      private void loadAppointments() {
@@ -80,6 +84,18 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         }
     }
     
+    private void backToDashboard() {
+            mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+                appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
+    
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblMyAppointments);
+
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -97,8 +113,11 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         btnBackToDashboard = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(204, 204, 204));
+        setLayout(null);
 
         jPanel2.setLayout(new java.awt.BorderLayout());
+        add(jPanel2);
+        jPanel2.setBounds(643, 86, 0, 0);
 
         tblMyAppointments.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -121,55 +140,25 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         });
         jScrollPane1.setViewportView(tblMyAppointments);
 
+        add(jScrollPane1);
+        jScrollPane1.setBounds(6, 56, 790, 329);
+
         lblMyAppointments.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lblMyAppointments.setText("My Appointments");
+        add(lblMyAppointments);
+        lblMyAppointments.setBounds(20, 10, 192, 32);
 
         btnBackToDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackToDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackToDashboard.setText("Back to Dashboard");
         btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(70, 70, 70)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 625, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(82, 82, 82)
-                        .addComponent(lblMyAppointments))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(318, 318, 318)
-                        .addComponent(btnBackToDashboard)))
-                .addContainerGap(67, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(86, 86, 86)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(lblMyAppointments)
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 329, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(22, 22, 22))
-        );
+        add(btnBackToDashboard);
+        btnBackToDashboard.setBounds(420, 400, 160, 45);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-       mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+       backToDashboard();
 
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
