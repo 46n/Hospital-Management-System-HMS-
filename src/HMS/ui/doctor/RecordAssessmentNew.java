@@ -77,36 +77,37 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
     
     
     private void loadData() {
-        doctorAppointments = appointmentManager.listForDoctor(currentDoctor().getDoctorId());
-
+        doctorAppointments =
+            appointmentManager.listActiveForDoctor(currentDoctor().getDoctorId());
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
-                cmbAppointment.addItem(
+            cmbAppointment.addItem(
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
-                + " (" + appointment.getStatus() + ")");
+                + " (" + appointment.getStatus() + ")"
+            );
         }
         
     
 
-    activeTypes = new ArrayList<>();
+        activeTypes = new ArrayList<>();
 
-    for (AssessmentType type : typeManager.getTypes()) {
-        if (type.isActive()) {
+        for (AssessmentType type : typeManager.getTypes()) {
+            if (type.isActive()) {
             activeTypes.add(type);
+            }
         }
-    }
 
-    cmbAssessmentType.removeAllItems();
+        cmbAssessmentType.removeAllItems();
 
-    for (AssessmentType type : activeTypes) {
-        cmbAssessmentType.addItem(
+        for (AssessmentType type : activeTypes) {
+            cmbAssessmentType.addItem(
                 type.getName() + " ("
                 + type.getCategory() + ", "
                 + type.getGradingRule() + ")"
-        );
-    }
+            );
+        }
     }
     
     
