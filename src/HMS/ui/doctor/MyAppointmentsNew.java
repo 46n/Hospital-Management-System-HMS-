@@ -62,25 +62,37 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
     
      
     
-     private void loadAppointments() {
+    private void loadAppointments() {
 
-        DefaultTableModel model
-                = (DefaultTableModel) tblMyAppointments.getModel();
+        DefaultTableModel confirmedModel =
+            (DefaultTableModel) tblConfirmedAppointments.getModel();
 
-        // Remove the empty rows created by NetBeans
-        model.setRowCount(0);
 
-        // Get the currently logged-in Doctor
-        Doctor doctor
-                = (Doctor) sessionManager.getCurrentUser();
+        DefaultTableModel completedModel =
+            (DefaultTableModel) tblCompletedAppointments.getModel();
 
-        // Load only this doctor's appointments
-        for (Appointment appointment
-                : appointmentManager.listForDoctor(doctor.getDoctorId())) {
+        confirmedModel.setRowCount(0);
+        completedModel.setRowCount(0);
 
-            model.addRow(
+        Doctor doctor =
+            (Doctor) sessionManager.getCurrentUser();
+
+        for (Appointment appointment :
+            appointmentManager.listForDoctor(doctor.getDoctorId())) {
+
+                if ("CONFIRMED".equals(appointment.getStatus())
+                    || "RESCHEDULED".equals(appointment.getStatus())) {
+
+                confirmedModel.addRow(
+                AppointmentTableUtil.toRow(appointment)
+                );
+
+            } else if ("COMPLETED".equals(appointment.getStatus())) {
+
+                completedModel.addRow(
                     AppointmentTableUtil.toRow(appointment)
-            );
+                );
+            }
         }
     }
     
@@ -108,9 +120,13 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
 
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tblMyAppointments = new javax.swing.JTable();
+        tblCompletedAppointments = new javax.swing.JTable();
         lblMyAppointments = new javax.swing.JLabel();
         btnBackToDashboard = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblConfirmedAppointments = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(204, 204, 204));
         setLayout(null);
@@ -119,7 +135,7 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         add(jPanel2);
         jPanel2.setBounds(643, 86, 0, 0);
 
-        tblMyAppointments.setModel(new javax.swing.table.DefaultTableModel(
+        tblCompletedAppointments.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -138,10 +154,10 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(tblMyAppointments);
+        jScrollPane1.setViewportView(tblCompletedAppointments);
 
         add(jScrollPane1);
-        jScrollPane1.setBounds(6, 56, 790, 329);
+        jScrollPane1.setBounds(30, 310, 790, 180);
 
         lblMyAppointments.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lblMyAppointments.setText("My Appointments");
@@ -153,7 +169,41 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
         btnBackToDashboard.setText("Back to Dashboard");
         btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
         add(btnBackToDashboard);
-        btnBackToDashboard.setBounds(420, 400, 160, 45);
+        btnBackToDashboard.setBounds(400, 500, 160, 45);
+
+        tblConfirmedAppointments.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "ID", "Patient", "Doctor", "Date", "Time", "Status"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(tblConfirmedAppointments);
+
+        add(jScrollPane2);
+        jScrollPane2.setBounds(30, 80, 790, 180);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel1.setText("Confirmed Appointments");
+        add(jLabel1);
+        jLabel1.setBounds(30, 50, 250, 25);
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel2.setText("Completed Appointments");
+        add(jLabel2);
+        jLabel2.setBounds(30, 280, 250, 25);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
@@ -165,9 +215,13 @@ public class MyAppointmentsNew extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBackToDashboard;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblMyAppointments;
-    private javax.swing.JTable tblMyAppointments;
+    private javax.swing.JTable tblCompletedAppointments;
+    private javax.swing.JTable tblConfirmedAppointments;
     // End of variables declaration//GEN-END:variables
 }

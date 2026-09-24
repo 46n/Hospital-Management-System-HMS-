@@ -69,9 +69,10 @@ public class LogVitalsNew extends javax.swing.JPanel {
     
     private void loadAppointments() {
 
-        doctorAppointments =
-            appointmentManager.listForDoctor(currentDoctor().getDoctorId());
-
+       doctorAppointments =
+            appointmentManager.listActiveForDoctor(
+                currentDoctor().getDoctorId()
+            );
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
@@ -79,14 +80,18 @@ public class LogVitalsNew extends javax.swing.JPanel {
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
                 + " (" + appointment.getStatus() + ")"
-        );
+            );
         }
         
-    
 
         if (!doctorAppointments.isEmpty()) {
             loadExistingRecord();
+        } else {
+            txtVitalSigns.setText("");
+            txtConsultationNotes.setText("");
+            txtDiagnosis.setText("");
         }
+        
     }
     
 
@@ -237,7 +242,11 @@ public class LogVitalsNew extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this,
                 "Record finalized. Appointment marked COMPLETED.",
                 "Success",
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.INFORMATION_MESSAGE);
+
+            txtVitalSigns.setText("");
+            txtConsultationNotes.setText("");
+            txtDiagnosis.setText("");
 
             refreshAppointmentCombo();
 
@@ -251,6 +260,10 @@ public class LogVitalsNew extends javax.swing.JPanel {
         doctorAppointments =
             appointmentManager.listForDoctor(currentDoctor().getDoctorId());
 
+        doctorAppointments.removeIf(appointment ->
+            "COMPLETED".equals(appointment.getStatus())
+            || "CANCELLED".equals(appointment.getStatus()));
+
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
@@ -258,7 +271,13 @@ public class LogVitalsNew extends javax.swing.JPanel {
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
                 + " (" + appointment.getStatus() + ")"
-        );
+            );
+        }
+
+        if (doctorAppointments.isEmpty()) {
+            txtVitalSigns.setText("");
+            txtConsultationNotes.setText("");
+            txtDiagnosis.setText("");
         }
     }
     
@@ -351,7 +370,7 @@ public class LogVitalsNew extends javax.swing.JPanel {
         btnSaveVitalsNotes.setText("Save Vitals & Notes");
         btnSaveVitalsNotes.addActionListener(this::btnSaveVitalsNotesActionPerformed);
         add(btnSaveVitalsNotes);
-        btnSaveVitalsNotes.setBounds(50, 300, 160, 37);
+        btnSaveVitalsNotes.setBounds(50, 300, 170, 37);
 
         btnFinalizeRecord.setBackground(new java.awt.Color(51, 51, 51));
         btnFinalizeRecord.setForeground(new java.awt.Color(255, 255, 255));

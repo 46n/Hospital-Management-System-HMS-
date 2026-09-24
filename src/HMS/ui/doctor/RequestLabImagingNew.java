@@ -76,12 +76,14 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
     private void loadData() {
 
         doctorAppointments =
-            appointmentManager.listForDoctor(currentDoctor().getDoctorId());
+            appointmentManager.listActiveForDoctor(
+                currentDoctor().getDoctorId()
+            );
 
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
-        cmbAppointment.addItem(
+            cmbAppointment.addItem(
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
                 + " (" + appointment.getStatus() + ")"

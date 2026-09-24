@@ -149,6 +149,18 @@ public class AppointmentManager {
         }
         return result;
     }
+    
+    // Returns only confirmed and rescheduled appointments for this doctor.
+    public List<Appointment> listActiveForDoctor(String doctorId) {
+        List<Appointment> activeAppointments = listForDoctor(doctorId);
+
+        activeAppointments.removeIf(appointment ->
+            !"CONFIRMED".equals(appointment.getStatus())
+            && !"RESCHEDULED".equals(appointment.getStatus())
+        );
+
+        return activeAppointments;
+    }
 
     public List<Appointment> getAppointments() {
         return new ArrayList<>(appointments);

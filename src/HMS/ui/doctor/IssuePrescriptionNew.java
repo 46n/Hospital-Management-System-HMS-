@@ -73,8 +73,9 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
     private void loadAppointments() {
 
         doctorAppointments =
-            appointmentManager.listForDoctor(currentDoctor().getDoctorId());
-
+            appointmentManager.listActiveForDoctor(
+                currentDoctor().getDoctorId()
+            );
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
