@@ -13,6 +13,10 @@ public class MedicalRequest {
     private String status;
     private Doctor doctor;
     private MedicalRecord medicalRecord;
+    private String details;
+    private String rejectionReason;
+    private String processedBy;
+    private Date processedDate;
 
     public MedicalRequest() {
     }
@@ -70,6 +74,38 @@ public class MedicalRequest {
 
     public void setMedicalRecord(MedicalRecord medicalRecord) {
         this.medicalRecord = medicalRecord;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public String getProcessedBy() {
+        return processedBy;
+    }
+
+    public void setProcessedBy(String processedBy) {
+        this.processedBy = processedBy;
+    }
+
+    public Date getProcessedDate() {
+        return processedDate;
+    }
+
+    public void setProcessedDate(Date processedDate) {
+        this.processedDate = processedDate;
     }
 
     public void markAllocated() { status = "ALLOCATED"; }

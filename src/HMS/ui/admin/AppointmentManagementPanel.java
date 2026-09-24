@@ -1,6 +1,7 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -28,6 +29,7 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
 
     private final AppointmentManager appointmentManager;
     private final UserManager userManager;
+    private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final ConsultationRateManager rateManager;
     private final InsuranceNetworkManager insuranceManager;
@@ -38,11 +40,12 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public AppointmentManagementPanel(AppointmentManager appointmentManager, UserManager userManager,
-            HospitalAssetManager assetManager, ConsultationRateManager rateManager,
+            ClinicalManager clinicalManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
             InsuranceNetworkManager insuranceManager, SessionManager sessionManager,
             MainFrame mainFrame, Runnable onLogout) {
         this.appointmentManager = appointmentManager;
         this.userManager = userManager;
+        this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
         this.rateManager = rateManager;
         this.insuranceManager = insuranceManager;
@@ -150,8 +153,8 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
         };
         appointmentTable.setModel(tableModel);
         backButton.addActionListener(e -> mainFrame.showPanel(
-                new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
-                        rateManager, insuranceManager, mainFrame, onLogout)));
+                new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
+                        assetManager, rateManager, insuranceManager, mainFrame, onLogout)));
     }
 
     private void applySearch() {

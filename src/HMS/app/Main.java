@@ -96,7 +96,7 @@ public final class Main {
             DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager,
             MainFrame frame, Runnable onLogout) {
         if (sessionManager.hasRole("ADMIN_STAFF")) {
-            return new AdminDashboardPanel(sessionManager, userManager, appointmentManager,
+            return new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
                     assetManager, rateManager, insuranceManager, frame, onLogout);
         }
         if (sessionManager.hasRole("MEDICAL_MANAGER")) {

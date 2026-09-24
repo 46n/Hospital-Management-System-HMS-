@@ -1,6 +1,7 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -45,6 +46,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     private final ConsultationRateManager rateManager;
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
+    private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final InsuranceNetworkManager insuranceManager;
     private final SessionManager sessionManager;
@@ -54,12 +56,13 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public ConsultationRateManagementPanel(ConsultationRateManager rateManager, UserManager userManager,
-            AppointmentManager appointmentManager, HospitalAssetManager assetManager,
-            InsuranceNetworkManager insuranceManager, SessionManager sessionManager,
-            MainFrame mainFrame, Runnable onLogout) {
+            AppointmentManager appointmentManager, ClinicalManager clinicalManager,
+            HospitalAssetManager assetManager, InsuranceNetworkManager insuranceManager,
+            SessionManager sessionManager, MainFrame mainFrame, Runnable onLogout) {
         this.rateManager = rateManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
@@ -173,8 +176,8 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         toggleButton.addActionListener(e -> toggleSelectedActive());
         deleteButton.addActionListener(e -> deleteSelected());
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
-                sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
-                mainFrame, onLogout)));
+                sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
+                insuranceManager, mainFrame, onLogout)));
     }
 
     private void refreshTable() {

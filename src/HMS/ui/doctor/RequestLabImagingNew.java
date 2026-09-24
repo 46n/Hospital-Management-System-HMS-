@@ -17,6 +17,7 @@ import hms.model.MedicalRequest;
 
 import hms.ui.common.MainFrame;
 
+import java.io.IOException;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
@@ -26,8 +27,8 @@ import javax.swing.table.DefaultTableModel;
  * @author waleed
  */
 public class RequestLabImagingNew extends javax.swing.JPanel {
-    
-    
+
+
     private ClinicalManager clinicalManager;
     private AppointmentManager appointmentManager;
     private AssessmentTypeManager typeManager;
@@ -38,7 +39,8 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
     private List<Appointment> doctorAppointments;
 
-    private static final String[] REQUEST_TYPES = {"LAB", "IMAGING"};
+    /** The three assignment-required request categories. Legacy "IMAGING" records still load and display fine - this is only the set offered for new submissions. */
+    private static final String[] REQUEST_TYPES = {"LAB", "X_RAY", "SPECIALIZED_IMAGING"};
 
     /**
      * Creates new form DoctorAssessmentResultNew
@@ -46,13 +48,13 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
     private Doctor currentDoctor() {
         return (Doctor) sessionManager.getCurrentUser();
     }
-    
-    
+
+
     public RequestLabImagingNew() {
         initComponents();
     }
-    
-    
+
+
     public RequestLabImagingNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
         AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
         MainFrame mainFrame, Runnable onLogout) {
@@ -69,8 +71,8 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
         loadData();
     }
-    
-    
+
+
     private void loadData() {
 
         doctorAppointments =
@@ -96,8 +98,8 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
             refreshTable();
         }
     }
-    
-    
+
+
     private void submitRequest() {
 
         if (doctorAppointments.isEmpty()) {
@@ -118,7 +120,10 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
         clinicalManager.addRequest(
                 record.getRecordId(),
-                requestType);
+                requestType,
+                txtDetails.getText());
+
+        txtDetails.setText("");
 
         refreshTable();
 
@@ -129,10 +134,12 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
     } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
+    } catch (IOException ex) {
+            showError("The request could not be saved: " + ex.getMessage());
         }
     }
-    
-    
+
+
     private void refreshTable() {
 
         DefaultTableModel model =
@@ -157,22 +164,23 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
             model.addRow(new Object[]{
                 request.getRequestId(),
                 request.getRequestType(),
+                request.getDetails(),
                 request.getRequestDate(),
                 request.getStatus()
             });
         }
     }
-    
-    
+
+
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
-    
-    
-    
-    
-    
+
+
+
+
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -187,8 +195,10 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         lblRequestLabImaging = new javax.swing.JLabel();
         lblAppointment = new javax.swing.JLabel();
         lblRequestType = new javax.swing.JLabel();
+        lblDetails = new javax.swing.JLabel();
         cmbAppointment = new javax.swing.JComboBox<>();
         cmbRequestType = new javax.swing.JComboBox<>();
+        txtDetails = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblRequests = new javax.swing.JTable();
         btnBackToDashboard = new javax.swing.JButton();
@@ -203,6 +213,8 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
         lblRequestType.setText("Request Type:");
 
+        lblDetails.setText("Details:");
+
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         cmbAppointment.addActionListener(this::cmbAppointmentActionPerformed);
 
@@ -210,17 +222,17 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
         tblRequests.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
             },
             new String [] {
-                "Request ID", "Type", "Date", "Status"
+                "Request ID", "Type", "Details", "Date", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -266,11 +278,13 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblAppointment)
-                            .addComponent(lblRequestType))
+                            .addComponent(lblRequestType)
+                            .addComponent(lblDetails))
                         .addGap(79, 79, 79)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(cmbRequestType, 0, 99, Short.MAX_VALUE)
-                            .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtDetails, 0, 150, Short.MAX_VALUE))
                         .addGap(125, 125, 125))))
         );
         layout.setVerticalGroup(
@@ -288,7 +302,11 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(cmbRequestType, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblRequestType))
-                        .addGap(40, 40, 40))
+                        .addGap(12, 12, 12)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblDetails))
+                        .addGap(20, 20, 20))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -330,8 +348,10 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblAppointment;
+    private javax.swing.JLabel lblDetails;
     private javax.swing.JLabel lblRequestLabImaging;
     private javax.swing.JLabel lblRequestType;
     private javax.swing.JTable tblRequests;
+    private javax.swing.JTextField txtDetails;
     // End of variables declaration//GEN-END:variables
 }

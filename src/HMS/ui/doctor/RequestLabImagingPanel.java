@@ -30,10 +30,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import java.io.IOException;
+
 /**
  * Doctor screen for submitting lab or imaging requests against one of their
  * appointments. Selecting an appointment shows any requests already on that
  * appointment's medical record. All persistence goes through ClinicalManager.
+ *
+ * Not on the active navigation path (Main -&gt; DoctorDashboardNew uses
+ * RequestLabImagingNew instead) - kept compiling in case it is wired up
+ * elsewhere later, but intentionally not the target of Doctor-side feature work.
  */
 public class RequestLabImagingPanel extends JPanel {
 
@@ -156,6 +162,8 @@ public class RequestLabImagingPanel extends JPanel {
                     "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
+        } catch (IOException ex) {
+            showError("The request could not be saved: " + ex.getMessage());
         }
     }
 

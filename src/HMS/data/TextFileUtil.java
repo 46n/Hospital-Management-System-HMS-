@@ -74,6 +74,31 @@ public final class TextFileUtil {
     }
 
     /**
+     * Same as {@link #writeLines}, but rethrows the write failure instead of swallowing it,
+     * for callers that must not report success when the file was not actually saved.
+     */
+    public static void writeLinesChecked(File file, String header, List<String> lines) throws IOException {
+        if (file == null) {
+            throw new IllegalArgumentException("File is required");
+        }
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            if (header != null && !header.isEmpty()) {
+                writer.write(header);
+                writer.newLine();
+            }
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+    }
+
+    /**
      * Keeps free-text fields on a single line and out of the pipe delimiter's way.
      */
     public static String sanitize(String value) {

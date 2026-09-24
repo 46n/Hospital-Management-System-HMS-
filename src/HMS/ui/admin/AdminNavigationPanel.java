@@ -24,6 +24,7 @@ public class AdminNavigationPanel extends javax.swing.JPanel {
         manageUsersButton = new javax.swing.JButton();
         manageDoctorsButton = new javax.swing.JButton();
         viewAppointmentsButton = new javax.swing.JButton();
+        manageRequestsButton = new javax.swing.JButton();
         manageAssetsButton = new javax.swing.JButton();
         manageRatesButton = new javax.swing.JButton();
         manageInsuranceButton = new javax.swing.JButton();
@@ -72,9 +73,19 @@ public class AdminNavigationPanel extends javax.swing.JPanel {
         viewAppointmentsButton.setOpaque(true);
         add(viewAppointmentsButton);
 
+        manageRequestsButton.setBackground(new java.awt.Color(31, 78, 121));
+        manageRequestsButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        manageRequestsButton.setForeground(new java.awt.Color(255, 255, 255));
+        manageRequestsButton.setText("Medical Requests");
+        manageRequestsButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        manageRequestsButton.setBorderPainted(false);
+        manageRequestsButton.setFocusPainted(false);
+        manageRequestsButton.setOpaque(true);
+        add(manageRequestsButton);
+
+        manageAssetsButton.setBackground(new java.awt.Color(31, 78, 121));
         manageAssetsButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
         manageAssetsButton.setForeground(new java.awt.Color(255, 255, 255));
-        manageAssetsButton.setBackground(new java.awt.Color(31, 78, 121));
         manageAssetsButton.setText("Manage Hospital Assets");
         manageAssetsButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
         manageAssetsButton.setBorderPainted(false);
@@ -82,9 +93,9 @@ public class AdminNavigationPanel extends javax.swing.JPanel {
         manageAssetsButton.setOpaque(true);
         add(manageAssetsButton);
 
+        manageRatesButton.setBackground(new java.awt.Color(31, 78, 121));
         manageRatesButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
         manageRatesButton.setForeground(new java.awt.Color(255, 255, 255));
-        manageRatesButton.setBackground(new java.awt.Color(31, 78, 121));
         manageRatesButton.setText("Manage Consultation Rates");
         manageRatesButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
         manageRatesButton.setBorderPainted(false);
@@ -119,6 +130,10 @@ public class AdminNavigationPanel extends javax.swing.JPanel {
         return viewAppointmentsButton;
     }
 
+    public JButton getManageRequestsButton() {
+        return manageRequestsButton;
+    }
+
     public JButton getManageAssetsButton() {
         return manageAssetsButton;
     }
@@ -137,6 +152,7 @@ public class AdminNavigationPanel extends javax.swing.JPanel {
     private javax.swing.JButton manageDoctorsButton;
     private javax.swing.JButton manageInsuranceButton;
     private javax.swing.JButton manageRatesButton;
+    private javax.swing.JButton manageRequestsButton;
     private javax.swing.JButton manageUsersButton;
     private javax.swing.JButton viewAppointmentsButton;
     // End of variables declaration//GEN-END:variables
