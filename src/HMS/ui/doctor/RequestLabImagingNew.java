@@ -109,9 +109,14 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
             return;
         }
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
-        
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
 
         String requestType =
             (String) cmbRequestType.getSelectedItem();

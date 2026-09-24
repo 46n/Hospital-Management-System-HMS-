@@ -100,9 +100,14 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
             showError("You have no appointments.");
             return;
         }
+        int index = cmbAppointment.getSelectedIndex();
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
         
         if ("CANCELLED".equals(appointment.getStatus())) {
             showError("Cannot issue a prescription for a cancelled appointment.");
