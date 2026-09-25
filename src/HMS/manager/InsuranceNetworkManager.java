@@ -38,8 +38,8 @@ public class InsuranceNetworkManager {
 
     public InsuranceNetwork createNetwork(String providerName, String planName, double coveragePercentage,
             String managedByStaffId) {
-        ValidationUtil.requireNonBlank(providerName, "Provider name");
-        ValidationUtil.requireNonBlank(planName, "Plan name");
+        ValidationUtil.requireFileSafeText(providerName, "Provider name");
+        ValidationUtil.requireFileSafeText(planName, "Plan name");
         ValidationUtil.requireValidPercentage(coveragePercentage, "Coverage percentage");
         String trimmedProvider = providerName.trim();
         String trimmedPlan = planName.trim();
@@ -61,8 +61,8 @@ public class InsuranceNetworkManager {
 
     public void updateNetwork(String networkId, String providerName, String planName, double coveragePercentage) {
         InsuranceNetwork network = requireNetwork(networkId);
-        ValidationUtil.requireNonBlank(providerName, "Provider name");
-        ValidationUtil.requireNonBlank(planName, "Plan name");
+        ValidationUtil.requireFileSafeText(providerName, "Provider name");
+        ValidationUtil.requireFileSafeText(planName, "Plan name");
         ValidationUtil.requireValidPercentage(coveragePercentage, "Coverage percentage");
         String trimmedProvider = providerName.trim();
         String trimmedPlan = planName.trim();
@@ -214,12 +214,16 @@ public class InsuranceNetworkManager {
             System.err.println("Skipping duplicate insurance network ID: " + line);
             return null;
         }
-        if (providerName.isEmpty()) {
-            System.err.println("Skipping insurance network with a blank provider name: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(providerName, "Provider name");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping insurance network with an invalid provider name (" + e.getMessage() + "): " + line);
             return null;
         }
-        if (planName.isEmpty()) {
-            System.err.println("Skipping insurance network with a blank plan name: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(planName, "Plan name");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping insurance network with an invalid plan name (" + e.getMessage() + "): " + line);
             return null;
         }
         if (hasLoadedProviderPlanCombination(providerName, planName)) {

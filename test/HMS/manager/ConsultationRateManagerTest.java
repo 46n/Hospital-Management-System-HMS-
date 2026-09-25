@@ -67,6 +67,15 @@ public class ConsultationRateManagerTest {
         suite.run("testCreateTrimsConsultationType", suite::testCreateTrimsConsultationType);
         suite.run("testUpdateTrimsConsultationType", suite::testUpdateTrimsConsultationType);
         suite.run("testCreateRejectsBlankType", suite::testCreateRejectsBlankType);
+
+        // ---- structured-field file-safety ----
+        suite.run("testCreateRateRejectsPipeInType", suite::testCreateRateRejectsPipeInType);
+        suite.run("testCreateRateRejectsNewlineInType", suite::testCreateRateRejectsNewlineInType);
+        suite.run("testCreateRateRejectsCarriageReturnInType", suite::testCreateRateRejectsCarriageReturnInType);
+        suite.run("testCreateRateAcceptsTypeWithSpacesAndPunctuation",
+                suite::testCreateRateAcceptsTypeWithSpacesAndPunctuation);
+        suite.run("testUpdateRateRejectsPipeInTypeAndLeavesOriginalUnchanged",
+                suite::testUpdateRateRejectsPipeInTypeAndLeavesOriginalUnchanged);
         suite.run("testCreateRejectsNegativeAmount", suite::testCreateRejectsNegativeAmount);
         suite.run("testCreateRejectsNaNAmount", suite::testCreateRejectsNaNAmount);
         suite.run("testCreateRejectsInfiniteAmount", suite::testCreateRejectsInfiniteAmount);
@@ -432,6 +441,52 @@ public class ConsultationRateManagerTest {
             assertThrows(IllegalArgumentException.class,
                     () -> fixture.rateManager.createRate("   ", 50.0, dt("2026-01-01"), fixture.admin.getStaffId()),
                     "a blank consultation type must be rejected");
+        }
+    }
+
+    // ---- tests: structured-field file-safety (Step 9) ----
+
+    private void testCreateRateRejectsPipeInType() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.rateManager.createRate("General|Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId()),
+                    "a consultation type containing '|' must be rejected");
+        }
+    }
+
+    private void testCreateRateRejectsNewlineInType() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.rateManager.createRate("General\nCheckup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId()),
+                    "a consultation type containing a newline must be rejected");
+        }
+    }
+
+    private void testCreateRateRejectsCarriageReturnInType() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.rateManager.createRate("General\rCheckup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId()),
+                    "a consultation type containing a carriage return must be rejected");
+        }
+    }
+
+    private void testCreateRateAcceptsTypeWithSpacesAndPunctuation() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ConsultationRate rate = fixture.rateManager.createRate(
+                    "General Checkup (30 min)", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            assertEquals("General Checkup (30 min)", rate.getConsultationType(),
+                    "spaces and punctuation must remain valid in a consultation type");
+        }
+    }
+
+    private void testUpdateRateRejectsPipeInTypeAndLeavesOriginalUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ConsultationRate rate = fixture.rateManager.createRate(
+                    "General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.rateManager.updateRate(rate.getRateId(), "New|Type", 75.0, dt("2026-02-01")),
+                    "an updated consultation type containing '|' must be rejected");
+            assertEquals("General Checkup", rate.getConsultationType(), "the original type must be unchanged after a rejected update");
         }
     }
 

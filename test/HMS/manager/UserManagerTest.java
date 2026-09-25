@@ -88,6 +88,17 @@ public class UserManagerTest {
         suite.run("testResetPasswordPersistsAfterReload", suite::testResetPasswordPersistsAfterReload);
         suite.run("testResetPasswordRejectsBlankPassword", suite::testResetPasswordRejectsBlankPassword);
 
+        // ---- structured-field file-safety ----
+        suite.run("testRegisterUserRejectsPipeInPassword", suite::testRegisterUserRejectsPipeInPassword);
+        suite.run("testRegisterUserRejectsNewlineInPassword", suite::testRegisterUserRejectsNewlineInPassword);
+        suite.run("testRegisterUserRejectsCarriageReturnInPassword", suite::testRegisterUserRejectsCarriageReturnInPassword);
+        suite.run("testRegisterUserAcceptsPasswordWithSpacesAndPunctuation",
+                suite::testRegisterUserAcceptsPasswordWithSpacesAndPunctuation);
+        suite.run("testResetPasswordRejectsPipeAndLeavesOriginalPasswordUnchanged",
+                suite::testResetPasswordRejectsPipeAndLeavesOriginalPasswordUnchanged);
+        suite.run("testChangePasswordRejectsPipeAndLeavesOriginalPasswordUnchanged",
+                suite::testChangePasswordRejectsPipeAndLeavesOriginalPasswordUnchanged);
+
         // ---- deactivation/reactivation and login ----
         suite.run("testDeactivationPreventsLogin", suite::testDeactivationPreventsLogin);
         suite.run("testReactivationRestoresLogin", suite::testReactivationRestoresLogin);
@@ -654,6 +665,63 @@ public class UserManagerTest {
             assertThrows(IllegalArgumentException.class,
                     () -> fixture.userManager.resetPassword(admin.getUserId(), "   "),
                     "a blank new password must be rejected");
+        }
+    }
+
+    // ---- tests: structured-field file-safety (Step 9) ----
+
+    private void testRegisterUserRejectsPipeInPassword() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.registerUser(new AdminStaff(null, "admin1", "pass|1234",
+                            "0111111111", "admin1@test.com", "ADMIN_STAFF", null)),
+                    "a password containing '|' must be rejected");
+        }
+    }
+
+    private void testRegisterUserRejectsNewlineInPassword() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.registerUser(new AdminStaff(null, "admin1", "pass\n1234",
+                            "0111111111", "admin1@test.com", "ADMIN_STAFF", null)),
+                    "a password containing a newline must be rejected");
+        }
+    }
+
+    private void testRegisterUserRejectsCarriageReturnInPassword() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.registerUser(new AdminStaff(null, "admin1", "pass\r1234",
+                            "0111111111", "admin1@test.com", "ADMIN_STAFF", null)),
+                    "a password containing a carriage return must be rejected");
+        }
+    }
+
+    private void testRegisterUserAcceptsPasswordWithSpacesAndPunctuation() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = (AdminStaff) fixture.userManager.registerUser(new AdminStaff(null, "admin1",
+                    "pass 1234!?", "0111111111", "admin1@test.com", "ADMIN_STAFF", null));
+            assertEquals("pass 1234!?", admin.getPassword(), "spaces and punctuation must remain valid in a password");
+        }
+    }
+
+    private void testResetPasswordRejectsPipeAndLeavesOriginalPasswordUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.resetPassword(admin.getUserId(), "new|pass"),
+                    "a reset password containing '|' must be rejected");
+            assertEquals("pass1234", admin.getPassword(), "the original password must be unchanged after a rejected reset");
+        }
+    }
+
+    private void testChangePasswordRejectsPipeAndLeavesOriginalPasswordUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.changePassword(admin.getUserId(), "pass1234", "new|pass"),
+                    "a changed password containing '|' must be rejected");
+            assertEquals("pass1234", admin.getPassword(), "the original password must be unchanged after a rejected change");
         }
     }
 

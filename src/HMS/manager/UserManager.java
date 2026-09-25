@@ -48,7 +48,7 @@ public class UserManager {
             throw new IllegalArgumentException("User is required");
         }
         ValidationUtil.requireValidUsername(user.getUsername(), "Username");
-        ValidationUtil.requireNonBlank(user.getPassword(), "Password");
+        ValidationUtil.requireFileSafeText(user.getPassword(), "Password");
         ValidationUtil.requireValidPhone(user.getPhone(), "Phone");
         ValidationUtil.requireValidEmail(user.getEmail(), "Email");
         if (user instanceof Doctor) {
@@ -163,7 +163,7 @@ public class UserManager {
         if (!user.getPassword().equals(currentPassword)) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
-        ValidationUtil.requireNonBlank(newPassword, "New password");
+        ValidationUtil.requireFileSafeText(newPassword, "New password");
         String previousPassword = user.getPassword();
         user.setPassword(newPassword);
         try {
@@ -177,7 +177,7 @@ public class UserManager {
     /** Admin-initiated reset: unlike changePassword(), does not require knowing the current password. */
     public void resetPassword(String userId, String newPassword) {
         User user = requireById(userId);
-        ValidationUtil.requireNonBlank(newPassword, "New password");
+        ValidationUtil.requireFileSafeText(newPassword, "New password");
         String previousPassword = user.getPassword();
         user.setPassword(newPassword);
         try {
@@ -557,8 +557,10 @@ public class UserManager {
             System.err.println("Skipping duplicate username: " + line);
             return null;
         }
-        if (password.isEmpty()) {
-            System.err.println("Skipping user record with a blank password: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(password, "Password");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping user record with an invalid password (" + e.getMessage() + "): " + line);
             return null;
         }
         if (phone.isEmpty()) {

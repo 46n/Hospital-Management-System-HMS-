@@ -51,6 +51,16 @@ public class InsuranceNetworkManagerTest {
         suite.run("testUpdateTrimsProviderAndPlan", suite::testUpdateTrimsProviderAndPlan);
         suite.run("testCreateRejectsBlankProvider", suite::testCreateRejectsBlankProvider);
         suite.run("testCreateRejectsBlankPlan", suite::testCreateRejectsBlankPlan);
+
+        // ---- structured-field file-safety ----
+        suite.run("testCreateNetworkRejectsPipeInProvider", suite::testCreateNetworkRejectsPipeInProvider);
+        suite.run("testCreateNetworkRejectsNewlineInProvider", suite::testCreateNetworkRejectsNewlineInProvider);
+        suite.run("testCreateNetworkRejectsCarriageReturnInProvider", suite::testCreateNetworkRejectsCarriageReturnInProvider);
+        suite.run("testCreateNetworkAcceptsProviderWithSpacesAndPunctuation",
+                suite::testCreateNetworkAcceptsProviderWithSpacesAndPunctuation);
+        suite.run("testCreateNetworkRejectsPipeInPlan", suite::testCreateNetworkRejectsPipeInPlan);
+        suite.run("testUpdateNetworkRejectsPipeInProviderAndLeavesOriginalUnchanged",
+                suite::testUpdateNetworkRejectsPipeInProviderAndLeavesOriginalUnchanged);
         suite.run("testCreateAcceptsCoverageBoundaryZero", suite::testCreateAcceptsCoverageBoundaryZero);
         suite.run("testCreateAcceptsCoverageBoundaryHundred", suite::testCreateAcceptsCoverageBoundaryHundred);
         suite.run("testCreateRejectsNegativeCoverage", suite::testCreateRejectsNegativeCoverage);
@@ -355,6 +365,60 @@ public class InsuranceNetworkManagerTest {
             assertThrows(IllegalArgumentException.class,
                     () -> fixture.insuranceManager.createNetwork("HealthCo", "   ", 80.0, fixture.admin.getStaffId()),
                     "a blank plan name must be rejected");
+        }
+    }
+
+    // ---- tests: structured-field file-safety (Step 9) ----
+
+    private void testCreateNetworkRejectsPipeInProvider() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.insuranceManager.createNetwork("Health|Co", "Gold Plan", 80.0, fixture.admin.getStaffId()),
+                    "a provider name containing '|' must be rejected");
+        }
+    }
+
+    private void testCreateNetworkRejectsNewlineInProvider() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.insuranceManager.createNetwork("Health\nCo", "Gold Plan", 80.0, fixture.admin.getStaffId()),
+                    "a provider name containing a newline must be rejected");
+        }
+    }
+
+    private void testCreateNetworkRejectsCarriageReturnInProvider() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.insuranceManager.createNetwork("Health\rCo", "Gold Plan", 80.0, fixture.admin.getStaffId()),
+                    "a provider name containing a carriage return must be rejected");
+        }
+    }
+
+    private void testCreateNetworkAcceptsProviderWithSpacesAndPunctuation() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            InsuranceNetwork network = fixture.insuranceManager.createNetwork(
+                    "Health & Co, Inc.", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            assertEquals("Health & Co, Inc.", network.getProviderName(),
+                    "spaces and punctuation must remain valid in a provider name");
+        }
+    }
+
+    private void testCreateNetworkRejectsPipeInPlan() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.insuranceManager.createNetwork("HealthCo", "Gold|Plan", 80.0, fixture.admin.getStaffId()),
+                    "a plan name containing '|' must be rejected");
+        }
+    }
+
+    private void testUpdateNetworkRejectsPipeInProviderAndLeavesOriginalUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            InsuranceNetwork network = fixture.insuranceManager.createNetwork(
+                    "HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.insuranceManager.updateNetwork(network.getNetworkId(), "New|Provider", "Gold Plan", 80.0),
+                    "an updated provider name containing '|' must be rejected");
+            assertEquals("HealthCo", network.getProviderName(), "the original provider must be unchanged after a rejected update");
         }
     }
 

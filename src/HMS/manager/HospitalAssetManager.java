@@ -135,12 +135,12 @@ public class HospitalAssetManager {
     }
 
     private String requireTrimmedName(String assetName) {
-        ValidationUtil.requireNonBlank(assetName, "Asset name");
+        ValidationUtil.requireFileSafeText(assetName, "Asset name");
         return assetName.trim();
     }
 
     private String requireTrimmedLocation(String location) {
-        ValidationUtil.requireNonBlank(location, "Location");
+        ValidationUtil.requireFileSafeText(location, "Location");
         return location.trim();
     }
 
@@ -245,16 +245,20 @@ public class HospitalAssetManager {
             System.err.println("Skipping duplicate hospital asset ID: " + line);
             return null;
         }
-        if (assetName.isEmpty()) {
-            System.err.println("Skipping hospital asset with a blank name: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(assetName, "Asset name");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping hospital asset with an invalid name (" + e.getMessage() + "): " + line);
             return null;
         }
         if (loadedNamesLower.contains(assetName.toLowerCase())) {
             System.err.println("Skipping duplicate hospital asset name: " + line);
             return null;
         }
-        if (location.isEmpty()) {
-            System.err.println("Skipping hospital asset with a blank location: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(location, "Location");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping hospital asset with an invalid location (" + e.getMessage() + "): " + line);
             return null;
         }
         HospitalAssetType type = HospitalAssetType.fromStoredValue(assetTypeText);

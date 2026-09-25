@@ -45,7 +45,7 @@ public class ConsultationRateManager {
 
     public ConsultationRate createRate(String consultationType, double baseAmount, Date effectiveDate,
             String configuredByStaffId) {
-        ValidationUtil.requireNonBlank(consultationType, "Consultation type");
+        ValidationUtil.requireFileSafeText(consultationType, "Consultation type");
         ValidationUtil.requireValidAmount(baseAmount, "Base amount");
         if (effectiveDate == null) {
             throw new IllegalArgumentException("Effective date is required");
@@ -130,7 +130,7 @@ public class ConsultationRateManager {
 
     public void updateRate(String rateId, String consultationType, double baseAmount, Date effectiveDate) {
         ConsultationRate rate = requireRate(rateId);
-        ValidationUtil.requireNonBlank(consultationType, "Consultation type");
+        ValidationUtil.requireFileSafeText(consultationType, "Consultation type");
         ValidationUtil.requireValidAmount(baseAmount, "Base amount");
         if (effectiveDate == null) {
             throw new IllegalArgumentException("Effective date is required");
@@ -257,8 +257,10 @@ public class ConsultationRateManager {
             System.err.println("Skipping duplicate consultation rate ID: " + line);
             return null;
         }
-        if (consultationType.isEmpty()) {
-            System.err.println("Skipping consultation rate with a blank consultation type: " + line);
+        try {
+            ValidationUtil.requireFileSafeText(consultationType, "Consultation type");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Skipping consultation rate with an invalid type (" + e.getMessage() + "): " + line);
             return null;
         }
 

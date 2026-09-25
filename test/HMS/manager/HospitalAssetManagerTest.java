@@ -62,6 +62,18 @@ public class HospitalAssetManagerTest {
         // ---- creation/update validation ----
         suite.run("testBlankNameRejected", suite::testBlankNameRejected);
         suite.run("testBlankLocationRejected", suite::testBlankLocationRejected);
+
+        // ---- structured-field file-safety ----
+        suite.run("testCreateAssetRejectsPipeInName", suite::testCreateAssetRejectsPipeInName);
+        suite.run("testCreateAssetRejectsNewlineInName", suite::testCreateAssetRejectsNewlineInName);
+        suite.run("testCreateAssetRejectsCarriageReturnInName", suite::testCreateAssetRejectsCarriageReturnInName);
+        suite.run("testCreateAssetAcceptsNameWithSpacesAndPunctuation",
+                suite::testCreateAssetAcceptsNameWithSpacesAndPunctuation);
+        suite.run("testCreateAssetRejectsPipeInLocation", suite::testCreateAssetRejectsPipeInLocation);
+        suite.run("testUpdateAssetRejectsPipeInNameAndLeavesOriginalUnchanged",
+                suite::testUpdateAssetRejectsPipeInNameAndLeavesOriginalUnchanged);
+        suite.run("testUpdateAssetRejectsPipeInLocationAndLeavesOriginalUnchanged",
+                suite::testUpdateAssetRejectsPipeInLocationAndLeavesOriginalUnchanged);
         suite.run("testDuplicateNameRejectedCaseInsensitive", suite::testDuplicateNameRejectedCaseInsensitive);
         suite.run("testDuplicateNameRejectedWhenSpacesDiffer", suite::testDuplicateNameRejectedWhenSpacesDiffer);
         suite.run("testUpdateMayKeepOwnName", suite::testUpdateMayKeepOwnName);
@@ -364,6 +376,67 @@ public class HospitalAssetManagerTest {
             assertThrows(IllegalArgumentException.class,
                     () -> fixture.createAsset("Lab 1", "LAB", "   ", true),
                     "a blank location must be rejected");
+        }
+    }
+
+    // ---- tests: structured-field file-safety (Step 9) ----
+
+    private void testCreateAssetRejectsPipeInName() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("Lab|Room", "LAB", "Ground Floor", true),
+                    "an asset name containing '|' must be rejected");
+        }
+    }
+
+    private void testCreateAssetRejectsNewlineInName() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("Lab\nRoom", "LAB", "Ground Floor", true),
+                    "an asset name containing a newline must be rejected");
+        }
+    }
+
+    private void testCreateAssetRejectsCarriageReturnInName() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("Lab\rRoom", "LAB", "Ground Floor", true),
+                    "an asset name containing a carriage return must be rejected");
+        }
+    }
+
+    private void testCreateAssetAcceptsNameWithSpacesAndPunctuation() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room #1 (East)", "LAB", "Ground Floor", true);
+            assertEquals("Lab Room #1 (East)", asset.getAssetName(), "spaces and punctuation must remain valid in an asset name");
+        }
+    }
+
+    private void testCreateAssetRejectsPipeInLocation() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("Lab Room 1", "LAB", "Building A|Floor 2", true),
+                    "a location containing '|' must be rejected");
+        }
+    }
+
+    private void testUpdateAssetRejectsPipeInNameAndLeavesOriginalUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.hospitalAssetManager.updateAsset(asset.getAssetId(), "New|Name", "LAB", "Ground Floor"),
+                    "an updated asset name containing '|' must be rejected");
+            assertEquals("Lab Room 1", asset.getAssetName(), "the original name must be unchanged after a rejected update");
+        }
+    }
+
+    private void testUpdateAssetRejectsPipeInLocationAndLeavesOriginalUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.hospitalAssetManager.updateAsset(asset.getAssetId(), "Lab Room 1", "LAB", "New|Place"),
+                    "an updated location containing '|' must be rejected");
+            assertEquals("Ground Floor", asset.getLocation(), "the original location must be unchanged after a rejected update");
         }
     }
 

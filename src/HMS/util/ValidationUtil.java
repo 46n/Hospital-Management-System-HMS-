@@ -62,6 +62,22 @@ public final class ValidationUtil {
         }
     }
 
+    /**
+     * Rejects a value that would corrupt the pipe-delimited text files: a '|' would create an
+     * extra field, and a carriage return or newline would create an extra record. Requires the
+     * value to be non-blank first, since every field this is used for is mandatory. Ordinary
+     * spaces and punctuation stay valid - only these three characters are rejected.
+     */
+    public static void requireFileSafeText(String value, String fieldName) {
+        requireNonBlank(value, fieldName);
+        if (value.indexOf('|') >= 0) {
+            throw new IllegalArgumentException(fieldName + " cannot contain the '|' character");
+        }
+        if (value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) {
+            throw new IllegalArgumentException(fieldName + " cannot contain line breaks");
+        }
+    }
+
     /** Letters, digits, and underscores only, 4-20 characters, no spaces, at least one letter. */
     public static void requireValidUsername(String username, String fieldName) {
         requireNonBlank(username, fieldName);
