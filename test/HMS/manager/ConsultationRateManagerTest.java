@@ -6,6 +6,7 @@ import hms.model.Doctor;
 import hms.ui.admin.ConsultationRateManagementPanel;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -107,6 +108,15 @@ public class ConsultationRateManagerTest {
         // ---- GUI checks ----
         suite.run("testRateTableDisplaysRequiredColumns", suite::testRateTableDisplaysRequiredColumns);
         suite.run("testRateManagementButtonsHaveActionListeners", suite::testRateManagementButtonsHaveActionListeners);
+
+        // ---- persistence failure ----
+        suite.run("testCreateRateWriteFailureLeavesNoPhantom", suite::testCreateRateWriteFailureLeavesNoPhantom);
+        suite.run("testUpdateRateWriteFailureRestoresOriginalFields", suite::testUpdateRateWriteFailureRestoresOriginalFields);
+        suite.run("testSetActiveWriteFailureRestoresPreviousValue", suite::testSetActiveWriteFailureRestoresPreviousValue);
+        suite.run("testDeleteRateWriteFailureRestoresRecord", suite::testDeleteRateWriteFailureRestoresRecord);
+        suite.run("testExistingValidRateFileUnchangedAfterFailedWrite",
+                suite::testExistingValidRateFileUnchangedAfterFailedWrite);
+        suite.run("testUnreadableRateFileIsReportedAsLoadFailure", suite::testUnreadableRateFileIsReportedAsLoadFailure);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -806,6 +816,88 @@ public class ConsultationRateManagerTest {
                 assertNotNull(button, fieldName + " must exist");
                 assertTrue(button.getActionListeners().length > 0, fieldName + " must have an action listener wired");
             }
+        }
+    }
+
+    // ---- tests: persistence failure (Step 8) ----
+
+    private void testCreateRateWriteFailureLeavesNoPhantom() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            try (FileOutputStream lock = new FileOutputStream(fixture.ratesFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.rateManager.createRate("General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId()),
+                        "createRate must propagate a save failure instead of reporting success");
+            }
+            assertTrue(fixture.rateManager.getRates().isEmpty(), "a failed createRate must leave no phantom rate in memory");
+        }
+    }
+
+    private void testUpdateRateWriteFailureRestoresOriginalFields() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ConsultationRate rate = fixture.rateManager.createRate(
+                    "General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.ratesFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.rateManager.updateRate(rate.getRateId(), "Follow Up", 75.0, dt("2026-02-01")),
+                        "updateRate must propagate a save failure instead of reporting success");
+            }
+            assertEquals("General Checkup", rate.getConsultationType(), "type must be restored after a failed update");
+            assertEquals(50.0, rate.getBaseAmount(), "amount must be restored after a failed update");
+            assertEquals(dt("2026-01-01"), rate.getEffectiveDate(), "effective date must be restored after a failed update");
+        }
+    }
+
+    private void testSetActiveWriteFailureRestoresPreviousValue() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ConsultationRate rate = fixture.rateManager.createRate(
+                    "General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.ratesFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.rateManager.setActive(rate.getRateId(), false),
+                        "setActive must propagate a save failure instead of reporting success");
+            }
+            assertTrue(rate.isActive(), "active status must be restored to true after a failed toggle");
+        }
+    }
+
+    private void testDeleteRateWriteFailureRestoresRecord() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ConsultationRate rate = fixture.rateManager.createRate(
+                    "General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.ratesFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.rateManager.deleteRate(rate.getRateId()),
+                        "deleteRate must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.rateManager.findById(rate.getRateId()), "a failed delete must leave the rate in place");
+        }
+    }
+
+    private void testExistingValidRateFileUnchangedAfterFailedWrite() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            fixture.rateManager.createRate("General Checkup", 50.0, dt("2026-01-01"), fixture.admin.getStaffId());
+            List<String> originalContent = Files.readAllLines(fixture.ratesFile.toPath(), StandardCharsets.UTF_8);
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.ratesFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.rateManager.createRate(
+                                "Follow Up", 75.0, dt("2026-02-01"), fixture.admin.getStaffId()),
+                        "the second create must fail while the file is locked");
+            }
+
+            List<String> contentAfterFailure = Files.readAllLines(fixture.ratesFile.toPath(), StandardCharsets.UTF_8);
+            assertEquals(originalContent, contentAfterFailure,
+                    "the existing valid rate file must be unchanged after a failed write");
+        }
+    }
+
+    private void testUnreadableRateFileIsReportedAsLoadFailure() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            File directoryInPlaceOfFile = new File(fixture.tempDir.toFile(), "rates_as_directory.txt");
+            assertTrue(directoryInPlaceOfFile.mkdirs(), "test setup: could not create the directory standing in for the data file");
+            assertThrows(IllegalStateException.class,
+                    () -> new ConsultationRateManager(fixture.userManager, directoryInPlaceOfFile),
+                    "a data file that is actually a directory must be reported as a load failure, not an empty rate list");
         }
     }
 }

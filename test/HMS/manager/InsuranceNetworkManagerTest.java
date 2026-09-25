@@ -6,6 +6,7 @@ import hms.model.InsuranceNetwork;
 import hms.ui.admin.InsuranceNetworkManagementPanel;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -87,6 +88,16 @@ public class InsuranceNetworkManagerTest {
         // ---- GUI checks ----
         suite.run("testNetworkTableDisplaysRequiredColumns", suite::testNetworkTableDisplaysRequiredColumns);
         suite.run("testNetworkManagementButtonsHaveActionListeners", suite::testNetworkManagementButtonsHaveActionListeners);
+
+        // ---- persistence failure ----
+        suite.run("testCreateNetworkWriteFailureLeavesNoPhantom", suite::testCreateNetworkWriteFailureLeavesNoPhantom);
+        suite.run("testUpdateNetworkWriteFailureRestoresOriginalFields",
+                suite::testUpdateNetworkWriteFailureRestoresOriginalFields);
+        suite.run("testSetActiveWriteFailureRestoresPreviousValue", suite::testSetActiveWriteFailureRestoresPreviousValue);
+        suite.run("testDeleteNetworkWriteFailureRestoresRecord", suite::testDeleteNetworkWriteFailureRestoresRecord);
+        suite.run("testExistingValidNetworkFileUnchangedAfterFailedWrite",
+                suite::testExistingValidNetworkFileUnchangedAfterFailedWrite);
+        suite.run("testUnreadableNetworkFileIsReportedAsLoadFailure", suite::testUnreadableNetworkFileIsReportedAsLoadFailure);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -687,6 +698,92 @@ public class InsuranceNetworkManagerTest {
                 assertNotNull(button, fieldName + " must exist");
                 assertTrue(button.getActionListeners().length > 0, fieldName + " must have an action listener wired");
             }
+        }
+    }
+
+    // ---- tests: persistence failure (Step 8) ----
+
+    private void testCreateNetworkWriteFailureLeavesNoPhantom() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            try (FileOutputStream lock = new FileOutputStream(fixture.insuranceFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.insuranceManager.createNetwork(
+                                "HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId()),
+                        "createNetwork must propagate a save failure instead of reporting success");
+            }
+            assertTrue(fixture.insuranceManager.getNetworks().isEmpty(),
+                    "a failed createNetwork must leave no phantom network in memory");
+        }
+    }
+
+    private void testUpdateNetworkWriteFailureRestoresOriginalFields() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            InsuranceNetwork network = fixture.insuranceManager.createNetwork(
+                    "HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.insuranceFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.insuranceManager.updateNetwork(
+                                network.getNetworkId(), "MediCare Plus", "Silver Plan", 60.0),
+                        "updateNetwork must propagate a save failure instead of reporting success");
+            }
+            assertEquals("HealthCo", network.getProviderName(), "provider must be restored after a failed update");
+            assertEquals("Gold Plan", network.getPlanName(), "plan must be restored after a failed update");
+            assertEquals(80.0, network.getCoveragePercentage(), "coverage must be restored after a failed update");
+        }
+    }
+
+    private void testSetActiveWriteFailureRestoresPreviousValue() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            InsuranceNetwork network = fixture.insuranceManager.createNetwork(
+                    "HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.insuranceFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.insuranceManager.setActive(network.getNetworkId(), false),
+                        "setActive must propagate a save failure instead of reporting success");
+            }
+            assertTrue(network.isActive(), "active status must be restored to true after a failed toggle");
+        }
+    }
+
+    private void testDeleteNetworkWriteFailureRestoresRecord() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            InsuranceNetwork network = fixture.insuranceManager.createNetwork(
+                    "HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.insuranceFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.insuranceManager.deleteNetwork(network.getNetworkId()),
+                        "deleteNetwork must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.insuranceManager.findById(network.getNetworkId()),
+                    "a failed delete must leave the network in place");
+        }
+    }
+
+    private void testExistingValidNetworkFileUnchangedAfterFailedWrite() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            fixture.insuranceManager.createNetwork("HealthCo", "Gold Plan", 80.0, fixture.admin.getStaffId());
+            List<String> originalContent = Files.readAllLines(fixture.insuranceFile.toPath(), StandardCharsets.UTF_8);
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.insuranceFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.insuranceManager.createNetwork(
+                                "MediCare Plus", "Silver Plan", 60.0, fixture.admin.getStaffId()),
+                        "the second create must fail while the file is locked");
+            }
+
+            List<String> contentAfterFailure = Files.readAllLines(fixture.insuranceFile.toPath(), StandardCharsets.UTF_8);
+            assertEquals(originalContent, contentAfterFailure,
+                    "the existing valid insurance network file must be unchanged after a failed write");
+        }
+    }
+
+    private void testUnreadableNetworkFileIsReportedAsLoadFailure() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            File directoryInPlaceOfFile = new File(fixture.tempDir.toFile(), "networks_as_directory.txt");
+            assertTrue(directoryInPlaceOfFile.mkdirs(), "test setup: could not create the directory standing in for the data file");
+            assertThrows(IllegalStateException.class,
+                    () -> new InsuranceNetworkManager(fixture.userManager, directoryInPlaceOfFile),
+                    "a data file that is actually a directory must be reported as a load failure, not an empty network list");
         }
     }
 }

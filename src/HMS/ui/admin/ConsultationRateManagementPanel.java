@@ -217,7 +217,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         try {
             rateManager.setActive(rate.getRateId(), !rate.isActive());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -236,7 +236,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         try {
             rateManager.deleteRate(rate.getRateId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -297,7 +297,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

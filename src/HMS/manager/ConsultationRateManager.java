@@ -8,6 +8,7 @@ import hms.util.IdGenerator;
 import hms.util.ValidationUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +56,12 @@ public class ConsultationRateManager {
                 IdGenerator.next("CR", collectIds()), consultationType.trim(), baseAmount, effectiveDate, true);
         rate.setConfiguredBy(staff);
         rates.add(rate);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            rates.remove(rate);
+            throw e;
+        }
         return rate;
     }
 
@@ -100,17 +106,12 @@ public class ConsultationRateManager {
 
     /**
      * True if candidateId should win a same-effective-date tie-break against currentId. A
-     * generated rate ID is "CR" followed by a plain incrementing number with no fixed width, so
-     * "CR999" is followed by "CR1000" - not by a zero-padded "CR1000" of the same length as
-     * "CR999". Comparing the numeric suffixes as numbers (not as text) is what makes CR1000
-     * correctly outrank CR999; a plain string comparison would get this backwards, since the
-     * character '1' sorts before '9'.
-     *
-     * If either ID does not have that exact "CR" + digits shape - e.g. legacy data loaded from a
-     * file that used a different ID scheme, or a suffix too long to fit a long - this falls back
-     * to an ordinary string comparison. That fallback is still a fixed, deterministic answer and
-     * never throws; it just is not guaranteed to reflect creation order for IDs outside the
-     * normal generated shape.
+     * generated ID is "CR" plus a plain incrementing number with no fixed width, so "CR1000"
+     * follows "CR999" numerically but would sort before it as plain text (since '1' < '9'). This
+     * compares the numeric suffixes as numbers instead, so CR1000 correctly outranks CR999. If
+     * either ID does not have that exact "CR" + digits shape (legacy data, say), it falls back to
+     * an ordinary string comparison - still deterministic, just not guaranteed to reflect
+     * creation order for IDs outside the normal generated shape.
      */
     private static boolean isNewerRateId(String candidateId, String currentId) {
         Matcher candidateMatch = GENERATED_RATE_ID_PATTERN.matcher(candidateId);
@@ -134,22 +135,44 @@ public class ConsultationRateManager {
         if (effectiveDate == null) {
             throw new IllegalArgumentException("Effective date is required");
         }
+        String previousType = rate.getConsultationType();
+        double previousAmount = rate.getBaseAmount();
+        Date previousEffectiveDate = rate.getEffectiveDate();
         rate.setConsultationType(consultationType.trim());
         rate.setBaseAmount(baseAmount);
         rate.setEffectiveDate(effectiveDate);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            rate.setConsultationType(previousType);
+            rate.setBaseAmount(previousAmount);
+            rate.setEffectiveDate(previousEffectiveDate);
+            throw e;
+        }
     }
 
     public void setActive(String rateId, boolean active) {
         ConsultationRate rate = requireRate(rateId);
+        boolean previousActive = rate.isActive();
         rate.setActive(active);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            rate.setActive(previousActive);
+            throw e;
+        }
     }
 
     public void deleteRate(String rateId) {
         ConsultationRate rate = requireRate(rateId);
+        int previousIndex = rates.indexOf(rate);
         rates.remove(rate);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            rates.add(previousIndex, rate);
+            throw e;
+        }
     }
 
     public ConsultationRate findById(String rateId) {
@@ -193,8 +216,18 @@ public class ConsultationRateManager {
     }
 
     private void load() {
+        // A missing file means "no rates yet", but a file that exists and cannot be read must
+        // not be silently treated the same way - that would risk overwriting real rate data
+        // with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(dataFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + dataFile.getPath() + ": " + e.getMessage(), e);
+        }
+
         List<String> loadedIds = new ArrayList<>();
-        for (String line : TextFileUtil.readLines(dataFile)) {
+        for (String line : rawLines) {
             ConsultationRate rate = parseLine(line, loadedIds);
             if (rate != null) {
                 loadedIds.add(rate.getRateId());
@@ -276,7 +309,11 @@ public class ConsultationRateManager {
         for (ConsultationRate rate : rates) {
             lines.add(toLine(rate));
         }
-        TextFileUtil.writeLines(dataFile, HEADER, lines);
+        try {
+            TextFileUtil.writeLinesChecked(dataFile, HEADER, lines);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not save consultation rate data: " + e.getMessage(), e);
+        }
     }
 
     private String toLine(ConsultationRate rate) {

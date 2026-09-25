@@ -215,7 +215,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         try {
             assetManager.setAvailability(asset.getAssetId(), !asset.isAvailability());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -245,7 +245,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         try {
             assetManager.deleteAsset(asset.getAssetId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -317,7 +317,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

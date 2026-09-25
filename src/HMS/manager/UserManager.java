@@ -10,6 +10,7 @@ import hms.util.IdGenerator;
 import hms.util.ValidationUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -62,7 +63,14 @@ public class UserManager {
         user.setUserId(IdGenerator.next(rolePrefix(user), collectIds()));
         assignRoleSpecificId(user);
         users.add(user);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            users.remove(user);
+            user.setUserId(null);
+            clearRoleSpecificId(user);
+            throw e;
+        }
         return user;
     }
 
@@ -83,20 +91,23 @@ public class UserManager {
         User user = requireById(userId);
         ValidationUtil.requireValidPhone(phone, "Phone");
         ValidationUtil.requireValidEmail(email, "Email");
+        String previousPhone = user.getPhone();
+        String previousEmail = user.getEmail();
         user.updateContactDetails(phone, email);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.updateContactDetails(previousPhone, previousEmail);
+            throw e;
+        }
     }
 
     /**
-     * The complete Admin "Edit Profile" operation for a managed user, done as one atomic update:
-     * username, phone, and email, plus the role-specific field (Doctor specialty or Patient date
-     * of birth) when the user is that role. Every value is validated first, using the same rules
-     * as registration - nothing is changed until every check has passed - and only then are all
-     * applicable fields applied and saved together in a single save(). This is what stops a
-     * failed Doctor specialty or Patient date of birth from leaving an already-changed username,
-     * phone, or email in place. specialty and dateOfBirth are ignored unless the user is that
-     * role, so callers editing an Admin Staff or Medical Manager may pass null for both. Role and
-     * every generated ID (userId, staffId, managerId, doctorId, patientId) are never touched.
+     * The complete Admin "Edit Profile" operation for a managed user: username, phone, and
+     * email, plus the role-specific field (Doctor specialty or Patient date of birth) when the
+     * user is that role - pass null for specialty/dateOfBirth otherwise. Every value is validated
+     * first, so a failed Doctor specialty or Patient date of birth never leaves an already-changed
+     * username, phone, or email in place. Role and every generated ID are never touched.
      */
     public void updateManagedUser(String userId, String username, String phone, String email,
             String specialty, Date dateOfBirth) {
@@ -118,6 +129,12 @@ public class UserManager {
         }
 
         // Every value has now passed validation - apply and save them together, as one operation.
+        String previousUsername = user.getUsername();
+        String previousPhone = user.getPhone();
+        String previousEmail = user.getEmail();
+        String previousSpecialty = (user instanceof Doctor) ? ((Doctor) user).getSpecialty() : null;
+        Date previousDateOfBirth = (user instanceof Patient) ? ((Patient) user).getDateOfBirth() : null;
+
         user.setUsername(trimmedUsername);
         user.updateContactDetails(phone.trim(), email.trim());
         if (user instanceof Doctor) {
@@ -126,7 +143,19 @@ public class UserManager {
         if (user instanceof Patient) {
             ((Patient) user).setDateOfBirth(dateOfBirth);
         }
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.setUsername(previousUsername);
+            user.updateContactDetails(previousPhone, previousEmail);
+            if (user instanceof Doctor) {
+                ((Doctor) user).setSpecialty(previousSpecialty);
+            }
+            if (user instanceof Patient) {
+                ((Patient) user).setDateOfBirth(previousDateOfBirth);
+            }
+            throw e;
+        }
     }
 
     public void changePassword(String userId, String currentPassword, String newPassword) {
@@ -135,16 +164,28 @@ public class UserManager {
             throw new IllegalArgumentException("Current password is incorrect");
         }
         ValidationUtil.requireNonBlank(newPassword, "New password");
+        String previousPassword = user.getPassword();
         user.setPassword(newPassword);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.setPassword(previousPassword);
+            throw e;
+        }
     }
 
     /** Admin-initiated reset: unlike changePassword(), does not require knowing the current password. */
     public void resetPassword(String userId, String newPassword) {
         User user = requireById(userId);
         ValidationUtil.requireNonBlank(newPassword, "New password");
+        String previousPassword = user.getPassword();
         user.setPassword(newPassword);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.setPassword(previousPassword);
+            throw e;
+        }
     }
 
     /**
@@ -156,35 +197,88 @@ public class UserManager {
      */
     public void deleteUser(String userId) {
         User user = requireById(userId);
+        int previousIndex = users.indexOf(user);
+        MedicalManager previousManagerOfDoctor = null;
+        List<Doctor> previousManagedDoctors = null;
+
         if (user instanceof Doctor) {
-            Doctor doctor = (Doctor) user;
-            MedicalManager manager = doctor.getShiftManager();
-            if (manager != null) {
-                manager.removeDoctor(doctor);
-                doctor.setShiftManager(null);
-            }
+            previousManagerOfDoctor = detachDoctorFromManager((Doctor) user);
         } else if (user instanceof MedicalManager) {
-            MedicalManager manager = (MedicalManager) user;
-            List<Doctor> managedDoctors = new ArrayList<>(manager.getManagedDoctors());
-            for (Doctor doctor : managedDoctors) {
-                doctor.setShiftManager(null);
-                manager.removeDoctor(doctor);
-            }
+            previousManagedDoctors = detachManagerFromDoctors((MedicalManager) user);
         }
+
         users.remove(user);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            users.add(previousIndex, user);
+            if (user instanceof Doctor) {
+                reattachDoctorToManager((Doctor) user, previousManagerOfDoctor);
+            } else if (user instanceof MedicalManager) {
+                reattachManagerToDoctors((MedicalManager) user, previousManagedDoctors);
+            }
+            throw e;
+        }
+    }
+
+    /** Removes the doctor from its manager's list before deletion; returns that manager so a failed delete can restore it. */
+    private MedicalManager detachDoctorFromManager(Doctor doctor) {
+        MedicalManager manager = doctor.getShiftManager();
+        if (manager != null) {
+            manager.removeDoctor(doctor);
+            doctor.setShiftManager(null);
+        }
+        return manager;
+    }
+
+    /** Undoes detachDoctorFromManager() when deleteUser()'s save() fails. */
+    private void reattachDoctorToManager(Doctor doctor, MedicalManager previousManager) {
+        if (previousManager != null) {
+            doctor.setShiftManager(previousManager);
+            previousManager.addDoctor(doctor);
+        }
+    }
+
+    /** Unassigns every doctor under this manager before deletion; returns that list so a failed delete can restore it. */
+    private List<Doctor> detachManagerFromDoctors(MedicalManager manager) {
+        List<Doctor> previousDoctors = new ArrayList<>(manager.getManagedDoctors());
+        for (Doctor doctor : previousDoctors) {
+            doctor.setShiftManager(null);
+            manager.removeDoctor(doctor);
+        }
+        return previousDoctors;
+    }
+
+    /** Undoes detachManagerFromDoctors() when deleteUser()'s save() fails. */
+    private void reattachManagerToDoctors(MedicalManager manager, List<Doctor> previousDoctors) {
+        for (Doctor doctor : previousDoctors) {
+            doctor.setShiftManager(manager);
+            manager.addDoctor(doctor);
+        }
     }
 
     public void deactivateUser(String userId) {
         User user = requireById(userId);
+        boolean previousActive = user.isActive();
         user.setActive(false);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.setActive(previousActive);
+            throw e;
+        }
     }
 
     public void reactivateUser(String userId) {
         User user = requireById(userId);
+        boolean previousActive = user.isActive();
         user.setActive(true);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            user.setActive(previousActive);
+            throw e;
+        }
     }
 
     /**
@@ -206,7 +300,15 @@ public class UserManager {
                 previousManager.removeDoctor(doctor);
             }
             doctor.setShiftManager(null);
-            save();
+            try {
+                save();
+            } catch (IllegalStateException e) {
+                doctor.setShiftManager(previousManager);
+                if (previousManager != null) {
+                    previousManager.addDoctor(doctor);
+                }
+                throw e;
+            }
             return;
         }
 
@@ -217,18 +319,35 @@ public class UserManager {
         if (!newManager.isActive()) {
             throw new IllegalArgumentException("Cannot assign a Doctor to an inactive Medical Manager");
         }
+        boolean removedFromPrevious = false;
         if (previousManager != null && !previousManager.getManagerId().equals(newManager.getManagerId())) {
             previousManager.removeDoctor(doctor);
+            removedFromPrevious = true;
         }
         doctor.assignToManager(newManager);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            newManager.removeDoctor(doctor);
+            doctor.setShiftManager(previousManager);
+            if (removedFromPrevious) {
+                previousManager.addDoctor(doctor);
+            }
+            throw e;
+        }
     }
 
     public void updateDoctorSpecialty(String doctorId, String specialty) {
         Doctor doctor = requireDoctor(doctorId);
         validateSpecialty(specialty);
+        String previousSpecialty = doctor.getSpecialty();
         doctor.setSpecialty(specialty);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            doctor.setSpecialty(previousSpecialty);
+            throw e;
+        }
     }
 
     public static List<String> getValidSpecialties() {
@@ -345,13 +464,37 @@ public class UserManager {
         }
     }
 
+    /** Undoes assignRoleSpecificId() - used to roll back a registration whose save() failed. */
+    private void clearRoleSpecificId(User user) {
+        if (user instanceof AdminStaff) {
+            ((AdminStaff) user).setStaffId(null);
+        } else if (user instanceof MedicalManager) {
+            ((MedicalManager) user).setManagerId(null);
+        } else if (user instanceof Doctor) {
+            ((Doctor) user).setDoctorId(null);
+        } else if (user instanceof Patient) {
+            ((Patient) user).setPatientId(null);
+        }
+    }
+
     private void load() {
+        // A missing file means "no users yet" (an empty list), but a file that exists and cannot
+        // be read - permissions, or a directory sitting where the file should be - must not be
+        // silently treated the same way, since that would risk overwriting real user data with
+        // nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(dataFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + dataFile.getPath() + ": " + e.getMessage(), e);
+        }
+
         // Every ID and every lowercased username already loaded from this file, so a duplicate
         // row can be detected with a plain list search - the same style used elsewhere in the app.
         List<String> loadedIds = new ArrayList<>();
         List<String> loadedUsernamesLower = new ArrayList<>();
         Map<String, String> doctorManagerLinks = new HashMap<>();
-        for (String line : TextFileUtil.readLines(dataFile)) {
+        for (String line : rawLines) {
             User user = parseLine(line, loadedIds, loadedUsernamesLower);
             if (user == null) {
                 continue;
@@ -476,12 +619,20 @@ public class UserManager {
         return user;
     }
 
+    /**
+     * Throws IllegalStateException instead of IOException, so every caller above can catch it,
+     * roll back its own change, and rethrow it without declaring a checked exception.
+     */
     private void save() {
         List<String> lines = new ArrayList<>();
         for (User user : users) {
             lines.add(toLine(user));
         }
-        TextFileUtil.writeLines(dataFile, HEADER, lines);
+        try {
+            TextFileUtil.writeLinesChecked(dataFile, HEADER, lines);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not save user data: " + e.getMessage(), e);
+        }
     }
 
     private String toLine(User user) {

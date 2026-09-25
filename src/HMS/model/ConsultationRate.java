@@ -58,11 +58,9 @@ public class ConsultationRate {
         this.effectiveDate = copyDate(effectiveDate);
     }
 
-    // Dates are mutable in Java, so every getter/setter copies instead of sharing the caller's
-    // Date instance - otherwise a caller could change this rate's effective date later just by
-    // mutating a Date it happened to still hold a reference to, bypassing manager validation and
-    // save(). Null-safe since effectiveDate has no non-null guarantee at the model level (only
-    // ConsultationRateManager enforces that a rate always has one).
+    // Dates are mutable in Java, so we copy them here instead of storing the caller's reference -
+    // this stops code elsewhere in the app from reaching back in later and mutating the Date it
+    // originally passed in.
     private static Date copyDate(Date date) {
         return date == null ? null : new Date(date.getTime());
     }

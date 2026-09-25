@@ -380,7 +380,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
                 userManager.assignDoctorToManager(doctorId, managers.get(index).getManagerId());
             }
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -401,7 +401,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         try {
             userManager.updateDoctorSpecialty(doctorId, (String) selection);
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -425,7 +425,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         try {
             userManager.assignDoctorToManager(doctorId, null);
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }

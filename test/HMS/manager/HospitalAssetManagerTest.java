@@ -7,6 +7,7 @@ import hms.model.MedicalRequest;
 import hms.ui.admin.HospitalAssetManagementPanel;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -105,6 +106,16 @@ public class HospitalAssetManagerTest {
         suite.run("testXrayRoomIsSelectable", suite::testXrayRoomIsSelectable);
         suite.run("testAssetTableDisplaysRequiredColumns", suite::testAssetTableDisplaysRequiredColumns);
         suite.run("testAssetButtonsHaveActionListeners", suite::testAssetButtonsHaveActionListeners);
+
+        // ---- persistence failure ----
+        suite.run("testCreateAssetWriteFailureLeavesNoPhantom", suite::testCreateAssetWriteFailureLeavesNoPhantom);
+        suite.run("testUpdateAssetWriteFailureRestoresOriginalFields", suite::testUpdateAssetWriteFailureRestoresOriginalFields);
+        suite.run("testSetAvailabilityWriteFailureRestoresPreviousValue",
+                suite::testSetAvailabilityWriteFailureRestoresPreviousValue);
+        suite.run("testDeleteAssetWriteFailureRestoresRecord", suite::testDeleteAssetWriteFailureRestoresRecord);
+        suite.run("testExistingValidAssetFileUnchangedAfterFailedWrite",
+                suite::testExistingValidAssetFileUnchangedAfterFailedWrite);
+        suite.run("testUnreadableAssetFileIsReportedAsLoadFailure", suite::testUnreadableAssetFileIsReportedAsLoadFailure);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -745,6 +756,86 @@ public class HospitalAssetManagerTest {
                 assertNotNull(button, fieldName + " must exist");
                 assertTrue(button.getActionListeners().length > 0, fieldName + " must have an action listener wired");
             }
+        }
+    }
+
+    // ---- tests: persistence failure (Step 8) ----
+
+    private void testCreateAssetWriteFailureLeavesNoPhantom() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            try (FileOutputStream lock = new FileOutputStream(fixture.assetsFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.hospitalAssetManager.createAsset("Lab Room 1", "LAB", "Ground Floor", true, "AS001"),
+                        "createAsset must propagate a save failure instead of reporting success");
+            }
+            assertTrue(fixture.hospitalAssetManager.getAssets().isEmpty(),
+                    "a failed createAsset must leave no phantom asset in memory");
+        }
+    }
+
+    private void testUpdateAssetWriteFailureRestoresOriginalFields() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            try (FileOutputStream lock = new FileOutputStream(fixture.assetsFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.hospitalAssetManager.updateAsset(asset.getAssetId(), "Renamed", "CLINIC", "Elsewhere"),
+                        "updateAsset must propagate a save failure instead of reporting success");
+            }
+            assertEquals("Lab Room 1", asset.getAssetName(), "name must be restored after a failed update");
+            assertEquals("LAB", asset.getAssetType(), "type must be restored after a failed update");
+            assertEquals("Ground Floor", asset.getLocation(), "location must be restored after a failed update");
+        }
+    }
+
+    private void testSetAvailabilityWriteFailureRestoresPreviousValue() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            try (FileOutputStream lock = new FileOutputStream(fixture.assetsFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.hospitalAssetManager.setAvailability(asset.getAssetId(), false),
+                        "setAvailability must propagate a save failure instead of reporting success");
+            }
+            assertTrue(asset.isAvailability(), "availability must be restored to true after a failed toggle");
+        }
+    }
+
+    private void testDeleteAssetWriteFailureRestoresRecord() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            HospitalAsset asset = fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            try (FileOutputStream lock = new FileOutputStream(fixture.assetsFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.hospitalAssetManager.deleteAsset(asset.getAssetId()),
+                        "deleteAsset must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.hospitalAssetManager.findById(asset.getAssetId()),
+                    "a failed delete must leave the asset in place");
+        }
+    }
+
+    private void testExistingValidAssetFileUnchangedAfterFailedWrite() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            fixture.createAsset("Lab Room 1", "LAB", "Ground Floor", true);
+            List<String> originalContent = Files.readAllLines(fixture.assetsFile.toPath(), StandardCharsets.UTF_8);
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.assetsFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.hospitalAssetManager.createAsset("Lab Room 2", "LAB", "First Floor", true, "AS001"),
+                        "the second create must fail while the file is locked");
+            }
+
+            List<String> contentAfterFailure = Files.readAllLines(fixture.assetsFile.toPath(), StandardCharsets.UTF_8);
+            assertEquals(originalContent, contentAfterFailure,
+                    "the existing valid asset file must be unchanged after a failed write");
+        }
+    }
+
+    private void testUnreadableAssetFileIsReportedAsLoadFailure() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            File directoryInPlaceOfFile = new File(fixture.tempDir.toFile(), "assets_as_directory.txt");
+            assertTrue(directoryInPlaceOfFile.mkdirs(), "test setup: could not create the directory standing in for the data file");
+            assertThrows(IllegalStateException.class,
+                    () -> new HospitalAssetManager(fixture.userManager, directoryInPlaceOfFile),
+                    "a data file that is actually a directory must be reported as a load failure, not an empty asset list");
         }
     }
 }

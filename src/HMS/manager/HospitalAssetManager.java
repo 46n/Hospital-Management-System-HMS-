@@ -9,6 +9,7 @@ import hms.util.IdGenerator;
 import hms.util.ValidationUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +62,12 @@ public class HospitalAssetManager {
                 IdGenerator.next("HA", collectIds()), trimmedName, canonicalType, trimmedLocation, availability);
         asset.setManagedBy(staff);
         assets.add(asset);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            assets.remove(asset);
+            throw e;
+        }
         return asset;
     }
 
@@ -72,22 +78,44 @@ public class HospitalAssetManager {
         String trimmedLocation = requireTrimmedLocation(location);
         requireNameAvailable(trimmedName, assetId);
 
+        String previousName = asset.getAssetName();
+        String previousType = asset.getAssetType();
+        String previousLocation = asset.getLocation();
         asset.setAssetName(trimmedName);
         asset.setAssetType(canonicalType);
         asset.setLocation(trimmedLocation);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            asset.setAssetName(previousName);
+            asset.setAssetType(previousType);
+            asset.setLocation(previousLocation);
+            throw e;
+        }
     }
 
     public void setAvailability(String assetId, boolean availability) {
         HospitalAsset asset = requireAsset(assetId);
+        boolean previousAvailability = asset.isAvailability();
         asset.setAvailability(availability);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            asset.setAvailability(previousAvailability);
+            throw e;
+        }
     }
 
     public void deleteAsset(String assetId) {
         HospitalAsset asset = requireAsset(assetId);
+        int previousIndex = assets.indexOf(asset);
         assets.remove(asset);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            assets.add(previousIndex, asset);
+            throw e;
+        }
     }
 
     public HospitalAsset findById(String assetId) {
@@ -172,11 +200,21 @@ public class HospitalAssetManager {
     }
 
     private void load() {
+        // A missing file means "no assets yet", but a file that exists and cannot be read must
+        // not be silently treated the same way - that would risk overwriting real asset data
+        // with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(dataFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + dataFile.getPath() + ": " + e.getMessage(), e);
+        }
+
         // Every ID and every lowercased name already loaded from this file, so a duplicate row
         // can be detected with a plain list search - the same style used elsewhere in the app.
         List<String> loadedIds = new ArrayList<>();
         List<String> loadedNamesLower = new ArrayList<>();
-        for (String line : TextFileUtil.readLines(dataFile)) {
+        for (String line : rawLines) {
             HospitalAsset asset = parseLine(line, loadedIds, loadedNamesLower);
             if (asset != null) {
                 loadedIds.add(asset.getAssetId());
@@ -253,7 +291,11 @@ public class HospitalAssetManager {
         for (HospitalAsset asset : assets) {
             lines.add(toLine(asset));
         }
-        TextFileUtil.writeLines(dataFile, HEADER, lines);
+        try {
+            TextFileUtil.writeLinesChecked(dataFile, HEADER, lines);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not save hospital asset data: " + e.getMessage(), e);
+        }
     }
 
     private String toLine(HospitalAsset asset) {

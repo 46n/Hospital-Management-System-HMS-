@@ -336,7 +336,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
                 userManager.reactivateUser(userId);
             }
             refreshTable(userManager.getUsers());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -369,7 +369,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
         try {
             userManager.deleteUser(userId);
             refreshTable(userManager.getUsers());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -537,7 +537,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
                 userManager.registerUser(newUser);
                 dialog.dispose();
                 refreshTable(userManager.getUsers());
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });
@@ -675,7 +675,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
                         phoneField.getText().trim(), emailField.getText().trim(), specialty, dateOfBirth);
                 dialog.dispose();
                 refreshTable(userManager.getUsers());
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });
@@ -737,7 +737,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
                 dialog.dispose();
                 JOptionPane.showMessageDialog(this, "Password reset successfully.",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

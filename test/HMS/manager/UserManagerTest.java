@@ -10,6 +10,7 @@ import hms.ui.admin.DoctorManagementPanel;
 import hms.ui.admin.UserManagementPanel;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -160,6 +161,30 @@ public class UserManagerTest {
         suite.run("testDoctorSearchMatchesIdUsernameSpecialtyManagerAndAssignedState",
                 suite::testDoctorSearchMatchesIdUsernameSpecialtyManagerAndAssignedState);
         suite.run("testAssignmentDialogOffersOnlyActiveManagers", suite::testAssignmentDialogOffersOnlyActiveManagers);
+
+        // ---- persistence failure ----
+        suite.run("testRegisterUserWriteFailureLeavesNoPhantomAndClearsGeneratedIds",
+                suite::testRegisterUserWriteFailureLeavesNoPhantomAndClearsGeneratedIds);
+        suite.run("testUpdateManagedUserWriteFailureRestoresAllFields",
+                suite::testUpdateManagedUserWriteFailureRestoresAllFields);
+        suite.run("testResetPasswordWriteFailureRestoresOldPassword", suite::testResetPasswordWriteFailureRestoresOldPassword);
+        suite.run("testDeactivateWriteFailureRestoresPreviousActiveState",
+                suite::testDeactivateWriteFailureRestoresPreviousActiveState);
+        suite.run("testReactivateWriteFailureRestoresPreviousActiveState",
+                suite::testReactivateWriteFailureRestoresPreviousActiveState);
+        suite.run("testDeleteUserWriteFailureRestoresRecord", suite::testDeleteUserWriteFailureRestoresRecord);
+        suite.run("testExistingValidUsersFileUnchangedAfterFailedWrite",
+                suite::testExistingValidUsersFileUnchangedAfterFailedWrite);
+        suite.run("testUnreadableUsersFileIsReportedAsLoadFailure", suite::testUnreadableUsersFileIsReportedAsLoadFailure);
+        suite.run("testAssignDoctorToManagerInitialAssignmentWriteFailureRestoresBothSides",
+                suite::testAssignDoctorToManagerInitialAssignmentWriteFailureRestoresBothSides);
+        suite.run("testReassignDoctorToManagerWriteFailureRestoresBothSides",
+                suite::testReassignDoctorToManagerWriteFailureRestoresBothSides);
+        suite.run("testUnassignDoctorWriteFailureRestoresBothSides", suite::testUnassignDoctorWriteFailureRestoresBothSides);
+        suite.run("testDeleteDoctorWriteFailureRestoresManagerRelationship",
+                suite::testDeleteDoctorWriteFailureRestoresManagerRelationship);
+        suite.run("testDeleteManagerWriteFailureRestoresAllDoctorRelationships",
+                suite::testDeleteManagerWriteFailureRestoresAllDoctorRelationships);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -1333,6 +1358,213 @@ public class UserManagerTest {
                     (List<MedicalManager>) invokePrivateMethod(panel, "getActiveMedicalManagers", new Class<?>[0]);
             assertTrue(activeManagers.contains(activeManager), "an active Medical Manager must be offered");
             assertTrue(!activeManagers.contains(inactiveManager), "an inactive Medical Manager must not be offered");
+        }
+    }
+
+    // ---- tests: persistence failure (Step 8) ----
+
+    private void testRegisterUserWriteFailureLeavesNoPhantomAndClearsGeneratedIds() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            Doctor doctor = new Doctor(null, "doctor1", "pass1234", "0133333333", "doctor1@test.com", "DOCTOR", null,
+                    "Cardiology");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.registerUser(doctor),
+                        "registerUser must propagate a save failure instead of reporting success");
+            }
+            assertNull(fixture.userManager.findByUsername("doctor1"), "a failed registration must leave no phantom user in memory");
+            assertNull(doctor.getUserId(), "a failed registration must clear the generated user ID back to null");
+            assertNull(doctor.getDoctorId(), "a failed registration must clear the generated role-specific ID back to null");
+        }
+    }
+
+    private void testUpdateManagedUserWriteFailureRestoresAllFields() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.updateManagedUser(doctor.getUserId(), "renamedDoctor", "0199999999",
+                                "renamed@test.com", "Neurology", null),
+                        "updateManagedUser must propagate a save failure instead of reporting success");
+            }
+            assertEquals("doctor1", doctor.getUsername(), "username must be restored after a failed update");
+            assertEquals("0133333333", doctor.getPhone(), "phone must be restored after a failed update");
+            assertEquals("doctor1@test.com", doctor.getEmail(), "email must be restored after a failed update");
+            assertEquals("Cardiology", doctor.getSpecialty(), "specialty must be restored after a failed update");
+        }
+    }
+
+    private void testResetPasswordWriteFailureRestoresOldPassword() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.resetPassword(admin.getUserId(), "newPass99"),
+                        "resetPassword must propagate a save failure instead of reporting success");
+            }
+            assertEquals("pass1234", admin.getPassword(), "the old password must be restored after a failed reset");
+        }
+    }
+
+    private void testDeactivateWriteFailureRestoresPreviousActiveState() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.deactivateUser(admin.getUserId()),
+                        "deactivateUser must propagate a save failure instead of reporting success");
+            }
+            assertTrue(admin.isActive(), "active status must be restored to true after a failed deactivation");
+        }
+    }
+
+    private void testReactivateWriteFailureRestoresPreviousActiveState() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            fixture.userManager.deactivateUser(admin.getUserId());
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.reactivateUser(admin.getUserId()),
+                        "reactivateUser must propagate a save failure instead of reporting success");
+            }
+            assertTrue(!admin.isActive(), "active status must be restored to false after a failed reactivation");
+        }
+    }
+
+    private void testDeleteUserWriteFailureRestoresRecord() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.deleteUser(admin.getUserId()),
+                        "deleteUser must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.userManager.findById(admin.getUserId()), "a failed delete must leave the user in place");
+        }
+    }
+
+    private void testExistingValidUsersFileUnchangedAfterFailedWrite() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            fixture.registerAdmin("admin1");
+            List<String> originalContent = Files.readAllLines(fixture.usersFile.toPath(), StandardCharsets.UTF_8);
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.registerAdmin("admin2"),
+                        "the second registration must fail while the file is locked");
+            }
+
+            List<String> contentAfterFailure = Files.readAllLines(fixture.usersFile.toPath(), StandardCharsets.UTF_8);
+            assertEquals(originalContent, contentAfterFailure,
+                    "the existing valid users file must be unchanged after a failed write");
+        }
+    }
+
+    private void testUnreadableUsersFileIsReportedAsLoadFailure() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            File directoryInPlaceOfFile = new File(fixture.tempDir.toFile(), "users_as_directory.txt");
+            assertTrue(directoryInPlaceOfFile.mkdirs(), "test setup: could not create the directory standing in for the data file");
+            assertThrows(IllegalStateException.class,
+                    () -> new UserManager(directoryInPlaceOfFile),
+                    "a data file that is actually a directory must be reported as a load failure, not an empty user list");
+        }
+    }
+
+    private void testAssignDoctorToManagerInitialAssignmentWriteFailureRestoresBothSides() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId()),
+                        "assignDoctorToManager must propagate a save failure instead of reporting success");
+            }
+            assertNull(doctor.getShiftManager(), "a failed initial assignment must leave the doctor unassigned");
+            assertTrue(!manager.getManagedDoctors().contains(doctor),
+                    "a failed initial assignment must not list the doctor under the manager");
+        }
+    }
+
+    private void testReassignDoctorToManagerWriteFailureRestoresBothSides() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager managerA = fixture.registerManager("managerA");
+            MedicalManager managerB = fixture.registerManager("managerB");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), managerA.getManagerId());
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), managerB.getManagerId()),
+                        "reassignment must propagate a save failure instead of reporting success");
+            }
+            assertEquals(managerA.getManagerId(), doctor.getShiftManager().getManagerId(),
+                    "a failed reassignment must leave the doctor pointing at the original manager");
+            assertTrue(managerA.getManagedDoctors().contains(doctor),
+                    "a failed reassignment must leave the doctor listed under the original manager");
+            assertTrue(!managerB.getManagedDoctors().contains(doctor),
+                    "a failed reassignment must not list the doctor under the new manager");
+        }
+    }
+
+    private void testUnassignDoctorWriteFailureRestoresBothSides() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), null),
+                        "unassignment must propagate a save failure instead of reporting success");
+            }
+            assertEquals(manager.getManagerId(), doctor.getShiftManager().getManagerId(),
+                    "a failed unassignment must leave the doctor still pointing at the manager");
+            assertTrue(manager.getManagedDoctors().contains(doctor),
+                    "a failed unassignment must leave the doctor listed under the manager");
+        }
+    }
+
+    private void testDeleteDoctorWriteFailureRestoresManagerRelationship() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.deleteUser(doctor.getUserId()),
+                        "deleteUser must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.userManager.findById(doctor.getUserId()), "a failed doctor deletion must leave the doctor in place");
+            assertEquals(manager.getManagerId(), doctor.getShiftManager().getManagerId(),
+                    "a failed doctor deletion must restore the doctor's manager reference");
+            assertTrue(manager.getManagedDoctors().contains(doctor),
+                    "a failed doctor deletion must restore the manager's doctor list");
+        }
+    }
+
+    private void testDeleteManagerWriteFailureRestoresAllDoctorRelationships() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctorA = fixture.registerDoctor("doctorA", "Cardiology");
+            Doctor doctorB = fixture.registerDoctor("doctorB", "Neurology");
+            fixture.userManager.assignDoctorToManager(doctorA.getDoctorId(), manager.getManagerId());
+            fixture.userManager.assignDoctorToManager(doctorB.getDoctorId(), manager.getManagerId());
+
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.deleteUser(manager.getUserId()),
+                        "deleteUser must propagate a save failure instead of reporting success");
+            }
+            assertNotNull(fixture.userManager.findById(manager.getUserId()), "a failed manager deletion must leave the manager in place");
+            assertEquals(manager.getManagerId(), doctorA.getShiftManager().getManagerId(),
+                    "doctorA's manager reference must be restored");
+            assertEquals(manager.getManagerId(), doctorB.getShiftManager().getManagerId(),
+                    "doctorB's manager reference must be restored");
+            assertTrue(manager.getManagedDoctors().contains(doctorA),
+                    "the manager's doctor list must be restored to include doctorA");
+            assertTrue(manager.getManagedDoctors().contains(doctorB),
+                    "the manager's doctor list must be restored to include doctorB");
         }
     }
 }

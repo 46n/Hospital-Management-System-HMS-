@@ -8,6 +8,7 @@ import hms.util.IdGenerator;
 import hms.util.ValidationUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +50,12 @@ public class InsuranceNetworkManager {
                 IdGenerator.next("IN", collectIds()), trimmedProvider, trimmedPlan, coveragePercentage, true);
         network.setManagedBy(staff);
         networks.add(network);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            networks.remove(network);
+            throw e;
+        }
         return network;
     }
 
@@ -61,22 +67,45 @@ public class InsuranceNetworkManager {
         String trimmedProvider = providerName.trim();
         String trimmedPlan = planName.trim();
         requireProviderPlanAvailable(trimmedProvider, trimmedPlan, networkId);
+
+        String previousProvider = network.getProviderName();
+        String previousPlan = network.getPlanName();
+        double previousCoverage = network.getCoveragePercentage();
         network.setProviderName(trimmedProvider);
         network.setPlanName(trimmedPlan);
         network.setCoveragePercentage(coveragePercentage);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            network.setProviderName(previousProvider);
+            network.setPlanName(previousPlan);
+            network.setCoveragePercentage(previousCoverage);
+            throw e;
+        }
     }
 
     public void setActive(String networkId, boolean active) {
         InsuranceNetwork network = requireNetwork(networkId);
+        boolean previousActive = network.isActive();
         network.setActive(active);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            network.setActive(previousActive);
+            throw e;
+        }
     }
 
     public void deleteNetwork(String networkId) {
         InsuranceNetwork network = requireNetwork(networkId);
+        int previousIndex = networks.indexOf(network);
         networks.remove(network);
-        save();
+        try {
+            save();
+        } catch (IllegalStateException e) {
+            networks.add(previousIndex, network);
+            throw e;
+        }
     }
 
     public InsuranceNetwork findById(String networkId) {
@@ -98,11 +127,9 @@ public class InsuranceNetworkManager {
     /**
      * Rejects a provider+plan combination already used by a different network, ignoring case and
      * surrounding spaces. excludingNetworkId is null when creating (nothing to exclude) and the
-     * network's own ID when updating (so a network may keep its own provider+plan combination).
-     * Coursework decision: accepted networks are configured by an Admin one at a time and the
-     * real data file starts empty, so there is no existing data to accommodate - duplicates are
-     * rejected outright rather than allowed, matching the duplicate-name pattern already used for
-     * hospital assets and usernames elsewhere in this app.
+     * network's own ID when updating (so a network may keep its own combination). Duplicates are
+     * rejected outright, matching the duplicate-name pattern already used for hospital assets and
+     * usernames elsewhere in this app.
      */
     private void requireProviderPlanAvailable(String trimmedProvider, String trimmedPlan, String excludingNetworkId) {
         for (InsuranceNetwork network : networks) {
@@ -146,8 +173,18 @@ public class InsuranceNetworkManager {
     }
 
     private void load() {
+        // A missing file means "no networks yet", but a file that exists and cannot be read must
+        // not be silently treated the same way - that would risk overwriting real network data
+        // with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(dataFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + dataFile.getPath() + ": " + e.getMessage(), e);
+        }
+
         List<String> loadedIds = new ArrayList<>();
-        for (String line : TextFileUtil.readLines(dataFile)) {
+        for (String line : rawLines) {
             InsuranceNetwork network = parseLine(line, loadedIds);
             if (network != null) {
                 loadedIds.add(network.getNetworkId());
@@ -243,7 +280,11 @@ public class InsuranceNetworkManager {
         for (InsuranceNetwork network : networks) {
             lines.add(toLine(network));
         }
-        TextFileUtil.writeLines(dataFile, HEADER, lines);
+        try {
+            TextFileUtil.writeLinesChecked(dataFile, HEADER, lines);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not save insurance network data: " + e.getMessage(), e);
+        }
     }
 
     private String toLine(InsuranceNetwork network) {

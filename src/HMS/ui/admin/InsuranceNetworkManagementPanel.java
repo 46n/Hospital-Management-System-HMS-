@@ -212,7 +212,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
         try {
             insuranceManager.setActive(network.getNetworkId(), !network.isActive());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -231,7 +231,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
         try {
             insuranceManager.deleteNetwork(network.getNetworkId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -285,7 +285,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });
