@@ -32,6 +32,20 @@ public final class ValidationUtil {
         }
     }
 
+    /**
+     * A genuine, finite monetary amount: not NaN, not positive/negative infinity, and not
+     * negative. NaN and infinity both fail a plain "value &lt; 0" check (NaN compares false to
+     * everything, and positive infinity is not negative), so they need their own check here
+     * rather than relying on requireNonNegative alone. Zero is accepted as valid - a rate may
+     * legitimately be free of charge.
+     */
+    public static void requireValidAmount(double value, String fieldName) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException(fieldName + " must be a finite number");
+        }
+        requireNonNegative(value, fieldName);
+    }
+
     /** Letters, digits, and underscores only, 4-20 characters, no spaces, at least one letter. */
     public static void requireValidUsername(String username, String fieldName) {
         requireNonBlank(username, fieldName);

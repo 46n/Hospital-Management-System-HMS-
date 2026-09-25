@@ -12,6 +12,7 @@ import hms.model.ConsultationRate;
 import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
+import hms.util.ValidationUtil;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -281,7 +282,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
                 return;
             }
             try {
-                effectiveDate = DATE_FORMAT.parse(dateField.getText().trim());
+                effectiveDate = ValidationUtil.parseStrictDate(dateField.getText().trim());
             } catch (ParseException ex) {
                 showError("Effective date must be in yyyy-MM-dd format.");
                 return;

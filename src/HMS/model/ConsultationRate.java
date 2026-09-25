@@ -21,7 +21,7 @@ public class ConsultationRate {
         this.rateId = rateId;
         this.consultationType = consultationType;
         this.baseAmount = baseAmount;
-        this.effectiveDate = effectiveDate;
+        this.effectiveDate = copyDate(effectiveDate);
         this.active = active;
     }
 
@@ -49,12 +49,22 @@ public class ConsultationRate {
         this.baseAmount = baseAmount;
     }
 
+    /** Defensive copy - mutating the returned Date cannot change this rate's effective date. */
     public Date getEffectiveDate() {
-        return effectiveDate;
+        return copyDate(effectiveDate);
     }
 
     public void setEffectiveDate(Date effectiveDate) {
-        this.effectiveDate = effectiveDate;
+        this.effectiveDate = copyDate(effectiveDate);
+    }
+
+    // Dates are mutable in Java, so every getter/setter copies instead of sharing the caller's
+    // Date instance - otherwise a caller could change this rate's effective date later just by
+    // mutating a Date it happened to still hold a reference to, bypassing manager validation and
+    // save(). Null-safe since effectiveDate has no non-null guarantee at the model level (only
+    // ConsultationRateManager enforces that a rate always has one).
+    private static Date copyDate(Date date) {
+        return date == null ? null : new Date(date.getTime());
     }
 
     public boolean isActive() {
