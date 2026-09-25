@@ -105,7 +105,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
 
         searchPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        searchLabel.setText("Search (username or specialty):");
+        searchLabel.setText("Search (ID, username, specialty, or manager):");
         searchPanel.add(searchLabel);
 
         searchField.setColumns(16);
@@ -247,6 +247,17 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         return managers;
     }
 
+    /** Only an active Medical Manager may be offered as a new assignment target. */
+    private List<MedicalManager> getActiveMedicalManagers() {
+        List<MedicalManager> activeManagers = new ArrayList<>();
+        for (MedicalManager manager : getAllMedicalManagers()) {
+            if (manager.isActive()) {
+                activeManagers.add(manager);
+            }
+        }
+        return activeManagers;
+    }
+
     private void applySearch() {
         String query = searchField.getText().trim().toLowerCase();
         if (query.isEmpty()) {
@@ -255,12 +266,27 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         }
         List<Doctor> matches = new ArrayList<>();
         for (Doctor doctor : getAllDoctors()) {
-            String specialty = doctor.getSpecialty() == null ? "" : doctor.getSpecialty().toLowerCase();
-            if (doctor.getUsername().toLowerCase().contains(query) || specialty.contains(query)) {
+            if (doctorMatchesSearch(doctor, query)) {
                 matches.add(doctor);
             }
         }
         refreshTable(matches);
+    }
+
+    /** Matches on Doctor ID, username, specialty, and the assigned manager's username/ID/unassigned state. */
+    private boolean doctorMatchesSearch(Doctor doctor, String query) {
+        String specialty = doctor.getSpecialty() == null ? "" : doctor.getSpecialty().toLowerCase();
+        String managerText = managerLabel(doctor).toLowerCase();
+        if (doctor.getDoctorId().toLowerCase().contains(query)) {
+            return true;
+        }
+        if (doctor.getUsername().toLowerCase().contains(query)) {
+            return true;
+        }
+        if (specialty.contains(query)) {
+            return true;
+        }
+        return managerText.contains(query);
     }
 
     private void refreshTable(List<Doctor> doctors) {
@@ -329,9 +355,9 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
             return;
         }
         Doctor doctor = userManager.findDoctorById(doctorId);
-        List<MedicalManager> managers = getAllMedicalManagers();
+        List<MedicalManager> managers = getActiveMedicalManagers();
         if (managers.isEmpty()) {
-            showError("No Medical Managers are registered yet.");
+            showError("No active Medical Managers are available to assign.");
             return;
         }
 

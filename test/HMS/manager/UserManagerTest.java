@@ -6,6 +6,7 @@ import hms.model.Doctor;
 import hms.model.MedicalManager;
 import hms.model.Patient;
 import hms.model.User;
+import hms.ui.admin.DoctorManagementPanel;
 import hms.ui.admin.UserManagementPanel;
 
 import java.io.File;
@@ -100,6 +101,22 @@ public class UserManagerTest {
                 suite::testAdminStaffWithManagedAssetBlocksDeletionViaPanel);
         suite.run("testCleanUserHasNoDependencyBlockingDeletion", suite::testCleanUserHasNoDependencyBlockingDeletion);
 
+        // ---- doctor-to-Medical-Manager assignment (Step 5) ----
+        suite.run("testAssignDoctorToManagerInitialAssignment", suite::testAssignDoctorToManagerInitialAssignment);
+        suite.run("testReassignDoctorToDifferentManagerRemovesFromPrevious",
+                suite::testReassignDoctorToDifferentManagerRemovesFromPrevious);
+        suite.run("testUnassignDoctorRemovesFromManager", suite::testUnassignDoctorRemovesFromManager);
+        suite.run("testReassignSameManagerDoesNotDuplicate", suite::testReassignSameManagerDoesNotDuplicate);
+        suite.run("testAssignmentPersistsAfterReload", suite::testAssignmentPersistsAfterReload);
+        suite.run("testUnassignmentPersistsAfterReload", suite::testUnassignmentPersistsAfterReload);
+        suite.run("testAssignRejectsInvalidDoctorId", suite::testAssignRejectsInvalidDoctorId);
+        suite.run("testAssignRejectsNonDoctorId", suite::testAssignRejectsNonDoctorId);
+        suite.run("testAssignRejectsInvalidManagerId", suite::testAssignRejectsInvalidManagerId);
+        suite.run("testAssignRejectsNonManagerId", suite::testAssignRejectsNonManagerId);
+        suite.run("testAssignRejectsInactiveDoctor", suite::testAssignRejectsInactiveDoctor);
+        suite.run("testAssignRejectsInactiveManager", suite::testAssignRejectsInactiveManager);
+        suite.run("testUnassignAllowedForInactiveDoctor", suite::testUnassignAllowedForInactiveDoctor);
+
         // ---- self-protection ----
         suite.run("testCannotSelectSelfForDeletionOrDeactivation", suite::testCannotSelectSelfForDeletionOrDeactivation);
 
@@ -128,6 +145,8 @@ public class UserManagerTest {
         suite.run("testAdminDateParsingRejectsTrailingCharacters", suite::testAdminDateParsingRejectsTrailingCharacters);
         suite.run("testAdminDateParsingRejectsNonCanonicalForm", suite::testAdminDateParsingRejectsNonCanonicalForm);
         suite.run("testLoadSkipsDoctorManagerLinkToNonManagerUser", suite::testLoadSkipsDoctorManagerLinkToNonManagerUser);
+        suite.run("testLoadSkipsDoctorManagerLinkToUnknownManagerId", suite::testLoadSkipsDoctorManagerLinkToUnknownManagerId);
+        suite.run("testLoadResolvesLinkToInactiveManager", suite::testLoadResolvesLinkToInactiveManager);
         suite.run("testLoadResolvesDoctorManagerLinkRegardlessOfRowOrder",
                 suite::testLoadResolvesDoctorManagerLinkRegardlessOfRowOrder);
         suite.run("testValidLegacyRecordWithoutTrailingColumnsStillLoads",
@@ -136,6 +155,11 @@ public class UserManagerTest {
         // ---- GUI checks ----
         suite.run("testUserTableDisplaysRequiredColumns", suite::testUserTableDisplaysRequiredColumns);
         suite.run("testUserManagementButtonsHaveActionListeners", suite::testUserManagementButtonsHaveActionListeners);
+        suite.run("testDoctorManagementTableDisplaysRequiredColumns", suite::testDoctorManagementTableDisplaysRequiredColumns);
+        suite.run("testDoctorManagementButtonsHaveActionListeners", suite::testDoctorManagementButtonsHaveActionListeners);
+        suite.run("testDoctorSearchMatchesIdUsernameSpecialtyManagerAndAssignedState",
+                suite::testDoctorSearchMatchesIdUsernameSpecialtyManagerAndAssignedState);
+        suite.run("testAssignmentDialogOffersOnlyActiveManagers", suite::testAssignmentDialogOffersOnlyActiveManagers);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -251,6 +275,11 @@ public class UserManagerTest {
 
         UserManagementPanel newPanel() {
             return new UserManagementPanel(userManager, appointmentManager, clinicalManager, hospitalAssetManager,
+                    rateManager, insuranceManager, allocationManager, sessionManager, null, () -> { });
+        }
+
+        DoctorManagementPanel newDoctorPanel() {
+            return new DoctorManagementPanel(userManager, appointmentManager, clinicalManager, hospitalAssetManager,
                     rateManager, insuranceManager, allocationManager, sessionManager, null, () -> { });
         }
 
@@ -656,6 +685,170 @@ public class UserManagerTest {
         }
     }
 
+    // ---- tests: doctor-to-Medical-Manager assignment (Step 5) ----
+
+    private void testAssignDoctorToManagerInitialAssignment() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+            assertEquals(manager.getManagerId(), doctor.getShiftManager().getManagerId(),
+                    "the doctor must point at the newly assigned manager");
+            assertTrue(manager.getManagedDoctors().contains(doctor), "the manager must list the newly assigned doctor");
+        }
+    }
+
+    private void testReassignDoctorToDifferentManagerRemovesFromPrevious() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager managerA = fixture.registerManager("managerA");
+            MedicalManager managerB = fixture.registerManager("managerB");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), managerA.getManagerId());
+
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), managerB.getManagerId());
+            assertEquals(managerB.getManagerId(), doctor.getShiftManager().getManagerId(),
+                    "the doctor must now point at the new manager");
+            assertTrue(!managerA.getManagedDoctors().contains(doctor),
+                    "the previous manager must no longer list this doctor");
+            assertTrue(managerB.getManagedDoctors().contains(doctor), "the new manager must list this doctor");
+        }
+    }
+
+    private void testUnassignDoctorRemovesFromManager() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), null);
+            assertNull(doctor.getShiftManager(), "the doctor must no longer point at any manager");
+            assertTrue(!manager.getManagedDoctors().contains(doctor), "the manager must no longer list this doctor");
+        }
+    }
+
+    private void testReassignSameManagerDoesNotDuplicate() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+
+            int occurrences = 0;
+            for (Doctor managedDoctor : manager.getManagedDoctors()) {
+                if (managedDoctor.getDoctorId().equals(doctor.getDoctorId())) {
+                    occurrences++;
+                }
+            }
+            assertEquals(1, occurrences, "reassigning to the same manager must not create a duplicate entry");
+        }
+    }
+
+    private void testAssignmentPersistsAfterReload() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+
+            UserManager reloaded = new UserManager(fixture.usersFile);
+            Doctor reloadedDoctor = reloaded.findDoctorById(doctor.getDoctorId());
+            MedicalManager reloadedManager = reloaded.findMedicalManagerById(manager.getManagerId());
+            assertNotNull(reloadedDoctor.getShiftManager(), "the assignment must survive reload");
+            assertEquals(reloadedManager.getManagerId(), reloadedDoctor.getShiftManager().getManagerId(),
+                    "the reloaded doctor must point at the reloaded manager");
+            assertTrue(reloadedManager.getManagedDoctors().contains(reloadedDoctor),
+                    "the reloaded manager must list the reloaded doctor");
+        }
+    }
+
+    private void testUnassignmentPersistsAfterReload() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), null);
+
+            UserManager reloaded = new UserManager(fixture.usersFile);
+            Doctor reloadedDoctor = reloaded.findDoctorById(doctor.getDoctorId());
+            assertNull(reloadedDoctor.getShiftManager(), "the unassignment must survive reload");
+        }
+    }
+
+    private void testAssignRejectsInvalidDoctorId() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager("UNKNOWN999", manager.getManagerId()),
+                    "an unknown doctor ID must be rejected with a clear error");
+        }
+    }
+
+    private void testAssignRejectsNonDoctorId() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Patient patient = fixture.registerPatient("patient1", "1990-01-01");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager(patient.getUserId(), manager.getManagerId()),
+                    "a Patient ID must not be accepted as the doctor being assigned");
+        }
+    }
+
+    private void testAssignRejectsInvalidManagerId() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), "UNKNOWN999"),
+                    "an unknown manager ID must be rejected with a clear error");
+        }
+    }
+
+    private void testAssignRejectsNonManagerId() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            Patient patient = fixture.registerPatient("patient1", "1990-01-01");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), patient.getUserId()),
+                    "a Patient ID must not be accepted as the Medical Manager being assigned to");
+        }
+    }
+
+    private void testAssignRejectsInactiveDoctor() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.deactivateUser(doctor.getUserId());
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId()),
+                    "an inactive doctor must not be newly assigned to a manager");
+            assertNull(doctor.getShiftManager(), "the rejected assignment must not have taken effect");
+        }
+    }
+
+    private void testAssignRejectsInactiveManager() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.deactivateUser(manager.getUserId());
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId()),
+                    "a doctor must not be newly assigned to an inactive manager");
+            assertNull(doctor.getShiftManager(), "the rejected assignment must not have taken effect");
+        }
+    }
+
+    private void testUnassignAllowedForInactiveDoctor() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("manager1");
+            Doctor doctor = fixture.registerDoctor("doctor1", "Cardiology");
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), manager.getManagerId());
+            fixture.userManager.deactivateUser(doctor.getUserId());
+
+            fixture.userManager.assignDoctorToManager(doctor.getDoctorId(), null);
+            assertNull(doctor.getShiftManager(), "unassigning an inactive doctor's existing relationship must still work");
+            assertTrue(!manager.getManagedDoctors().contains(doctor),
+                    "the manager must no longer list the inactive, now-unassigned doctor");
+        }
+    }
+
     private void testDoctorWithAppointmentBlocksDeletionViaPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             MedicalManager manager = fixture.registerManager("manager1");
@@ -972,6 +1165,35 @@ public class UserManagerTest {
         }
     }
 
+    /** Reviewer-required Step 5 coverage: a link to a manager ID that does not exist at all. */
+    private void testLoadSkipsDoctorManagerLinkToUnknownManagerId() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            writeFile(fixture.usersFile,
+                    "#userId|role|username|password|phone|email|extra1|extra2|active|doctorManagerId",
+                    "DR001|DOCTOR|doctor1|pass1234|0111111111|d@test.com|DR001|Cardiology|true|MM999");
+            UserManager freshManager = new UserManager(fixture.usersFile);
+            Doctor doctor = freshManager.findDoctorById("DR001");
+            assertNotNull(doctor, "the doctor row itself must still load");
+            assertNull(doctor.getShiftManager(),
+                    "a doctorManagerId pointing at a manager ID that does not exist must not crash and must leave the doctor unassigned");
+        }
+    }
+
+    /** Reviewer-required Step 5 coverage: a relationship to an inactive manager survives loading unchanged. */
+    private void testLoadResolvesLinkToInactiveManager() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            writeFile(fixture.usersFile,
+                    "#userId|role|username|password|phone|email|extra1|extra2|active|doctorManagerId",
+                    "DR001|DOCTOR|doctor1|pass1234|0111111111|d@test.com|DR001|Cardiology|true|MM001",
+                    "MM001|MEDICAL_MANAGER|manager1|pass1234|0122222222|m@test.com|MM001||false|");
+            UserManager freshManager = new UserManager(fixture.usersFile);
+            Doctor doctor = freshManager.findDoctorById("DR001");
+            assertNotNull(doctor.getShiftManager(),
+                    "a persisted relationship to a manager must survive loading even if that manager is inactive - "
+                            + "deactivation must never silently remove an existing assignment");
+        }
+    }
+
     private void testLoadResolvesDoctorManagerLinkRegardlessOfRowOrder() throws Exception {
         try (Fixture fixture = new Fixture()) {
             writeFile(fixture.usersFile,
@@ -1031,6 +1253,86 @@ public class UserManagerTest {
                 assertNotNull(button, fieldName + " must exist");
                 assertTrue(button.getActionListeners().length > 0, fieldName + " must have an action listener wired");
             }
+        }
+    }
+
+    // ---- tests: DoctorManagementPanel (Step 5) ----
+
+    private void testDoctorManagementTableDisplaysRequiredColumns() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            DoctorManagementPanel panel = fixture.newDoctorPanel();
+            JTable doctorTable = (JTable) getPrivateField(panel, "doctorTable");
+            TableModel model = doctorTable.getModel();
+            List<String> columns = new ArrayList<>();
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                columns.add(model.getColumnName(i));
+            }
+            assertTrue(columns.contains("ID"), "doctor table must show the doctor ID");
+            assertTrue(columns.contains("Assigned Manager"), "doctor table must show the assigned manager");
+            assertTrue(columns.contains("Active"), "doctor table must show active status");
+        }
+    }
+
+    private void testDoctorManagementButtonsHaveActionListeners() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            DoctorManagementPanel panel = fixture.newDoctorPanel();
+            String[] buttonFields = {
+                    "viewButton", "assignManagerButton", "unassignManagerButton",
+                    "updateSpecialtyButton", "backButton", "searchButton", "clearButton"
+            };
+            for (String fieldName : buttonFields) {
+                JButton button = (JButton) getPrivateField(panel, fieldName);
+                assertNotNull(button, fieldName + " must exist");
+                assertTrue(button.getActionListeners().length > 0, fieldName + " must have an action listener wired");
+            }
+        }
+    }
+
+    private void testDoctorSearchMatchesIdUsernameSpecialtyManagerAndAssignedState() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager manager = fixture.registerManager("managerOne");
+            Doctor assignedDoctor = fixture.registerDoctor("houseMd", "Cardiology");
+            Doctor unassignedDoctor = fixture.registerDoctor("wilsonMd", "Neurology");
+            fixture.userManager.assignDoctorToManager(assignedDoctor.getDoctorId(), manager.getManagerId());
+
+            DoctorManagementPanel panel = fixture.newDoctorPanel();
+            JTextField searchField = (JTextField) getPrivateField(panel, "searchField");
+            DefaultTableModel tableModel = (DefaultTableModel) getPrivateField(panel, "tableModel");
+
+            searchField.setText(assignedDoctor.getDoctorId().toLowerCase());
+            invokePrivateMethod(panel, "applySearch", new Class<?>[0]);
+            assertEquals(1, tableModel.getRowCount(), "searching by Doctor ID must find the matching doctor");
+
+            searchField.setText("cardiology");
+            invokePrivateMethod(panel, "applySearch", new Class<?>[0]);
+            assertEquals(1, tableModel.getRowCount(), "searching by specialty must find the matching doctor");
+
+            searchField.setText("managerone");
+            invokePrivateMethod(panel, "applySearch", new Class<?>[0]);
+            assertEquals(1, tableModel.getRowCount(), "searching by the assigned manager's username must find that doctor");
+
+            searchField.setText(manager.getManagerId().toLowerCase());
+            invokePrivateMethod(panel, "applySearch", new Class<?>[0]);
+            assertEquals(1, tableModel.getRowCount(), "searching by the assigned manager's ID must find that doctor");
+
+            searchField.setText("unassigned");
+            invokePrivateMethod(panel, "applySearch", new Class<?>[0]);
+            assertEquals(1, tableModel.getRowCount(), "searching for \"unassigned\" must find only the unassigned doctor");
+        }
+    }
+
+    private void testAssignmentDialogOffersOnlyActiveManagers() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalManager activeManager = fixture.registerManager("activeManager");
+            MedicalManager inactiveManager = fixture.registerManager("inactiveManager");
+            fixture.userManager.deactivateUser(inactiveManager.getUserId());
+
+            DoctorManagementPanel panel = fixture.newDoctorPanel();
+            @SuppressWarnings("unchecked")
+            List<MedicalManager> activeManagers =
+                    (List<MedicalManager>) invokePrivateMethod(panel, "getActiveMedicalManagers", new Class<?>[0]);
+            assertTrue(activeManagers.contains(activeManager), "an active Medical Manager must be offered");
+            assertTrue(!activeManagers.contains(inactiveManager), "an inactive Medical Manager must not be offered");
         }
     }
 }

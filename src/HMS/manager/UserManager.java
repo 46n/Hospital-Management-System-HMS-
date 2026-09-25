@@ -190,7 +190,12 @@ public class UserManager {
     /**
      * Assigns (or, with a null/blank managerId, unassigns) a doctor's Medical
      * Manager. Removes the doctor from any previous manager's list first, so
-     * a doctor is never listed under two managers at once.
+     * a doctor is never listed under two managers at once. Unassigning is
+     * always allowed - even for an inactive Doctor, since cleaning up an
+     * existing relationship must never be blocked - but a new assignment (a
+     * non-blank managerId) requires both the Doctor and the Medical Manager
+     * to be active. Deactivating an account never removes an existing
+     * assignment by itself; this check only applies to a fresh assign call.
      */
     public void assignDoctorToManager(String doctorId, String managerId) {
         Doctor doctor = requireDoctor(doctorId);
@@ -205,7 +210,13 @@ public class UserManager {
             return;
         }
 
+        if (!doctor.isActive()) {
+            throw new IllegalArgumentException("Cannot assign an inactive Doctor to a Medical Manager");
+        }
         MedicalManager newManager = requireMedicalManager(managerId);
+        if (!newManager.isActive()) {
+            throw new IllegalArgumentException("Cannot assign a Doctor to an inactive Medical Manager");
+        }
         if (previousManager != null && !previousManager.getManagerId().equals(newManager.getManagerId())) {
             previousManager.removeDoctor(doctor);
         }
