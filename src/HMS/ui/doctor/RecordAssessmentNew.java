@@ -52,8 +52,8 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
     public RecordAssessmentNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
             AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
             MainFrame mainFrame, Runnable onLogout) {
-        initComponents();
-        applyStyles();
+            initComponents();
+            applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -88,9 +88,6 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
                 + " (" + appointment.getStatus() + ")"
             );
         }
-        
-    
-
         activeTypes = new ArrayList<>();
 
         for (AssessmentType type : typeManager.getTypes()) {
@@ -108,50 +105,66 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
                 + type.getGradingRule() + ")"
             );
         }
+        loadSelectedAppointmentResults();
     }
     
     
     
     private void recordResult() {
         if (doctorAppointments.isEmpty()) {
-        showError("You have no appointments to record a result against.");
-        return;
-    }
+            showError("You have no appointments to record a result against.");
+            return;
+        }
 
-    if (activeTypes.isEmpty()) {
-        showError("No active assessment types are available. Ask a Medical Manager to add one.");
-        return;
-    }
+        if (activeTypes.isEmpty()) {
+            showError("No active assessment types are available. Ask a Medical Manager to add one.");
+            return;
+        }
 
-    Appointment appointment = doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        int appointmentIndex = cmbAppointment.getSelectedIndex();
+
+        if (appointmentIndex < 0
+            || appointmentIndex >= doctorAppointments.size()) {
+                showError("Please select an appointment.");
+                return;
+        }
+
+        Appointment appointment = doctorAppointments.get(appointmentIndex);
     
-    if ("CANCELLED".equals(appointment.getStatus())) {
-        showError("Cannot record an assessment result for a cancelled appointment.");
-        return;
-    }
-    AssessmentType type = activeTypes.get(cmbAssessmentType.getSelectedIndex());
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            showError("Cannot record an assessment result for a cancelled appointment.");
+            return;
+        }
+        int typeIndex = cmbAssessmentType.getSelectedIndex();
 
-    try {
-        MedicalRecord record = clinicalManager.getOrOpenRecord(
+        if (typeIndex < 0 || typeIndex >= activeTypes.size()) {
+            showError("Please select an assessment type.");
+            return;
+        }
+
+        AssessmentType type = activeTypes.get(typeIndex);
+
+        try {
+            MedicalRecord record = clinicalManager.getOrOpenRecord(
                 appointment.getAppointmentId(), currentDoctor().getDoctorId());
 
-        clinicalManager.addAssessmentResult(
+            clinicalManager.addAssessmentResult(
                 record.getRecordId(), type.getAssessmentTypeId(),
                 txtValue.getText().trim(), txtGradeInterpretation.getText().trim());
 
-        txtValue.setText("");
-        txtGradeInterpretation.setText("");
+            txtValue.setText("");
+            txtGradeInterpretation.setText("");
 
-        refreshResultsTable(record);
+            refreshResultsTable(record);
 
-        JOptionPane.showMessageDialog(this, "Assessment result recorded.",
+            JOptionPane.showMessageDialog(this, "Assessment result recorded.",
                 "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
             
-}
+    }
     
     
     private void refreshResultsTable(MedicalRecord record) {
@@ -159,18 +172,39 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
             (DefaultTableModel) tblAssessmentResults.getModel();
 
             model.setRowCount(0);
+            if (record == null) {
+                return;
+            }    
 
         for (AssessmentResult result : record.getAssessmentResults()) {
-        model.addRow(new Object[]{
-            result.getResultId(),
-            result.getAssessmentName(),
-            result.getValue(),
-            result.getGrade(),
-            result.getResultDate()
-        });
-    }
+            model.addRow(new Object[]{
+                result.getResultId(),
+                result.getAssessmentName(),
+                result.getValue(),
+                result.getGrade(),
+                result.getResultDate()
+            });
+        }
         
     }
+    
+    private void loadSelectedAppointmentResults() {
+        if (doctorAppointments == null) {
+            refreshResultsTable(null);
+            return;
+        }
+
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            refreshResultsTable(null);
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
+        refreshResultsTable(appointment.getMedicalRecord());
+    }
+    
     
     
     
@@ -243,10 +277,12 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         lblAssessmentType.setBounds(20, 100, 170, 16);
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbAppointment.addActionListener(this::cmbAppointmentActionPerformed);
         add(cmbAppointment);
         cmbAppointment.setBounds(170, 50, 210, 30);
 
         cmbAssessmentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbAssessmentType.addActionListener(this::cmbAssessmentTypeActionPerformed);
         add(cmbAssessmentType);
         cmbAssessmentType.setBounds(160, 100, 330, 28);
 
@@ -307,6 +343,15 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         backToDashboard();
 
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
+
+    private void cmbAssessmentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAssessmentTypeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbAssessmentTypeActionPerformed
+
+    private void cmbAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAppointmentActionPerformed
+        // TODO add your handling code here:
+        loadSelectedAppointmentResults();
+    }//GEN-LAST:event_cmbAppointmentActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
