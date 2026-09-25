@@ -47,8 +47,11 @@ public class AssetAllocationManagerTest {
 
         suite.run("testCreateAllocationForLabRequest", suite::testCreateAllocationForLabRequest);
         suite.run("testCreateAllocationForXRayRequest", suite::testCreateAllocationForXRayRequest);
+        suite.run("testRejectXRayRequestWithImagingRoomAsset", suite::testRejectXRayRequestWithImagingRoomAsset);
         suite.run("testCreateAllocationForSpecializedImagingRequest",
                 suite::testCreateAllocationForSpecializedImagingRequest);
+        suite.run("testRejectSpecializedImagingRequestWithXRayRoomAsset",
+                suite::testRejectSpecializedImagingRequestWithXRayRoomAsset);
         suite.run("testCreateAllocationForLegacyImagingRequest", suite::testCreateAllocationForLegacyImagingRequest);
         suite.run("testRejectIncompatibleAssetType", suite::testRejectIncompatibleAssetType);
         suite.run("testRejectAllocationOfPendingRequest", suite::testRejectAllocationOfPendingRequest);
@@ -180,7 +183,8 @@ public class AssetAllocationManagerTest {
                     "HA001|Lab Room 1|LAB|Ground Floor|true|",
                     "HA002|Imaging Room 1|IMAGING_ROOM|First Floor|true|",
                     "HA003|Old Lab|LAB|Basement|false|",
-                    "HA004|Lab Room 2|LAB|Ground Floor|true|");
+                    "HA004|Lab Room 2|LAB|Ground Floor|true|",
+                    "HA005|X-Ray Room 1|XRAY_ROOM|First Floor|true|");
 
             userManager = new UserManager(usersFile);
             DoctorShiftManager shiftManager = new DoctorShiftManager(userManager, shiftsFile);
@@ -338,8 +342,28 @@ public class AssetAllocationManagerTest {
         try (Fixture fixture = new Fixture()) {
             MedicalRequest request = fixture.createApprovedRequest("X_RAY", "Right wrist");
             AssetAllocation allocation = fixture.allocationManager.createAllocation(
-                    request.getRequestId(), "HA002", "AS001", dt("2026-03-01 09:00:00"), dt("2026-03-01 09:30:00"));
-            assertEquals("HA002", allocation.getAssetId(), "X_RAY request allocated to the IMAGING_ROOM asset");
+                    request.getRequestId(), "HA005", "AS001", dt("2026-03-01 09:00:00"), dt("2026-03-01 09:30:00"));
+            assertEquals("HA005", allocation.getAssetId(), "X_RAY request allocated to the XRAY_ROOM asset");
+        }
+    }
+
+    private void testRejectXRayRequestWithImagingRoomAsset() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalRequest request = fixture.createApprovedRequest("X_RAY", "Right wrist");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.allocationManager.createAllocation(request.getRequestId(), "HA002", "AS001",
+                            dt("2026-03-01 09:00:00"), dt("2026-03-01 09:30:00")),
+                    "a new X_RAY allocation must require XRAY_ROOM, not IMAGING_ROOM");
+        }
+    }
+
+    private void testRejectSpecializedImagingRequestWithXRayRoomAsset() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            MedicalRequest request = fixture.createApprovedRequest("SPECIALIZED_IMAGING", "MRI lumbar spine");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.allocationManager.createAllocation(request.getRequestId(), "HA005", "AS001",
+                            dt("2026-03-01 09:00:00"), dt("2026-03-01 09:45:00")),
+                    "a SPECIALIZED_IMAGING allocation must require IMAGING_ROOM, not XRAY_ROOM");
         }
     }
 

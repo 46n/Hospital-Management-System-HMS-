@@ -225,6 +225,17 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         if (asset == null) {
             return;
         }
+        // Deleting an asset that already has allocation history (scheduled, completed or
+        // cancelled) would leave a dangling asset ID in asset_allocations.txt and destroy that
+        // history. The rule itself lives in AssetAllocationManager.validateAssetCanBeDeleted() -
+        // not here, and not in HospitalAssetManager (which has no reference to
+        // AssetAllocationManager, avoiding a circular dependency between the two managers).
+        try {
+            allocationManager.validateAssetCanBeDeleted(asset.getAssetId());
+        } catch (IllegalStateException ex) {
+            showError(ex.getMessage());
+            return;
+        }
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Delete asset " + asset.getAssetId() + "? This cannot be undone.",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION);
@@ -257,6 +268,10 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         if (isEdit) {
             typeCombo.setSelectedItem(existingAsset.getAssetType());
             availableCheckBox.setEnabled(false);
+            if (allocationManager.hasAllocationHistoryForAsset(existingAsset.getAssetId())) {
+                typeCombo.setEnabled(false);
+                typeCombo.setToolTipText("This asset has allocation history, so its type cannot be changed.");
+            }
         }
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -284,6 +299,17 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
                 String type = (String) typeCombo.getSelectedItem();
                 String location = locationField.getText().trim();
                 if (isEdit) {
+                    // An asset with allocation history keeps its type forever, so the historical
+                    // allocation rows (each recording a compatible asset type at the time) always
+                    // stay meaningful. Name and location can still change freely. The rule itself
+                    // lives in AssetAllocationManager.validateAssetTypeCanChange().
+                    try {
+                        allocationManager.validateAssetTypeCanChange(
+                                existingAsset.getAssetId(), existingAsset.getAssetType(), type);
+                    } catch (IllegalStateException ex) {
+                        showError(ex.getMessage());
+                        return;
+                    }
                     assetManager.updateAsset(existingAsset.getAssetId(), name, type, location);
                 } else {
                     String staffId = sessionManager.getCurrentUser().getUserId();

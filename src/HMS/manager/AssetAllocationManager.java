@@ -4,6 +4,7 @@ import hms.data.TextFileUtil;
 import hms.model.AdminStaff;
 import hms.model.AssetAllocation;
 import hms.model.HospitalAsset;
+import hms.model.HospitalAssetType;
 import hms.model.MedicalRequest;
 import hms.model.User;
 import hms.util.IdGenerator;
@@ -67,21 +68,27 @@ public class AssetAllocationManager {
     }
 
     /**
-     * The Step 2 compatibility mapping (request type -> required asset type), centralized here
-     * in one method so the GUI and this manager never duplicate it. Written as a plain if/else
-     * chain rather than a lookup table, since there are only four request types to check.
-     * Step 3 may add more asset types or clinics; this only covers what already exists
-     * (LAB, IMAGING_ROOM).
+     * The compatibility mapping (request type -> required asset type), centralized here in one
+     * method so the GUI and this manager never duplicate it. Written as a plain if/else chain
+     * rather than a lookup table, since there are only four request types to check.
+     *
+     * As of Step 3, X_RAY now requires its own XRAY_ROOM type instead of sharing IMAGING_ROOM.
+     * SPECIALIZED_IMAGING and the legacy IMAGING value still require IMAGING_ROOM, so existing
+     * (pre-Step-3) allocation records made against an IMAGING_ROOM asset remain valid history -
+     * only where a *new* allocation is created for an X_RAY request does this change take effect.
      */
     public static String requiredAssetTypeFor(String requestType) {
         if (requestType == null) {
             return null;
         }
         if (requestType.equals("LAB")) {
-            return "LAB";
+            return HospitalAssetType.LAB.name();
         }
-        if (requestType.equals("X_RAY") || requestType.equals("SPECIALIZED_IMAGING") || requestType.equals("IMAGING")) {
-            return "IMAGING_ROOM";
+        if (requestType.equals("X_RAY")) {
+            return HospitalAssetType.XRAY_ROOM.name();
+        }
+        if (requestType.equals("SPECIALIZED_IMAGING") || requestType.equals("IMAGING")) {
+            return HospitalAssetType.IMAGING_ROOM.name();
         }
         return null;
     }
@@ -135,6 +142,60 @@ public class AssetAllocationManager {
             }
         }
         return matches;
+    }
+
+    /**
+     * True if this asset has ever been allocated at all - SCHEDULED, COMPLETED or CANCELLED.
+     * Used by the Admin asset workflow to block deleting or retyping an asset that already has
+     * allocation history, without HospitalAssetManager needing to know about allocations itself
+     * (that would create a circular dependency between the two managers).
+     */
+    public boolean hasAllocationHistoryForAsset(String assetId) {
+        for (AssetAllocation allocation : allocations) {
+            if (allocation.getAssetId().equals(assetId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if this asset currently has a SCHEDULED (active) allocation. */
+    public boolean hasScheduledAllocationForAsset(String assetId) {
+        for (AssetAllocation allocation : allocations) {
+            if (allocation.getAssetId().equals(assetId)
+                    && AssetAllocation.STATUS_SCHEDULED.equals(allocation.getAllocationStatus())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The single production rule for whether an asset may be deleted: it must have no allocation
+     * history at all. Does not delete anything itself - it only throws when deletion would be
+     * unsafe. HospitalAssetManagementPanel calls this before calling
+     * HospitalAssetManager.deleteAsset(), and tests call it the same way, so the GUI and the
+     * tests can never drift apart on what the rule actually is.
+     */
+    public void validateAssetCanBeDeleted(String assetId) {
+        if (hasAllocationHistoryForAsset(assetId)) {
+            throw new IllegalStateException(
+                    "Asset " + assetId + " has allocation history and cannot be deleted. Mark it unavailable instead.");
+        }
+    }
+
+    /**
+     * The single production rule for whether an asset's type may change: only when it has no
+     * allocation history, or when the "change" is not actually a change. HospitalAssetManagementPanel
+     * calls this before calling HospitalAssetManager.updateAsset() with a possibly-different type,
+     * and tests call it the same way.
+     */
+    public void validateAssetTypeCanChange(String assetId, String currentType, String requestedType) {
+        boolean typeChanged = !requestedType.equals(currentType);
+        if (typeChanged && hasAllocationHistoryForAsset(assetId)) {
+            throw new IllegalStateException(
+                    "Asset " + assetId + " has allocation history, so its type cannot be changed.");
+        }
     }
 
     /** The request's current non-cancelled, non-completed allocation, or null if it has none. */
