@@ -9,13 +9,21 @@ import hms.manager.InsuranceNetworkManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.model.AdminStaff;
+import hms.model.Appointment;
+import hms.model.AssetAllocation;
+import hms.model.ConsultationRate;
 import hms.model.Doctor;
+import hms.model.HospitalAsset;
+import hms.model.InsuranceNetwork;
 import hms.model.MedicalManager;
+import hms.model.MedicalRecord;
+import hms.model.MedicalRequest;
 import hms.model.Patient;
 import hms.model.User;
 import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
+import hms.util.ValidationUtil;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -120,7 +128,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
 
         searchPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        searchLabel.setText("Search (username or role):");
+        searchLabel.setText("Search (ID, username, or role):");
         searchPanel.add(searchLabel);
 
         searchField.setColumns(16);
@@ -262,7 +270,8 @@ public class UserManagementPanel extends javax.swing.JPanel {
         List<User> matches = new ArrayList<>();
         for (User user : userManager.getUsers()) {
             if (user.getUsername().toLowerCase().contains(query)
-                    || user.getUserType().toLowerCase().contains(query)) {
+                    || user.getUserType().toLowerCase().contains(query)
+                    || user.getUserId().toLowerCase().contains(query)) {
                 matches.add(user);
             }
         }
@@ -299,6 +308,12 @@ public class UserManagementPanel extends javax.swing.JPanel {
         return userId;
     }
 
+    /** True if the given user ID belongs to the Admin currently logged into this screen. */
+    private boolean isCurrentUser(String userId) {
+        User currentUser = sessionManager.getCurrentUser();
+        return currentUser != null && currentUser.getUserId().equals(userId);
+    }
+
     /** Toggles the selected user's active state, mirroring the "Toggle Active/Availability" pattern used elsewhere. */
     private void toggleSelectedStatus() {
         String userId = requireSelection();
@@ -308,6 +323,10 @@ public class UserManagementPanel extends javax.swing.JPanel {
         User user = userManager.findById(userId);
         if (user == null) {
             showError("User not found: " + userId);
+            return;
+        }
+        if (user.isActive() && isCurrentUser(userId)) {
+            showError("You cannot deactivate your own account while logged in.");
             return;
         }
         try {
@@ -327,6 +346,20 @@ public class UserManagementPanel extends javax.swing.JPanel {
         if (userId == null) {
             return;
         }
+        if (isCurrentUser(userId)) {
+            showError("You cannot delete your own account while logged in.");
+            return;
+        }
+        User user = userManager.findById(userId);
+        if (user == null) {
+            showError("User not found: " + userId);
+            return;
+        }
+        String blockingReason = findDependencyBlockingDeletion(user);
+        if (blockingReason != null) {
+            showError(blockingReason);
+            return;
+        }
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Delete user " + userId + "? This cannot be undone.",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION);
@@ -339,6 +372,95 @@ public class UserManagementPanel extends javax.swing.JPanel {
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
+    }
+
+    /**
+     * Checks the clinical and administrative records this screen already has access to for any
+     * row that still points at this user, so deleting the user would leave that row referring to
+     * an account that no longer exists. Returns a clear message naming the reason, or null if
+     * deletion is safe. Deliberately narrow: it only inspects data already reachable from this
+     * panel's existing manager references, and never rewrites those managers' own logic.
+     */
+    private String findDependencyBlockingDeletion(User user) {
+        if (user instanceof Doctor) {
+            String doctorId = ((Doctor) user).getDoctorId();
+            int appointmentCount = 0;
+            for (Appointment appointment : appointmentManager.getAppointments()) {
+                if (appointment.getDoctor() != null && doctorId.equals(appointment.getDoctor().getDoctorId())) {
+                    appointmentCount++;
+                }
+            }
+            int recordCount = 0;
+            for (MedicalRecord record : clinicalManager.getRecords()) {
+                if (record.getDoctor() != null && doctorId.equals(record.getDoctor().getDoctorId())) {
+                    recordCount++;
+                }
+            }
+            int requestCount = 0;
+            for (MedicalRequest request : clinicalManager.getAllRequests()) {
+                if (request.getDoctor() != null && doctorId.equals(request.getDoctor().getDoctorId())) {
+                    requestCount++;
+                }
+            }
+            int feedbackCount = clinicalManager.getDoctorFeedback(doctorId).size();
+            if (appointmentCount > 0 || recordCount > 0 || requestCount > 0 || feedbackCount > 0) {
+                return "Cannot delete this Doctor: " + appointmentCount + " appointment(s), " + recordCount
+                        + " medical record(s), " + requestCount + " medical request(s), and " + feedbackCount
+                        + " feedback entr(y/ies) still refer to this account. Deactivate the account instead.";
+            }
+        } else if (user instanceof Patient) {
+            String patientId = ((Patient) user).getPatientId();
+            int appointmentCount = 0;
+            for (Appointment appointment : appointmentManager.getAppointments()) {
+                if (appointment.getPatient() != null && patientId.equals(appointment.getPatient().getPatientId())) {
+                    appointmentCount++;
+                }
+            }
+            int recordCount = clinicalManager.getPatientHistory(patientId).size();
+            if (appointmentCount > 0 || recordCount > 0) {
+                return "Cannot delete this Patient: " + appointmentCount + " appointment(s) and " + recordCount
+                        + " medical record(s) still refer to this account. Deactivate the account instead.";
+            }
+        } else if (user instanceof AdminStaff) {
+            String staffId = ((AdminStaff) user).getStaffId();
+            int assetCount = 0;
+            for (HospitalAsset asset : assetManager.getAssets()) {
+                if (asset.getManagedBy() != null && staffId.equals(asset.getManagedBy().getStaffId())) {
+                    assetCount++;
+                }
+            }
+            int rateCount = 0;
+            for (ConsultationRate rate : rateManager.getRates()) {
+                if (rate.getConfiguredBy() != null && staffId.equals(rate.getConfiguredBy().getStaffId())) {
+                    rateCount++;
+                }
+            }
+            int networkCount = 0;
+            for (InsuranceNetwork network : insuranceManager.getNetworks()) {
+                if (network.getManagedBy() != null && staffId.equals(network.getManagedBy().getStaffId())) {
+                    networkCount++;
+                }
+            }
+            int allocationCount = 0;
+            for (AssetAllocation allocation : allocationManager.getAllocations()) {
+                if (staffId.equals(allocation.getAllocatedByAdminId())) {
+                    allocationCount++;
+                }
+            }
+            int requestCount = 0;
+            for (MedicalRequest request : clinicalManager.getAllRequests()) {
+                if (staffId.equals(request.getProcessedBy())) {
+                    requestCount++;
+                }
+            }
+            if (assetCount > 0 || rateCount > 0 || networkCount > 0 || allocationCount > 0 || requestCount > 0) {
+                return "Cannot delete this Admin Staff account: " + assetCount + " hospital asset(s), " + rateCount
+                        + " consultation rate(s), " + networkCount + " insurance network(s), " + allocationCount
+                        + " asset allocation(s), and " + requestCount
+                        + " processed request(s) still refer to this account. Deactivate the account instead.";
+            }
+        }
+        return null;
     }
 
     private void showError(String message) {
@@ -463,7 +585,7 @@ public class UserManagementPanel extends javax.swing.JPanel {
             return null;
         }
         try {
-            return DATE_FORMAT.parse(text);
+            return ValidationUtil.parseStrictDate(text);
         } catch (ParseException e) {
             throw new IllegalArgumentException("Date of birth must be in yyyy-MM-dd format");
         }
@@ -498,8 +620,26 @@ public class UserManagementPanel extends javax.swing.JPanel {
         JDialog dialog = new JDialog(mainFrame, "Edit User " + userId, true);
         dialog.setLayout(new GridBagLayout());
 
+        boolean isDoctor = user instanceof Doctor;
+        boolean isPatient = user instanceof Patient;
+
+        JTextField usernameField = new JTextField(user.getUsername(), 16);
         JTextField phoneField = new JTextField(user.getPhone(), 16);
         JTextField emailField = new JTextField(user.getEmail(), 16);
+
+        List<String> specialties = UserManager.getValidSpecialties();
+        JComboBox<String> specialtyCombo = new JComboBox<>(specialties.toArray(new String[0]));
+        if (isDoctor) {
+            specialtyCombo.setSelectedItem(((Doctor) user).getSpecialty());
+        }
+
+        JTextField dobField = new JTextField(16);
+        if (isPatient) {
+            Date dateOfBirth = ((Patient) user).getDateOfBirth();
+            if (dateOfBirth != null) {
+                dobField.setText(DATE_FORMAT.format(dateOfBirth));
+            }
+        }
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
@@ -507,8 +647,15 @@ public class UserManagementPanel extends javax.swing.JPanel {
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
 
+        addFormRow(dialog, gbc, "Username:", usernameField);
         addFormRow(dialog, gbc, "Phone:", phoneField);
         addFormRow(dialog, gbc, "Email:", emailField);
+        if (isDoctor) {
+            addFormRow(dialog, gbc, "Specialty:", specialtyCombo);
+        }
+        if (isPatient) {
+            addFormRow(dialog, gbc, "Date of Birth (yyyy-MM-dd):", dobField);
+        }
 
         JButton saveButton = new JButton("Save");
         UIStyles.applyPrimaryButtonStyle(saveButton);
@@ -518,7 +665,14 @@ public class UserManagementPanel extends javax.swing.JPanel {
 
         saveButton.addActionListener(e -> {
             try {
-                userManager.updateProfile(userId, phoneField.getText().trim(), emailField.getText().trim());
+                // Parsing the date of birth text can throw before UserManager is ever called, and
+                // updateManagedUser() itself validates everything else before changing anything -
+                // so a bad specialty or date of birth can never leave a saved username/phone/email
+                // change behind.
+                String specialty = isDoctor ? (String) specialtyCombo.getSelectedItem() : null;
+                Date dateOfBirth = isPatient ? parseDateOfBirth(dobField.getText().trim()) : null;
+                userManager.updateManagedUser(userId, usernameField.getText().trim(),
+                        phoneField.getText().trim(), emailField.getText().trim(), specialty, dateOfBirth);
                 dialog.dispose();
                 refreshTable(userManager.getUsers());
             } catch (IllegalArgumentException ex) {

@@ -87,6 +87,48 @@ public class UserManager {
         save();
     }
 
+    /**
+     * The complete Admin "Edit Profile" operation for a managed user, done as one atomic update:
+     * username, phone, and email, plus the role-specific field (Doctor specialty or Patient date
+     * of birth) when the user is that role. Every value is validated first, using the same rules
+     * as registration - nothing is changed until every check has passed - and only then are all
+     * applicable fields applied and saved together in a single save(). This is what stops a
+     * failed Doctor specialty or Patient date of birth from leaving an already-changed username,
+     * phone, or email in place. specialty and dateOfBirth are ignored unless the user is that
+     * role, so callers editing an Admin Staff or Medical Manager may pass null for both. Role and
+     * every generated ID (userId, staffId, managerId, doctorId, patientId) are never touched.
+     */
+    public void updateManagedUser(String userId, String username, String phone, String email,
+            String specialty, Date dateOfBirth) {
+        User user = requireById(userId);
+
+        ValidationUtil.requireValidUsername(username, "Username");
+        ValidationUtil.requireValidPhone(phone, "Phone");
+        ValidationUtil.requireValidEmail(email, "Email");
+        String trimmedUsername = username.trim();
+        User sameUsername = findByUsername(trimmedUsername);
+        if (sameUsername != null && !sameUsername.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Username '" + trimmedUsername + "' is already taken");
+        }
+        if (user instanceof Doctor) {
+            validateSpecialty(specialty);
+        }
+        if (user instanceof Patient && dateOfBirth == null) {
+            throw new IllegalArgumentException("Date of birth is required");
+        }
+
+        // Every value has now passed validation - apply and save them together, as one operation.
+        user.setUsername(trimmedUsername);
+        user.updateContactDetails(phone.trim(), email.trim());
+        if (user instanceof Doctor) {
+            ((Doctor) user).setSpecialty(specialty);
+        }
+        if (user instanceof Patient) {
+            ((Patient) user).setDateOfBirth(dateOfBirth);
+        }
+        save();
+    }
+
     public void changePassword(String userId, String currentPassword, String newPassword) {
         User user = requireById(userId);
         if (!user.getPassword().equals(currentPassword)) {
@@ -105,8 +147,30 @@ public class UserManager {
         save();
     }
 
+    /**
+     * Deletes a user and keeps the Doctor/Medical Manager relationship consistent: a deleted
+     * Doctor is removed from its assigned manager's list first, and a deleted Medical Manager
+     * has every one of its assigned Doctors unassigned first - so no Doctor is ever left
+     * pointing at a manager that no longer exists, and no manager is ever left listing a
+     * Doctor that no longer exists.
+     */
     public void deleteUser(String userId) {
         User user = requireById(userId);
+        if (user instanceof Doctor) {
+            Doctor doctor = (Doctor) user;
+            MedicalManager manager = doctor.getShiftManager();
+            if (manager != null) {
+                manager.removeDoctor(doctor);
+                doctor.setShiftManager(null);
+            }
+        } else if (user instanceof MedicalManager) {
+            MedicalManager manager = (MedicalManager) user;
+            List<Doctor> managedDoctors = new ArrayList<>(manager.getManagedDoctors());
+            for (Doctor doctor : managedDoctors) {
+                doctor.setShiftManager(null);
+                manager.removeDoctor(doctor);
+            }
+        }
         users.remove(user);
         save();
     }
@@ -271,17 +335,23 @@ public class UserManager {
     }
 
     private void load() {
+        // Every ID and every lowercased username already loaded from this file, so a duplicate
+        // row can be detected with a plain list search - the same style used elsewhere in the app.
+        List<String> loadedIds = new ArrayList<>();
+        List<String> loadedUsernamesLower = new ArrayList<>();
         Map<String, String> doctorManagerLinks = new HashMap<>();
         for (String line : TextFileUtil.readLines(dataFile)) {
-            User user = parseLine(line);
+            User user = parseLine(line, loadedIds, loadedUsernamesLower);
             if (user == null) {
                 continue;
             }
             users.add(user);
+            loadedIds.add(user.getUserId());
+            loadedUsernamesLower.add(user.getUsername().toLowerCase());
             if (user instanceof Doctor) {
                 String[] fields = line.split("\\|", -1);
-                if (fields.length >= 10 && !fields[9].isEmpty()) {
-                    doctorManagerLinks.put(user.getUserId(), fields[9]);
+                if (fields.length >= 10 && !fields[9].trim().isEmpty()) {
+                    doctorManagerLinks.put(user.getUserId(), fields[9].trim());
                 }
             }
         }
@@ -298,20 +368,66 @@ public class UserManager {
         }
     }
 
-    private User parseLine(String line) {
+    private User parseLine(String line, List<String> loadedIds, List<String> loadedUsernamesLower) {
         String[] fields = line.split("\\|", -1);
-        if (fields.length < 8) {
+        if (fields.length < 8 || fields.length > 10) {
             System.err.println("Skipping malformed user record: " + line);
             return null;
         }
-        String userId = fields[0];
-        String role = fields[1];
-        String username = fields[2];
-        String password = fields[3];
-        String phone = fields[4];
-        String email = fields[5];
-        String extra1 = fields[6];
-        String extra2 = fields[7];
+        String userId = fields[0].trim();
+        String role = fields[1].trim();
+        String username = fields[2].trim();
+        String password = fields[3].trim();
+        String phone = fields[4].trim();
+        String email = fields[5].trim();
+        String extra1 = fields[6].trim();
+        String extra2 = fields[7].trim();
+
+        if (userId.isEmpty()) {
+            System.err.println("Skipping user record with a blank user ID: " + line);
+            return null;
+        }
+        if (loadedIds.contains(userId)) {
+            System.err.println("Skipping duplicate user ID: " + line);
+            return null;
+        }
+        if (role.isEmpty()) {
+            System.err.println("Skipping user record with a blank role: " + line);
+            return null;
+        }
+        if (username.isEmpty()) {
+            System.err.println("Skipping user record with a blank username: " + line);
+            return null;
+        }
+        if (loadedUsernamesLower.contains(username.toLowerCase())) {
+            System.err.println("Skipping duplicate username: " + line);
+            return null;
+        }
+        if (password.isEmpty()) {
+            System.err.println("Skipping user record with a blank password: " + line);
+            return null;
+        }
+        if (phone.isEmpty()) {
+            System.err.println("Skipping user record with a blank phone: " + line);
+            return null;
+        }
+        if (email.isEmpty()) {
+            System.err.println("Skipping user record with a blank email: " + line);
+            return null;
+        }
+
+        // Only an 8-field legacy row (no active column at all) defaults to active. Once a ninth
+        // field is present, it must be exactly true or false - a blank value there is malformed,
+        // not "unset", and must be skipped like any other invalid active value.
+        boolean active = true;
+        if (fields.length >= 9) {
+            String activeText = fields[8].trim();
+            if (!activeText.equalsIgnoreCase("true") && !activeText.equalsIgnoreCase("false")) {
+                System.err.println("Skipping user record with an invalid active value \"" + activeText + "\": " + line);
+                return null;
+            }
+            active = Boolean.parseBoolean(activeText);
+        }
 
         User user;
         try {
@@ -323,10 +439,18 @@ public class UserManager {
                     user = new MedicalManager(userId, username, password, phone, email, role, extra1);
                     break;
                 case "DOCTOR":
+                    if (!VALID_SPECIALTIES.contains(extra2)) {
+                        System.err.println("Skipping doctor record with an invalid specialty \"" + extra2 + "\": " + line);
+                        return null;
+                    }
                     user = new Doctor(userId, username, password, phone, email, role, extra1, extra2);
                     break;
                 case "PATIENT":
-                    Date dob = extra2.isEmpty() ? null : DATE_FORMAT.parse(extra2);
+                    if (extra2.isEmpty()) {
+                        System.err.println("Skipping patient record with a blank date of birth: " + line);
+                        return null;
+                    }
+                    Date dob = ValidationUtil.parseStrictDate(extra2);
                     user = new Patient(userId, username, password, phone, email, role, extra1, dob);
                     break;
                 default:
@@ -337,7 +461,6 @@ public class UserManager {
             System.err.println("Skipping user record with invalid date of birth: " + line);
             return null;
         }
-        boolean active = fields.length < 9 || Boolean.parseBoolean(fields[8]);
         user.setActive(active);
         return user;
     }
