@@ -46,6 +46,22 @@ public final class ValidationUtil {
         requireNonNegative(value, fieldName);
     }
 
+    /**
+     * A genuine percentage value: not NaN, not positive/negative infinity, and between 0 and 100
+     * inclusive. NaN and infinity both fail a plain "0 &lt;= value &lt;= 100" check in different
+     * ways (NaN compares false to every comparison, and infinity is always outside the range
+     * anyway) - checking finiteness explicitly first gives a clearer error message than letting
+     * NaN silently slip through a range check that never rejects it.
+     */
+    public static void requireValidPercentage(double value, String fieldName) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException(fieldName + " must be a finite number");
+        }
+        if (value < 0 || value > 100) {
+            throw new IllegalArgumentException(fieldName + " must be between 0 and 100");
+        }
+    }
+
     /** Letters, digits, and underscores only, 4-20 characters, no spaces, at least one letter. */
     public static void requireValidUsername(String username, String fieldName) {
         requireNonBlank(username, fieldName);
