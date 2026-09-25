@@ -255,7 +255,8 @@ public class ClinicalManager {
         return request;
     }
 
-    private MedicalRequest findRequestById(String requestId) {
+    /** Looks up a request across every patient's record, for Step 2 allocation orchestration. */
+    public MedicalRequest findRequestById(String requestId) {
         for (MedicalRecord record : records) {
             for (MedicalRequest request : record.getMedicalRequests()) {
                 if (request.getRequestId().equals(requestId)) {
@@ -264,6 +265,64 @@ public class ClinicalManager {
             }
         }
         return null;
+    }
+
+    /**
+     * Marks an APPROVED request ALLOCATED once Admin has assigned a hospital asset to it.
+     * Called by AssetAllocationManager as one half of a single allocate operation; rolls back
+     * the in-memory status (and rethrows) if the file write fails, matching approveRequest().
+     */
+    public MedicalRequest markRequestAllocated(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"APPROVED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an approved request can be marked allocated (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.markAllocated();
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Marks an ALLOCATED request COMPLETED once Admin has completed its asset allocation. */
+    public MedicalRequest markRequestCompleted(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"ALLOCATED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an allocated request can be marked completed (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.markCompleted();
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Reverts an ALLOCATED request back to APPROVED once Admin has cancelled its asset allocation. */
+    public MedicalRequest revertRequestToApproved(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"ALLOCATED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an allocated request can be reverted to approved (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.setStatus("APPROVED");
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
     }
 
     private MedicalRequest requireRequest(String requestId) {

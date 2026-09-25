@@ -1,6 +1,7 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
 import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
@@ -8,22 +9,48 @@ import hms.manager.InsuranceNetworkManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.model.AdminStaff;
+import hms.model.AssetAllocation;
+import hms.model.HospitalAsset;
 import hms.model.MedicalRequest;
 import hms.ui.common.MainFrame;
 import hms.ui.common.MedicalRequestTableUtil;
+import hms.ui.common.Theme;
+import hms.ui.common.UIStyles;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 /**
- * Admin screen for processing lab/imaging requests Doctors have submitted:
- * search/filter, view full details, and approve or reject a PENDING request.
- * Asset booking/allocation for approved requests is out of scope here (Step 2).
- * All transition rules (PENDING-only, rejection reason required, persistence)
- * live in ClinicalManager - this panel only collects input and displays results.
+ * Admin screen for processing lab/imaging requests submitted by Doctors, and
+ * for allocating a hospital asset (Step 2) once a request is APPROVED.
+ *
+ * This class shows encapsulation in practice: the Swing components below are
+ * all private fields, and every action a button can trigger goes through a
+ * small, clearly named method (approveSelectedRequest, rejectSelectedRequest,
+ * openAllocationDialog, ...). The panel never touches the request/allocation
+ * text files directly - it only calls ClinicalManager and
+ * AssetAllocationManager, which is a simple example of separating the GUI
+ * layer from the business-logic layer.
  *
  * Visual structure is managed by the NetBeans GUI Builder (see
  * MedicalRequestManagementPanel.form). Only initComponents() is
@@ -33,7 +60,9 @@ import javax.swing.table.DefaultTableModel;
 public class MedicalRequestManagementPanel extends javax.swing.JPanel {
 
     private static final String ALL_LABEL = "All";
-    private static final String[] STATUS_OPTIONS = {ALL_LABEL, "PENDING", "APPROVED", "REJECTED"};
+    private static final String[] STATUS_OPTIONS =
+            {ALL_LABEL, "PENDING", "APPROVED", "REJECTED", "ALLOCATED", "COMPLETED"};
+
     /**
      * The assignment-required categories plus the legacy value pre-existing data may still use.
      * The actual filter list (built in initializeBehavior()) also folds in any request type
@@ -42,12 +71,21 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
      */
     private static final String[] BASE_TYPE_OPTIONS = {"LAB", "X_RAY", "SPECIALIZED_IMAGING", "IMAGING"};
 
+    /** Format for the Allocate Asset dialog's start/end fields - strict, so an impossible or malformed value is rejected. */
+    private static final SimpleDateFormat ALLOCATION_DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    static {
+        ALLOCATION_DATETIME_FORMAT.setLenient(false);
+    }
+
+    // Collaborating managers this panel was given at construction time - it only ever calls
+    // their public methods, never reads or writes a data file itself.
     private final ClinicalManager clinicalManager;
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
     private final HospitalAssetManager assetManager;
     private final ConsultationRateManager rateManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -57,13 +95,15 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
     public MedicalRequestManagementPanel(ClinicalManager clinicalManager, UserManager userManager,
             AppointmentManager appointmentManager, HospitalAssetManager assetManager,
             ConsultationRateManager rateManager, InsuranceNetworkManager insuranceManager,
-            SessionManager sessionManager, MainFrame mainFrame, Runnable onLogout) {
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.clinicalManager = clinicalManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
         this.assetManager = assetManager;
         this.rateManager = rateManager;
         this.insuranceManager = insuranceManager;
+        this.allocationManager = allocationManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
         this.onLogout = onLogout;
@@ -76,23 +116,24 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         topPanel = new javax.swing.JPanel();
-        titleLabel = new javax.swing.JLabel();
+        titleLbl = new javax.swing.JLabel();
         searchPanel = new javax.swing.JPanel();
-        searchLabel = new javax.swing.JLabel();
-        searchField = new javax.swing.JTextField();
-        typeLabel = new javax.swing.JLabel();
-        typeFilterCombo = new javax.swing.JComboBox<>();
-        statusLabel = new javax.swing.JLabel();
-        statusFilterCombo = new javax.swing.JComboBox<>();
-        searchButton = new javax.swing.JButton();
-        clearButton = new javax.swing.JButton();
+        searchLbl = new javax.swing.JLabel();
+        searchTf = new javax.swing.JTextField();
+        typeLbl = new javax.swing.JLabel();
+        typeCmb = new javax.swing.JComboBox<>();
+        statusLbl = new javax.swing.JLabel();
+        statusCmb = new javax.swing.JComboBox<>();
+        searchBtn = new javax.swing.JButton();
+        clearBtn = new javax.swing.JButton();
         tableScrollPane = new javax.swing.JScrollPane();
-        requestTable = new javax.swing.JTable();
+        requestsTbl = new javax.swing.JTable();
         buttonPanel = new javax.swing.JPanel();
-        viewButton = new javax.swing.JButton();
-        approveButton = new javax.swing.JButton();
-        rejectButton = new javax.swing.JButton();
-        backButton = new javax.swing.JButton();
+        viewBtn = new javax.swing.JButton();
+        approveBtn = new javax.swing.JButton();
+        rejectBtn = new javax.swing.JButton();
+        allocateBtn = new javax.swing.JButton();
+        backBtn = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(255, 255, 255));
         setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
@@ -101,114 +142,124 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
         topPanel.setBackground(new java.awt.Color(255, 255, 255));
         topPanel.setLayout(new java.awt.BorderLayout());
 
-        titleLabel.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
-        titleLabel.setForeground(new java.awt.Color(33, 33, 33));
-        titleLabel.setText("Medical Requests");
-        topPanel.add(titleLabel, java.awt.BorderLayout.WEST);
+        titleLbl.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        titleLbl.setForeground(new java.awt.Color(33, 33, 33));
+        titleLbl.setText("Medical Requests");
+        topPanel.add(titleLbl, java.awt.BorderLayout.WEST);
 
         searchPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        searchLabel.setText("Search (patient, doctor, or details):");
-        searchPanel.add(searchLabel);
+        searchLbl.setText("Search (patient, doctor, or details):");
+        searchPanel.add(searchLbl);
 
-        searchField.setColumns(14);
-        searchPanel.add(searchField);
+        searchTf.setColumns(14);
+        searchPanel.add(searchTf);
 
-        typeLabel.setText("Type:");
-        searchPanel.add(typeLabel);
+        typeLbl.setText("Type:");
+        searchPanel.add(typeLbl);
 
-        typeFilterCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {ALL_LABEL}));
-        searchPanel.add(typeFilterCombo);
+        typeCmb.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {ALL_LABEL}));
+        searchPanel.add(typeCmb);
 
-        statusLabel.setText("Status:");
-        searchPanel.add(statusLabel);
+        statusLbl.setText("Status:");
+        searchPanel.add(statusLbl);
 
-        statusFilterCombo.setModel(new javax.swing.DefaultComboBoxModel<>(STATUS_OPTIONS));
-        searchPanel.add(statusFilterCombo);
+        statusCmb.setModel(new javax.swing.DefaultComboBoxModel<>(STATUS_OPTIONS));
+        searchPanel.add(statusCmb);
 
-        searchButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        searchButton.setForeground(new java.awt.Color(255, 255, 255));
-        searchButton.setBackground(new java.awt.Color(31, 78, 121));
-        searchButton.setText("Search");
-        searchButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        searchButton.setBorderPainted(false);
-        searchButton.setFocusPainted(false);
-        searchButton.setOpaque(true);
-        searchPanel.add(searchButton);
+        searchBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        searchBtn.setForeground(new java.awt.Color(255, 255, 255));
+        searchBtn.setBackground(new java.awt.Color(31, 78, 121));
+        searchBtn.setText("Search");
+        searchBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        searchBtn.setBorderPainted(false);
+        searchBtn.setFocusPainted(false);
+        searchBtn.setOpaque(true);
+        searchPanel.add(searchBtn);
 
-        clearButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        clearButton.setForeground(new java.awt.Color(255, 255, 255));
-        clearButton.setBackground(new java.awt.Color(31, 78, 121));
-        clearButton.setText("Clear");
-        clearButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        clearButton.setBorderPainted(false);
-        clearButton.setFocusPainted(false);
-        clearButton.setOpaque(true);
-        searchPanel.add(clearButton);
+        clearBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        clearBtn.setForeground(new java.awt.Color(255, 255, 255));
+        clearBtn.setBackground(new java.awt.Color(31, 78, 121));
+        clearBtn.setText("Clear");
+        clearBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        clearBtn.setBorderPainted(false);
+        clearBtn.setFocusPainted(false);
+        clearBtn.setOpaque(true);
+        searchPanel.add(clearBtn);
 
         topPanel.add(searchPanel, java.awt.BorderLayout.EAST);
 
         add(topPanel, java.awt.BorderLayout.NORTH);
 
-        requestTable.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        requestTable.setRowHeight(24);
-        tableScrollPane.setViewportView(requestTable);
+        requestsTbl.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        requestsTbl.setRowHeight(24);
+        tableScrollPane.setViewportView(requestsTbl);
 
         add(tableScrollPane, java.awt.BorderLayout.CENTER);
 
         buttonPanel.setBackground(new java.awt.Color(255, 255, 255));
-        buttonPanel.setLayout(new java.awt.GridLayout(1, 4));
+        buttonPanel.setLayout(new java.awt.GridLayout(1, 5));
 
-        viewButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        viewButton.setForeground(new java.awt.Color(255, 255, 255));
-        viewButton.setBackground(new java.awt.Color(31, 78, 121));
-        viewButton.setText("View Details");
-        viewButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        viewButton.setBorderPainted(false);
-        viewButton.setFocusPainted(false);
-        viewButton.setOpaque(true);
-        buttonPanel.add(viewButton);
+        viewBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        viewBtn.setForeground(new java.awt.Color(255, 255, 255));
+        viewBtn.setBackground(new java.awt.Color(31, 78, 121));
+        viewBtn.setText("View Details");
+        viewBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        viewBtn.setBorderPainted(false);
+        viewBtn.setFocusPainted(false);
+        viewBtn.setOpaque(true);
+        buttonPanel.add(viewBtn);
 
-        approveButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        approveButton.setForeground(new java.awt.Color(255, 255, 255));
-        approveButton.setBackground(new java.awt.Color(31, 78, 121));
-        approveButton.setText("Approve");
-        approveButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        approveButton.setBorderPainted(false);
-        approveButton.setFocusPainted(false);
-        approveButton.setOpaque(true);
-        buttonPanel.add(approveButton);
+        approveBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        approveBtn.setForeground(new java.awt.Color(255, 255, 255));
+        approveBtn.setBackground(new java.awt.Color(31, 78, 121));
+        approveBtn.setText("Approve");
+        approveBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        approveBtn.setBorderPainted(false);
+        approveBtn.setFocusPainted(false);
+        approveBtn.setOpaque(true);
+        buttonPanel.add(approveBtn);
 
-        rejectButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        rejectButton.setForeground(new java.awt.Color(255, 255, 255));
-        rejectButton.setBackground(new java.awt.Color(31, 78, 121));
-        rejectButton.setText("Reject");
-        rejectButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        rejectButton.setBorderPainted(false);
-        rejectButton.setFocusPainted(false);
-        rejectButton.setOpaque(true);
-        buttonPanel.add(rejectButton);
+        rejectBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        rejectBtn.setForeground(new java.awt.Color(255, 255, 255));
+        rejectBtn.setBackground(new java.awt.Color(31, 78, 121));
+        rejectBtn.setText("Reject");
+        rejectBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        rejectBtn.setBorderPainted(false);
+        rejectBtn.setFocusPainted(false);
+        rejectBtn.setOpaque(true);
+        buttonPanel.add(rejectBtn);
 
-        backButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        backButton.setForeground(new java.awt.Color(255, 255, 255));
-        backButton.setBackground(new java.awt.Color(31, 78, 121));
-        backButton.setText("Back to Dashboard");
-        backButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        backButton.setBorderPainted(false);
-        backButton.setFocusPainted(false);
-        backButton.setOpaque(true);
-        buttonPanel.add(backButton);
+        allocateBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        allocateBtn.setForeground(new java.awt.Color(255, 255, 255));
+        allocateBtn.setBackground(new java.awt.Color(31, 78, 121));
+        allocateBtn.setText("Allocate Asset");
+        allocateBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        allocateBtn.setBorderPainted(false);
+        allocateBtn.setFocusPainted(false);
+        allocateBtn.setOpaque(true);
+        buttonPanel.add(allocateBtn);
+
+        backBtn.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        backBtn.setForeground(new java.awt.Color(255, 255, 255));
+        backBtn.setBackground(new java.awt.Color(31, 78, 121));
+        backBtn.setText("Back to Dashboard");
+        backBtn.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backBtn.setBorderPainted(false);
+        backBtn.setFocusPainted(false);
+        backBtn.setOpaque(true);
+        buttonPanel.add(backBtn);
 
         add(buttonPanel, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    /** Builds the table model and wires screen behavior. */
+    /** Builds the table model and wires screen behavior (button clicks, filters). */
     private void initializeBehavior() {
-        searchButton.addActionListener(e -> applyFilters());
-        clearButton.addActionListener(e -> {
-            searchField.setText("");
-            statusFilterCombo.setSelectedIndex(0);
-            typeFilterCombo.setSelectedIndex(0);
+        searchBtn.addActionListener(e -> applyFilters());
+        clearBtn.addActionListener(e -> {
+            searchTf.setText("");
+            statusCmb.setSelectedIndex(0);
+            typeCmb.setSelectedIndex(0);
             refreshTable(clinicalManager.getAllRequests());
         });
 
@@ -218,16 +269,17 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
                 return false;
             }
         };
-        requestTable.setModel(tableModel);
+        requestsTbl.setModel(tableModel);
 
-        typeFilterCombo.setModel(new javax.swing.DefaultComboBoxModel<>(buildTypeFilterOptions()));
+        typeCmb.setModel(new javax.swing.DefaultComboBoxModel<>(buildTypeFilterOptions()));
 
-        viewButton.addActionListener(e -> viewSelectedRequest());
-        approveButton.addActionListener(e -> approveSelectedRequest());
-        rejectButton.addActionListener(e -> rejectSelectedRequest());
-        backButton.addActionListener(e -> mainFrame.showPanel(
+        viewBtn.addActionListener(e -> viewSelectedRequest());
+        approveBtn.addActionListener(e -> approveSelectedRequest());
+        rejectBtn.addActionListener(e -> rejectSelectedRequest());
+        allocateBtn.addActionListener(e -> openAllocationDialog());
+        backBtn.addActionListener(e -> mainFrame.showPanel(
                 new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
-                        assetManager, rateManager, insuranceManager, mainFrame, onLogout)));
+                        assetManager, rateManager, insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     /**
@@ -236,23 +288,25 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
      * outside the hardcoded list (e.g. a legacy or otherwise unexpected value).
      */
     private String[] buildTypeFilterOptions() {
-        java.util.LinkedHashSet<String> options = new java.util.LinkedHashSet<>();
+        List<String> options = new ArrayList<>();
         options.add(ALL_LABEL);
         for (String type : BASE_TYPE_OPTIONS) {
             options.add(type);
         }
         for (MedicalRequest request : clinicalManager.getAllRequests()) {
-            if (request.getRequestType() != null && !request.getRequestType().isEmpty()) {
-                options.add(request.getRequestType());
+            String type = request.getRequestType();
+            if (type != null && !type.isEmpty() && !options.contains(type)) {
+                options.add(type);
             }
         }
         return options.toArray(new String[0]);
     }
 
+    /** Filters the table by search text, status and type - all three conditions must match. */
     private void applyFilters() {
-        String query = searchField.getText().trim().toLowerCase();
-        String statusFilter = (String) statusFilterCombo.getSelectedItem();
-        String typeFilter = (String) typeFilterCombo.getSelectedItem();
+        String query = searchTf.getText().trim().toLowerCase();
+        String statusFilter = (String) statusCmb.getSelectedItem();
+        String typeFilter = (String) typeCmb.getSelectedItem();
 
         List<MedicalRequest> matches = new ArrayList<>();
         for (MedicalRequest request : clinicalManager.getAllRequests()) {
@@ -289,7 +343,7 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
     }
 
     private String getSelectedRequestId() {
-        int row = requestTable.getSelectedRow();
+        int row = requestsTbl.getSelectedRow();
         if (row < 0) {
             return null;
         }
@@ -398,6 +452,225 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
         }
     }
 
+    /**
+     * Builds the allocation-history table model for one request - extracted from the dialog so
+     * it can be verified directly (component-level) without opening the modal dialog it feeds.
+     */
+    private DefaultTableModel buildAllocationHistoryModel(String requestId) {
+        String[] historyColumns = {"Allocation ID", "Asset", "Start", "End", "Status", "Cancellation Reason"};
+        DefaultTableModel historyModel = new DefaultTableModel(historyColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        for (AssetAllocation allocation : allocationManager.getAllocationsForRequest(requestId)) {
+            historyModel.addRow(new Object[]{
+                    allocation.getAllocationId(),
+                    allocation.getAssetId(),
+                    ALLOCATION_DATETIME_FORMAT.format(allocation.getStartDateTime()),
+                    ALLOCATION_DATETIME_FORMAT.format(allocation.getEndDateTime()),
+                    allocation.getAllocationStatus(),
+                    allocation.getCancellationReason() == null ? "-" : allocation.getCancellationReason()
+            });
+        }
+        return historyModel;
+    }
+
+    /**
+     * A single dialog for the whole Step 2 allocation workflow on the selected request: shows
+     * its allocation history, and offers either an Allocate form (APPROVED, no active allocation)
+     * or Cancel/Complete actions (has an active SCHEDULED allocation) - whichever applies. All
+     * validation and manager calls happen here in hand-written code; only the dialog's own
+     * skeleton is built with GridBagLayout, matching this codebase's existing ad-hoc JDialog
+     * convention (e.g. HospitalAssetManagementPanel.openAssetDialog) rather than a NetBeans form.
+     */
+    private void openAllocationDialog() {
+        String requestId = requireSelection();
+        if (requestId == null) {
+            return;
+        }
+        MedicalRequest request = findRequest(requestId);
+        if (request == null) {
+            showError("Medical request not found: " + requestId);
+            return;
+        }
+
+        JDialog dialog = new JDialog(mainFrame, "Manage Allocation - " + requestId, true);
+        dialog.setLayout(new BorderLayout());
+
+        DefaultTableModel historyModel = buildAllocationHistoryModel(requestId);
+        JTable historyTbl = new JTable(historyModel);
+        historyTbl.setFont(Theme.DEFAULT_FONT);
+        JScrollPane historyScroll = new JScrollPane(historyTbl);
+        historyScroll.setPreferredSize(new Dimension(600, 140));
+        dialog.add(historyScroll, BorderLayout.CENTER);
+
+        JPanel actionPanel = new JPanel(new GridBagLayout());
+        actionPanel.setBackground(Theme.BACKGROUND_COLOR);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL, Theme.SPACING_SMALL);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Decide which controls to show: an active allocation gets Cancel/Complete; an
+        // APPROVED request with no active allocation gets the Allocate form; anything
+        // else just explains why nothing can be done here.
+        AssetAllocation active = allocationManager.findActiveAllocation(requestId);
+        if (active != null) {
+            addActiveAllocationControls(dialog, actionPanel, gbc, active);
+        } else if ("APPROVED".equals(request.getStatus())) {
+            addAllocateForm(dialog, actionPanel, gbc, request);
+        } else {
+            gbc.gridwidth = 2;
+            actionPanel.add(new JLabel("This request cannot be allocated (status: " + request.getStatus() + ")."), gbc);
+            gbc.gridy++;
+        }
+
+        JButton closeBtn = new JButton("Close");
+        UIStyles.applyPrimaryButtonStyle(closeBtn);
+        closeBtn.addActionListener(e -> dialog.dispose());
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        actionPanel.add(closeBtn, gbc);
+
+        dialog.add(actionPanel, BorderLayout.SOUTH);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    /** Adds the Cancel/Complete buttons shown when the request already has an active allocation. */
+    private void addActiveAllocationControls(JDialog dialog, JPanel actionPanel, GridBagConstraints gbc,
+            AssetAllocation active) {
+        JLabel infoLbl = new JLabel("Active: " + active.getAssetId() + "  ("
+                + ALLOCATION_DATETIME_FORMAT.format(active.getStartDateTime()) + " to "
+                + ALLOCATION_DATETIME_FORMAT.format(active.getEndDateTime()) + ")");
+        gbc.gridwidth = 2;
+        actionPanel.add(infoLbl, gbc);
+        gbc.gridy++;
+
+        JButton completeBtn = new JButton("Complete Allocation");
+        UIStyles.applyPrimaryButtonStyle(completeBtn);
+        completeBtn.addActionListener(e -> {
+            try {
+                allocationManager.completeAllocation(active.getAllocationId());
+                dialog.dispose();
+                applyFilters();
+                JOptionPane.showMessageDialog(this, "Allocation completed; request marked COMPLETED.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IllegalArgumentException | IllegalStateException ex) {
+                showError(ex.getMessage());
+            } catch (IOException ex) {
+                showError("The completion could not be saved: " + ex.getMessage());
+            }
+        });
+
+        JButton cancelAllocationBtn = new JButton("Cancel Allocation");
+        UIStyles.applyPrimaryButtonStyle(cancelAllocationBtn);
+        cancelAllocationBtn.addActionListener(e -> {
+            String reason = JOptionPane.showInputDialog(dialog,
+                    "Reason for cancelling this allocation:", "Cancel Allocation", JOptionPane.PLAIN_MESSAGE);
+            if (reason == null) {
+                return;
+            }
+            if (reason.trim().isEmpty()) {
+                showError("A cancellation reason is required.");
+                return;
+            }
+            try {
+                allocationManager.cancelAllocation(active.getAllocationId(), reason);
+                dialog.dispose();
+                applyFilters();
+                JOptionPane.showMessageDialog(this, "Allocation cancelled; request returned to APPROVED.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IllegalArgumentException | IllegalStateException ex) {
+                showError(ex.getMessage());
+            } catch (IOException ex) {
+                showError("The cancellation could not be saved: " + ex.getMessage());
+            }
+        });
+
+        gbc.gridwidth = 1;
+        actionPanel.add(cancelAllocationBtn, gbc);
+        gbc.gridx = 1;
+        actionPanel.add(completeBtn, gbc);
+        gbc.gridx = 0;
+        gbc.gridy++;
+    }
+
+    /** Adds the asset/start/end form and Allocate button shown for an APPROVED request with no active allocation. */
+    private void addAllocateForm(JDialog dialog, JPanel actionPanel, GridBagConstraints gbc, MedicalRequest request) {
+        List<HospitalAsset> compatibleAssets = allocationManager.getCompatibleAvailableAssets(request.getRequestType());
+        String[] assetLabels = new String[compatibleAssets.size()];
+        for (int i = 0; i < compatibleAssets.size(); i++) {
+            HospitalAsset asset = compatibleAssets.get(i);
+            assetLabels[i] = asset.getAssetId() + " - " + asset.getAssetName() + " (" + asset.getLocation() + ")";
+        }
+        JComboBox<String> assetCmb = new JComboBox<>(assetLabels);
+        JTextField startTf = new JTextField(16);
+        JTextField endTf = new JTextField(16);
+
+        addFormRow(actionPanel, gbc, "Compatible Asset:", assetCmb);
+        addFormRow(actionPanel, gbc, "Start (yyyy-MM-dd HH:mm):", startTf);
+        addFormRow(actionPanel, gbc, "End (yyyy-MM-dd HH:mm):", endTf);
+
+        JButton allocateConfirmBtn = new JButton("Allocate");
+        UIStyles.applyPrimaryButtonStyle(allocateConfirmBtn);
+        allocateConfirmBtn.addActionListener(e -> {
+            if (compatibleAssets.isEmpty()) {
+                showError("No compatible, operationally available asset exists for a "
+                        + request.getRequestType() + " request.");
+                return;
+            }
+            int index = assetCmb.getSelectedIndex();
+            if (index < 0) {
+                showError("Select an asset.");
+                return;
+            }
+            Date start;
+            Date end;
+            try {
+                start = ALLOCATION_DATETIME_FORMAT.parse(startTf.getText().trim());
+            } catch (ParseException ex) {
+                showError("Start must be a valid date/time in yyyy-MM-dd HH:mm format.");
+                return;
+            }
+            try {
+                end = ALLOCATION_DATETIME_FORMAT.parse(endTf.getText().trim());
+            } catch (ParseException ex) {
+                showError("End must be a valid date/time in yyyy-MM-dd HH:mm format.");
+                return;
+            }
+            try {
+                allocationManager.createAllocation(request.getRequestId(), compatibleAssets.get(index).getAssetId(),
+                        currentAdminId(), start, end);
+                dialog.dispose();
+                applyFilters();
+                JOptionPane.showMessageDialog(this, "Asset allocated; request marked ALLOCATED.",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IllegalArgumentException | IllegalStateException ex) {
+                showError(ex.getMessage());
+            } catch (IOException ex) {
+                showError("The allocation could not be saved: " + ex.getMessage());
+            }
+        });
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        actionPanel.add(allocateConfirmBtn, gbc);
+        gbc.gridy++;
+    }
+
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, String labelText, Component field) {
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        panel.add(new JLabel(labelText), gbc);
+        gbc.gridx = 1;
+        panel.add(field, gbc);
+        gbc.gridy++;
+    }
+
     private String currentAdminId() {
         AdminStaff admin = (AdminStaff) sessionManager.getCurrentUser();
         return admin.getStaffId();
@@ -408,23 +681,24 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton approveButton;
-    private javax.swing.JButton backButton;
+    private javax.swing.JButton allocateBtn;
+    private javax.swing.JButton approveBtn;
+    private javax.swing.JButton backBtn;
     private javax.swing.JPanel buttonPanel;
-    private javax.swing.JButton clearButton;
-    private javax.swing.JButton rejectButton;
-    private javax.swing.JTable requestTable;
-    private javax.swing.JButton searchButton;
-    private javax.swing.JTextField searchField;
-    private javax.swing.JLabel searchLabel;
+    private javax.swing.JButton clearBtn;
+    private javax.swing.JButton rejectBtn;
+    private javax.swing.JTable requestsTbl;
+    private javax.swing.JButton searchBtn;
+    private javax.swing.JTextField searchTf;
+    private javax.swing.JLabel searchLbl;
     private javax.swing.JPanel searchPanel;
-    private javax.swing.JComboBox<String> statusFilterCombo;
-    private javax.swing.JLabel statusLabel;
+    private javax.swing.JComboBox<String> statusCmb;
+    private javax.swing.JLabel statusLbl;
     private javax.swing.JScrollPane tableScrollPane;
-    private javax.swing.JLabel titleLabel;
+    private javax.swing.JLabel titleLbl;
     private javax.swing.JPanel topPanel;
-    private javax.swing.JComboBox<String> typeFilterCombo;
-    private javax.swing.JLabel typeLabel;
-    private javax.swing.JButton viewButton;
+    private javax.swing.JComboBox<String> typeCmb;
+    private javax.swing.JLabel typeLbl;
+    private javax.swing.JButton viewBtn;
     // End of variables declaration//GEN-END:variables
 }

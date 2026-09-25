@@ -1,6 +1,7 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
 import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
@@ -40,6 +41,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
     private final HospitalAssetManager assetManager;
     private final ConsultationRateManager rateManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -47,12 +49,14 @@ public class EditProfilePanel extends javax.swing.JPanel {
     public EditProfilePanel(UserManager userManager, AppointmentManager appointmentManager,
             ClinicalManager clinicalManager, HospitalAssetManager assetManager,
             ConsultationRateManager rateManager, InsuranceNetworkManager insuranceManager,
-            SessionManager sessionManager, MainFrame mainFrame, Runnable onLogout) {
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
         this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
         this.rateManager = rateManager;
+        this.allocationManager = allocationManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -236,7 +240,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
 
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
                 sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
-                insuranceManager, mainFrame, onLogout)));
+                insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private void saveProfile() {

@@ -14,9 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -165,19 +163,24 @@ public class ClinicalManagerMedicalRequestTest {
         Files.write(file.toPath(), content, StandardCharsets.UTF_8);
     }
 
+    /** Ordinary recursion instead of a stream pipeline: delete every file inside, then the folder itself. */
     private static void deleteRecursively(Path root) throws IOException {
-        if (!Files.exists(root)) {
+        File folder = root.toFile();
+        if (!folder.exists()) {
             return;
         }
-        try (Stream<Path> walk = Files.walk(root)) {
-            walk.sorted(Comparator.reverseOrder()).forEach(path -> {
-                try {
-                    Files.deleteIfExists(path);
-                } catch (IOException ignored) {
-                    // Best-effort cleanup; leftover temp files don't affect test correctness.
-                }
-            });
+        File[] children = folder.listFiles();
+        if (children == null) {
+            throw new IOException("Could not list directory contents: " + folder);
         }
+        for (File child : children) {
+            if (child.isDirectory()) {
+                deleteRecursively(child.toPath());
+            } else {
+                Files.deleteIfExists(child.toPath());
+            }
+        }
+        Files.deleteIfExists(root);
     }
 
     // ---- assertions ----

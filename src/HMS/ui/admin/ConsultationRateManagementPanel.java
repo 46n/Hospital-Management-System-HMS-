@@ -1,6 +1,7 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
 import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
@@ -49,6 +50,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -58,12 +60,14 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     public ConsultationRateManagementPanel(ConsultationRateManager rateManager, UserManager userManager,
             AppointmentManager appointmentManager, ClinicalManager clinicalManager,
             HospitalAssetManager assetManager, InsuranceNetworkManager insuranceManager,
-            SessionManager sessionManager, MainFrame mainFrame, Runnable onLogout) {
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.rateManager = rateManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
         this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
+        this.allocationManager = allocationManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -177,7 +181,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         deleteButton.addActionListener(e -> deleteSelected());
         backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
                 sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
-                insuranceManager, mainFrame, onLogout)));
+                insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private void refreshTable() {

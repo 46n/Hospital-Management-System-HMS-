@@ -2,6 +2,7 @@ package hms.app;
 
 import hms.manager.AppointmentManager;
 import hms.manager.AssessmentTypeManager;
+import hms.manager.AssetAllocationManager;
 import hms.manager.BillingManager;
 import hms.manager.ClinicalDepartmentManager;
 import hms.manager.ClinicalManager;
@@ -47,24 +48,27 @@ public final class Main {
         billingManager,
         rateManager
 );
-        
-        
+
+
         InsuranceNetworkManager insuranceManager = new InsuranceNetworkManager(userManager);
         ClinicalDepartmentManager departmentManager = new ClinicalDepartmentManager(userManager);
+        AssetAllocationManager allocationManager = new AssetAllocationManager(clinicalManager, assetManager, userManager);
         SessionManager sessionManager = new SessionManager(userManager);
 
         SwingUtilities.invokeLater(() -> showLoginFrame(sessionManager, userManager, appointmentManager,
                 clinicalManager, billingManager, reportManager, assetManager, rateManager, insuranceManager,
-                typeManager, shiftManager, departmentManager));
+                typeManager, shiftManager, departmentManager, allocationManager));
     }
 
     private static void showLoginFrame(SessionManager sessionManager, UserManager userManager,
         AppointmentManager appointmentManager, ClinicalManager clinicalManager, BillingManager billingManager,
         ReportManager reportManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
         InsuranceNetworkManager insuranceManager, AssessmentTypeManager typeManager,
-        DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager) {
+        DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager,
+        AssetAllocationManager allocationManager) {
         LoginNew loginFrame = new LoginNew( sessionManager, user -> showMainFrame( sessionManager, userManager, appointmentManager,
-                    clinicalManager, billingManager,  reportManager,assetManager,rateManager, insuranceManager,typeManager,shiftManager,departmentManager
+                    clinicalManager, billingManager,  reportManager,assetManager,rateManager, insuranceManager,typeManager,shiftManager,departmentManager,
+                    allocationManager
             )
     );
     loginFrame.setVisible(true);
@@ -74,17 +78,18 @@ public final class Main {
             AppointmentManager appointmentManager, ClinicalManager clinicalManager, BillingManager billingManager,
             ReportManager reportManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
             InsuranceNetworkManager insuranceManager, AssessmentTypeManager typeManager,
-            DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager) {
+            DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager,
+            AssetAllocationManager allocationManager) {
         MainFrame frame = new MainFrame();
         Runnable onLogout = () -> {
             frame.dispose();
             showLoginFrame(sessionManager, userManager, appointmentManager, clinicalManager, billingManager,
                     reportManager, assetManager, rateManager, insuranceManager, typeManager, shiftManager,
-                    departmentManager);
+                    departmentManager, allocationManager);
         };
         frame.showPanel(createDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
                 billingManager, reportManager, assetManager, rateManager, insuranceManager, typeManager,
-                shiftManager, departmentManager, frame, onLogout));
+                shiftManager, departmentManager, allocationManager, frame, onLogout));
         frame.setVisible(true);
     }
 
@@ -94,10 +99,10 @@ public final class Main {
             ReportManager reportManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
             InsuranceNetworkManager insuranceManager, AssessmentTypeManager typeManager,
             DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager,
-            MainFrame frame, Runnable onLogout) {
+            AssetAllocationManager allocationManager, MainFrame frame, Runnable onLogout) {
         if (sessionManager.hasRole("ADMIN_STAFF")) {
             return new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
-                    assetManager, rateManager, insuranceManager, frame, onLogout);
+                    assetManager, rateManager, insuranceManager, allocationManager, frame, onLogout);
         }
         if (sessionManager.hasRole("MEDICAL_MANAGER")) {
             return new MedicalManagerDashboardNew(sessionManager, userManager, appointmentManager,
