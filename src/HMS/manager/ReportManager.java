@@ -33,23 +33,33 @@ public class ReportManager {
         return report.generateRows();
     }
 
-    public HospitalReport buildMetricsReport(AppointmentManager appointmentManager) {
-        if (appointmentManager == null) {
-            throw new IllegalArgumentException("Appointment manager is required");
-        }
-        int total = 0;
-        int completed = 0;
-        int cancelled = 0;
-        for (Appointment appointment : appointmentManager.getAppointments()) {
-            total++;
-            if ("COMPLETED".equals(appointment.getStatus())) {
-                completed++;
-            } else if ("CANCELLED".equals(appointment.getStatus())) {
-                cancelled++;
-            }
-        }
-        return new HospitalMetricsReport(total, completed, cancelled);
+    public HospitalReport buildMetricsReport(
+        AppointmentManager appointmentManager) {
+    if (appointmentManager == null) {
+        throw new IllegalArgumentException(
+                "Appointment manager is required"
+        );
     }
+    int total = 0;
+    int completed = 0;
+    int confirmed = 0;
+    int cancelled = 0;
+    int rescheduled = 0;
+    for (Appointment appointment
+            : appointmentManager.getAppointments()) {
+        total++;
+        if ("COMPLETED".equals(appointment.getStatus())) {
+            completed++;
+        } else if ("CONFIRMED".equals(appointment.getStatus())) {
+            confirmed++;
+        } else if ("CANCELLED".equals(appointment.getStatus())) {
+            cancelled++;
+        } else if ("RESCHEDULED".equals(appointment.getStatus())) {
+            rescheduled++;
+        }
+    }
+    return new HospitalMetricsReport(  total, completed, confirmed, cancelled,rescheduled);
+}
 
     public HospitalReport buildRevenueReport(BillingManager billingManager) {
         if (billingManager == null) {
