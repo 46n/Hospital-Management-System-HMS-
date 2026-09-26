@@ -15,6 +15,9 @@ import javax.swing.table.DefaultTableModel;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  *
@@ -87,6 +90,33 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
 
     spinner.setValue(calendar.getTime());
 }
+    
+    
+    
+    private boolean isPastShift(DoctorShift shift) {
+
+    if (shift.getShiftDate() == null
+            || shift.getEndTime() == null) {
+        return false;
+    }
+
+    LocalDate shiftDate =
+            shift.getShiftDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+    LocalDateTime shiftEnd =
+            LocalDateTime.of(
+                    shiftDate,
+                    shift.getEndTime()
+            );
+
+    return shiftEnd.isBefore(LocalDateTime.now());
+}
+    
+    
+    
     
     private LocalTime getTimeFromSpinner(javax.swing.JSpinner spinner) {
     Date value = (Date) spinner.getValue();
@@ -271,7 +301,7 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
     
     
     
-    private void refreshShiftTable() {
+   private void refreshShiftTable() {
     DefaultTableModel model =
             (DefaultTableModel) tblDoctorShifts.getModel();
     model.setRowCount(0);
@@ -279,6 +309,9 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
     for (DoctorShift shift
             : shiftManager.getShiftsForManager(
                     manager.getManagerId())) {
+        if (isPastShift(shift)) {
+            continue;
+        }
         model.addRow(new Object[]{
             shift.getShiftId(),
             shift.getDoctor() == null
@@ -547,10 +580,10 @@ public class DoctorShiftManagementNew extends javax.swing.JPanel {
                                 .addComponent(btnRemoveSelected)
                                 .addGap(18, 18, 18)
                                 .addComponent(btnBackDashboard))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 541, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 684, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(pnlShiftDetails, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(29, 29, 29))))
         );
