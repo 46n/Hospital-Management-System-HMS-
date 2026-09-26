@@ -13,7 +13,7 @@ import hms.manager.InsuranceNetworkManager;
 import hms.manager.ReportManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
-import hms.ui.admin.AdminDashboardPanel;
+import hms.ui.admin.AdminDashboardNew;
 import hms.ui.common.LoginNew;
 import hms.ui.common.MainFrame;
 import HMS.ui.doctor.DoctorDashboardNew;
@@ -101,7 +101,7 @@ public final class Main {
             DoctorShiftManager shiftManager, ClinicalDepartmentManager departmentManager,
             AssetAllocationManager allocationManager, MainFrame frame, Runnable onLogout) {
         if (sessionManager.hasRole("ADMIN_STAFF")) {
-            return new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
+            return new AdminDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
                     assetManager, rateManager, insuranceManager, allocationManager, frame, onLogout);
         }
         if (sessionManager.hasRole("MEDICAL_MANAGER")) {

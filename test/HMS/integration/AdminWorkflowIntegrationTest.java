@@ -739,15 +739,34 @@ public class AdminWorkflowIntegrationTest {
             File ratesFile = copyIfPresent(realDataDir, tempDir, "consultation_rates.txt");
             File insuranceFile = copyIfPresent(realDataDir, tempDir, "insurance_networks.txt");
 
-            // The compatibility check is simply that each manager's constructor - which parses the
-            // file and throws IllegalStateException on a load failure (since Step 8) - completes
-            // without throwing. There is nothing else to assert here: the real data's actual record
-            // counts and contents legitimately change over time, so no fixed expected count can be
-            // written without either duplicating production parsing logic or being tautological.
+            // The general compatibility check is simply that each manager's constructor - which
+            // parses the file and throws IllegalStateException on a load failure (since Step 8) -
+            // completes without throwing. For users/rates/insurance there is nothing else to
+            // assert: the real data's actual record counts and contents legitimately change over
+            // time, so no fixed expected count is written without duplicating production parsing
+            // logic or being tautological.
             UserManager userManager = new UserManager(usersFile);
-            new HospitalAssetManager(userManager, assetsFile);
+            HospitalAssetManager assetManager = new HospitalAssetManager(userManager, assetsFile);
             new ConsultationRateManager(userManager, ratesFile);
             new InsuranceNetworkManager(userManager, insuranceFile);
+
+            // Hospital assets are the one exception: the merged main branch's committed
+            // demonstration data uses legacy group-data type aliases (INPATIENT_WARD, LABORATORY)
+            // for three of its eight rows, which is exactly the compatibility gap
+            // HospitalAssetType.fromPersistedValue() closes. Asserting the concrete count and the
+            // three legacy rows' resolved canonical types is what actually proves that fix, rather
+            // than merely proving the constructor didn't throw.
+            assertEquals(8, assetManager.getAssets().size(),
+                    "all eight assets in the merged demonstration data must load - none silently skipped");
+            HospitalAsset ha004 = assetManager.findById("HA004");
+            assertNotNull(ha004, "HA004 must load");
+            assertEquals("WARD", ha004.getAssetType(), "HA004's legacy INPATIENT_WARD must resolve to the canonical WARD");
+            HospitalAsset ha005 = assetManager.findById("HA005");
+            assertNotNull(ha005, "HA005 must load");
+            assertEquals("LAB", ha005.getAssetType(), "HA005's legacy LABORATORY must resolve to the canonical LAB");
+            HospitalAsset ha008 = assetManager.findById("HA008");
+            assertNotNull(ha008, "HA008 must load");
+            assertEquals("WARD", ha008.getAssetType(), "HA008's legacy INPATIENT_WARD must resolve to the canonical WARD");
         } finally {
             deleteRecursively(tempDir);
         }

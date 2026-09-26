@@ -1,2 +1,9 @@
 #recordId|appointmentId|patientId|doctorId|vitalSigns|consultationNotes|diagnosis|recordDate
-MR001|AP005|PT001|DR001||||2026-09-22
+MR001|AP001|PT001|DR001|BP 128/82 mmHg, Pulse 78 bpm|Patient reported occasional chest discomfort during exercise|Mild exertional angina|2026-09-15
+MR002|AP002|PT002|DR002|BP 118/76 mmHg, Temp 37.8 C|Patient reported sore throat and mild fever for two days|Upper respiratory infection|2026-09-16
+MR003|AP003|PT001|DR002|BP 124/80 mmHg, Glucose 6.2 mmol/L|Routine follow-up with slightly elevated fasting glucose|Prediabetes monitoring|2026-09-17
+MR004|AP004|PT002|DR001|BP 135/85 mmHg, Pulse 84 bpm|Patient complained of palpitations during stressful periods|Sinus tachycardia|2026-09-18
+MR005|AP005|PT001|DR001|BP 130/84 mmHg, Pulse 76 bpm|Follow-up consultation after cardiac medication review|Stable angina|2026-09-19
+MR006|AP006|PT002|DR002|BP 116/74 mmHg, Temp 36.9 C|Patient presented with headache and nasal congestion|Acute sinusitis|2026-09-20
+MR007|AP007|PT001|DR002|BP 126/81 mmHg, BMI 27.3|Lifestyle review and dietary counselling provided|Overweight|2026-09-21
+MR008|AP008|PT002|DR001|BP 122/78 mmHg, Pulse 72 bpm|Cardiology review showed stable observations with no acute symptoms|Normal cardiac review|2026-09-22

@@ -230,7 +230,7 @@ private void applyStyles() {
         lblAvailableDoctors.setFont(new java.awt.Font("Dialog", 0, 15)); // NOI18N
         lblAvailableDoctors.setText("Available Doctors");
         add(lblAvailableDoctors);
-        lblAvailableDoctors.setBounds(280, 50, 150, 32);
+        lblAvailableDoctors.setBounds(280, 50, 200, 32);
 
         tblDoctors.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -256,7 +256,7 @@ private void applyStyles() {
         lblDoctorShifts.setFont(new java.awt.Font("Dialog", 0, 15)); // NOI18N
         lblDoctorShifts.setText("Selected Doctor's Working Shifts");
         add(lblDoctorShifts);
-        lblDoctorShifts.setBounds(680, 50, 250, 30);
+        lblDoctorShifts.setBounds(680, 50, 260, 30);
 
         tblDoctorShifts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {

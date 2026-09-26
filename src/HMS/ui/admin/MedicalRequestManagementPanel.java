@@ -278,7 +278,7 @@ public class MedicalRequestManagementPanel extends javax.swing.JPanel {
         rejectBtn.addActionListener(e -> rejectSelectedRequest());
         allocateBtn.addActionListener(e -> openAllocationDialog());
         backBtn.addActionListener(e -> mainFrame.showPanel(
-                new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
+                new AdminDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
                         assetManager, rateManager, insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 

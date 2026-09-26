@@ -261,7 +261,10 @@ public class HospitalAssetManager {
             System.err.println("Skipping hospital asset with an invalid location (" + e.getMessage() + "): " + line);
             return null;
         }
-        HospitalAssetType type = HospitalAssetType.fromStoredValue(assetTypeText);
+        // Loading an existing row also accepts legacy/group-data type aliases (e.g. the merged
+        // main branch's INPATIENT_WARD/LABORATORY demonstration data) - never used for validating
+        // new create/update input, which stays canonical-only via requireCanonicalType() below.
+        HospitalAssetType type = HospitalAssetType.fromPersistedValue(assetTypeText);
         if (type == null) {
             System.err.println("Skipping hospital asset with unknown type \"" + assetTypeText + "\": " + line);
             return null;

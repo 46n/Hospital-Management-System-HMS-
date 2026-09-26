@@ -171,7 +171,7 @@ private void applyStyles() {
         lblTitle.setFont(new java.awt.Font("Dialog", 0, 24)); // NOI18N
         lblTitle.setText("My Medical History");
         add(lblTitle);
-        lblTitle.setBounds(190, 20, 201, 32);
+        lblTitle.setBounds(190, 20, 250, 32);
 
         tblMedicalRecords.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {

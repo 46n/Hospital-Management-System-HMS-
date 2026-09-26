@@ -88,6 +88,12 @@ public class HospitalAssetManagerTest {
         suite.run("testValidLegacyRecordLoads", suite::testValidLegacyRecordLoads);
         suite.run("testImagingRoomLegacyRecordLoads", suite::testImagingRoomLegacyRecordLoads);
         suite.run("testLoadSkipsUnknownType", suite::testLoadSkipsUnknownType);
+        suite.run("testLoadResolvesInpatientWardAliasToWard", suite::testLoadResolvesInpatientWardAliasToWard);
+        suite.run("testLoadResolvesLaboratoryAliasToLab", suite::testLoadResolvesLaboratoryAliasToLab);
+        suite.run("testCreateAssetRejectsLegacyTypeAliasesAsNewInput",
+                suite::testCreateAssetRejectsLegacyTypeAliasesAsNewInput);
+        suite.run("testLoadStillSkipsGenuinelyUnknownTypeAfterAliasSupport",
+                suite::testLoadStillSkipsGenuinelyUnknownTypeAfterAliasSupport);
         suite.run("testLoadSkipsInvalidAvailability", suite::testLoadSkipsInvalidAvailability);
         suite.run("testLoadSkipsDuplicateId", suite::testLoadSkipsDuplicateId);
         suite.run("testLoadSkipsDuplicateName", suite::testLoadSkipsDuplicateName);
@@ -555,6 +561,104 @@ public class HospitalAssetManagerTest {
                     "HA003|Mystery Room|SPACESHIP_HANGAR|Roof|true|");
             HospitalAssetManager freshManager = new HospitalAssetManager(fixture.userManager, fixture.assetsFile);
             assertTrue(freshManager.getAssets().isEmpty(), "a row with an unknown type must be skipped, not crash");
+        }
+    }
+
+    /**
+     * INPATIENT_WARD is a legacy/group-data alias the merged main branch's demonstration data
+     * uses for what this project's HospitalAssetType enum canonically calls WARD. Loading such a
+     * row must resolve it to the canonical WARD, not skip it - and once loaded, any later save
+     * must persist the canonical value, not perpetuate the legacy alias.
+     */
+    private void testLoadResolvesInpatientWardAliasToWard() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            writeFile(fixture.assetsFile,
+                    "#assetId|assetName|assetType|location|availability|managedByStaffId",
+                    "HA004|General Medical Ward|INPATIENT_WARD|Block C Level 3|true|AS001");
+            HospitalAssetManager freshManager = new HospitalAssetManager(fixture.userManager, fixture.assetsFile);
+
+            assertEquals(1, freshManager.getAssets().size(), "the INPATIENT_WARD row must load, not be skipped");
+            HospitalAsset asset = freshManager.findById("HA004");
+            assertEquals("WARD", asset.getAssetType(), "INPATIENT_WARD must resolve to the canonical WARD");
+
+            // A later legitimate operation (here, toggling availability) resaves the file - the
+            // canonical value must be written, not the legacy alias that was originally loaded.
+            freshManager.setAvailability("HA004", false);
+            List<String> savedLines = Files.readAllLines(fixture.assetsFile.toPath(), StandardCharsets.UTF_8);
+            boolean foundCanonicalLine = false;
+            for (String savedLine : savedLines) {
+                if (savedLine.startsWith("HA004|")) {
+                    assertTrue(savedLine.contains("|WARD|"), "the resaved row must use the canonical WARD: " + savedLine);
+                    foundCanonicalLine = true;
+                }
+            }
+            assertTrue(foundCanonicalLine, "the resaved file must still contain the HA004 row");
+        }
+    }
+
+    /** Same alias behavior as INPATIENT_WARD/WARD above, for LABORATORY/LAB. */
+    private void testLoadResolvesLaboratoryAliasToLab() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            writeFile(fixture.assetsFile,
+                    "#assetId|assetName|assetType|location|availability|managedByStaffId",
+                    "HA005|Clinical Laboratory 1|LABORATORY|Block D Level 1|true|AS001");
+            HospitalAssetManager freshManager = new HospitalAssetManager(fixture.userManager, fixture.assetsFile);
+
+            assertEquals(1, freshManager.getAssets().size(), "the LABORATORY row must load, not be skipped");
+            HospitalAsset asset = freshManager.findById("HA005");
+            assertEquals("LAB", asset.getAssetType(), "LABORATORY must resolve to the canonical LAB");
+
+            freshManager.setAvailability("HA005", false);
+            List<String> savedLines = Files.readAllLines(fixture.assetsFile.toPath(), StandardCharsets.UTF_8);
+            boolean foundCanonicalLine = false;
+            for (String savedLine : savedLines) {
+                if (savedLine.startsWith("HA005|")) {
+                    assertTrue(savedLine.contains("|LAB|"), "the resaved row must use the canonical LAB: " + savedLine);
+                    foundCanonicalLine = true;
+                }
+            }
+            assertTrue(foundCanonicalLine, "the resaved file must still contain the HA005 row");
+        }
+    }
+
+    /**
+     * Legacy aliases are accepted only when loading an existing row - a new create/update call
+     * must still be rejected for anything other than the six canonical type names, exactly as
+     * before. Otherwise Admin could type "INPATIENT_WARD" into a new asset's type field and have
+     * it silently accepted, which is not one of the six required canonical values.
+     */
+    private void testCreateAssetRejectsLegacyTypeAliasesAsNewInput() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("New Ward", "INPATIENT_WARD", "Block A", true),
+                    "createAsset must reject the legacy INPATIENT_WARD alias as new input");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.createAsset("New Lab", "LABORATORY", "Block B", true),
+                    "createAsset must reject the legacy LABORATORY alias as new input");
+
+            HospitalAsset ward = fixture.createAsset("Ward 9", "WARD", "Block A", true);
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.hospitalAssetManager.updateAsset(ward.getAssetId(), "Ward 9", "INPATIENT_WARD", "Block A"),
+                    "updateAsset must reject the legacy INPATIENT_WARD alias as new input");
+            assertEquals("WARD", fixture.hospitalAssetManager.findById(ward.getAssetId()).getAssetType(),
+                    "the asset's type must be unchanged after the rejected update");
+        }
+    }
+
+    /**
+     * Regression guard: adding legacy-alias support for loading must not loosen what counts as a
+     * genuinely unknown type - a value that is neither canonical nor a recognized legacy alias
+     * must still be skipped while loading, exactly as testLoadSkipsUnknownType already proves for
+     * a different bogus value.
+     */
+    private void testLoadStillSkipsGenuinelyUnknownTypeAfterAliasSupport() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            writeFile(fixture.assetsFile,
+                    "#assetId|assetName|assetType|location|availability|managedByStaffId",
+                    "HA006|Storage Room|STORAGE_CLOSET|Basement|true|");
+            HospitalAssetManager freshManager = new HospitalAssetManager(fixture.userManager, fixture.assetsFile);
+            assertTrue(freshManager.getAssets().isEmpty(),
+                    "a row with a genuinely unknown type must still be skipped, not crash");
         }
     }
 

@@ -22,6 +22,7 @@ import hms.ui.common.MainFrame;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 /**
  *
  * @author waleed
@@ -51,9 +52,10 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
     }
     
     public IssuePrescriptionNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
-        AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
-        MainFrame mainFrame, Runnable onLogout) {
+            AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
+            MainFrame mainFrame, Runnable onLogout) {
         initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -71,8 +73,9 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
     private void loadAppointments() {
 
         doctorAppointments =
-            appointmentManager.listForDoctor(currentDoctor().getDoctorId());
-
+            appointmentManager.listActiveForDoctor(
+                currentDoctor().getDoctorId()
+            );
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
@@ -97,9 +100,19 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
             showError("You have no appointments.");
             return;
         }
+        int index = cmbAppointment.getSelectedIndex();
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
+        
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            showError("Cannot issue a prescription for a cancelled appointment.");
+            return;
+        }
 
         try {
             MedicalRecord record = clinicalManager.getOrOpenRecord(
@@ -161,10 +174,22 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
         }
     }
     
+    private void backToDashboard() {
+    mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+        appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblIssuePrescription);
+
+        UIStyles.applyPrimaryButtonStyle(btnIssuePrescription);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
     }
     
     
@@ -245,51 +270,44 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(58, 58, 58)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblAppointment)
+                    .addComponent(lblMedication))
+                .addGap(63, 63, 63)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(58, 58, 58)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(lblAppointment)
-                            .addComponent(lblMedication))
-                        .addGap(63, 63, 63)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnIssuePrescription, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(130, 130, 130))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(0, 0, Short.MAX_VALUE)
-                                        .addComponent(lblInstructions, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(txtMedication))
-                                        .addGap(177, 177, 177)
-                                        .addComponent(lblValue)))
-                                .addGap(25, 25, 25)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtInstructions, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
-                            .addComponent(txtDosage)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnIssuePrescription)
+                        .addGap(118, 118, 118))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 690, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(38, 38, 38))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(btnBackToDashboard)
-                .addGap(301, 301, 301))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtMedication))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(lblValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(lblInstructions, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
+                        .addGap(25, 25, 25)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtInstructions, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                    .addComponent(txtDosage))
+                .addGap(18, 18, 18))
             .addGroup(layout.createSequentialGroup()
-                .addGap(49, 49, 49)
+                .addGap(16, 16, 16)
                 .addComponent(lblIssuePrescription)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(514, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnBackToDashboard)
+                .addGap(354, 354, 354))
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(26, 26, 26)
+                .addGap(8, 8, 8)
                 .addComponent(lblIssuePrescription)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -312,7 +330,7 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
                     .addComponent(btnIssuePrescription, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(15, 15, 15))
         );
@@ -332,9 +350,7 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 

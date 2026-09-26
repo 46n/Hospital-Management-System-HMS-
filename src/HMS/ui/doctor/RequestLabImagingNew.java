@@ -16,6 +16,7 @@ import hms.model.MedicalRecord;
 import hms.model.MedicalRequest;
 
 import hms.ui.common.MainFrame;
+import hms.ui.common.UIStyles;
 
 import java.io.IOException;
 import java.util.List;
@@ -60,6 +61,7 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         MainFrame mainFrame, Runnable onLogout) {
 
         initComponents();
+        applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -76,12 +78,14 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
     private void loadData() {
 
         doctorAppointments =
-            appointmentManager.listForDoctor(currentDoctor().getDoctorId());
+            appointmentManager.listActiveForDoctor(
+                currentDoctor().getDoctorId()
+            );
 
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
-        cmbAppointment.addItem(
+            cmbAppointment.addItem(
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
                 + " (" + appointment.getStatus() + ")"
@@ -107,34 +111,46 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
             return;
         }
 
-        Appointment appointment =
-            doctorAppointments.get(cmbAppointment.getSelectedIndex());
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            showError("Please select an appointment.");
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
 
         String requestType =
             (String) cmbRequestType.getSelectedItem();
 
-    try {
-        MedicalRecord record = clinicalManager.getOrOpenRecord(
-                appointment.getAppointmentId(),
-                currentDoctor().getDoctorId());
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            showError("Cannot submit a lab or imaging request for a cancelled appointment.");
+            return;
+        }
 
-        clinicalManager.addRequest(
-                record.getRecordId(),
-                requestType,
-                txtDetails.getText());
 
-        txtDetails.setText("");
+        try {
+            MedicalRecord record = clinicalManager.getOrOpenRecord(
+                    appointment.getAppointmentId(),
+                    currentDoctor().getDoctorId());
 
-        refreshTable();
+            clinicalManager.addRequest(
+                    record.getRecordId(),
+                    requestType,
+                    txtDetails.getText());
 
-        JOptionPane.showMessageDialog(this,
-                requestType + " request submitted.",
-                "Success",
-                JOptionPane.INFORMATION_MESSAGE);
+            txtDetails.setText("");
 
-    } catch (IllegalArgumentException ex) {
+            refreshTable();
+
+            JOptionPane.showMessageDialog(this,
+                    requestType + " request submitted.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
-    } catch (IOException ex) {
+        } catch (IOException ex) {
             showError("The request could not be saved: " + ex.getMessage());
         }
     }
@@ -171,14 +187,22 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         }
     }
 
+    private void backToDashboard() {
+        mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+            appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
 
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    private void applyStyles() {
+        UIStyles.applyHeadingStyle(lblRequestLabImaging);
 
-
+        UIStyles.applyPrimaryButtonStyle(btnSubmitRequest);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }
 
 
 
@@ -255,66 +279,62 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(310, 310, 310))
             .addGroup(layout.createSequentialGroup()
-                .addGap(19, 19, 19)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 690, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(38, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(58, 58, 58)
+                .addGap(14, 14, 14)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 690, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblRequestLabImaging)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblRequestLabImaging)
-                        .addContainerGap(450, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(180, 180, 180)
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(btnSubmitRequest, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(8, 8, 8)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblAppointment)
                             .addComponent(lblRequestType)
                             .addComponent(lblDetails))
-                        .addGap(79, 79, 79)
+                        .addGap(55, 55, 55)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(cmbRequestType, 0, 99, Short.MAX_VALUE)
                             .addComponent(cmbAppointment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtDetails, 0, 150, Short.MAX_VALUE))
-                        .addGap(125, 125, 125))))
+                            .addComponent(cmbRequestType, javax.swing.GroupLayout.PREFERRED_SIZE, 198, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(157, 157, 157)
+                                .addComponent(btnSubmitRequest)))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 178, Short.MAX_VALUE)
+                .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(534, 534, 534))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addComponent(lblRequestLabImaging)
-                .addGap(14, 14, 14)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblAppointment))
-                .addGap(31, 31, 31)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(46, 46, 46)
+                        .addComponent(btnSubmitRequest, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(10, 10, 10)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblAppointment))
+                        .addGap(31, 31, 31)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(cmbRequestType, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblRequestType))
                         .addGap(12, 12, 12)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblDetails))
-                        .addGap(20, 20, 20))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnSubmitRequest, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                            .addComponent(lblDetails))))
+                .addGap(36, 36, 36)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -334,9 +354,7 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
 
 

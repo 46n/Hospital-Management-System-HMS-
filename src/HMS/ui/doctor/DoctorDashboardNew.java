@@ -10,6 +10,9 @@ import hms.manager.ClinicalManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.ui.common.MainFrame;
+import hms.ui.common.UIStyles;
+import hms.ui.common.EditProfileNew;
+
 /**
  *
  * @author waleed
@@ -23,29 +26,87 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
     private AssessmentTypeManager typeManager;
     private MainFrame mainFrame;
     private Runnable onLogout;
+    
 
     /**
      * Creates new form DoctorDashboardNew
      */
-    public DoctorDashboardNew(
-        SessionManager sessionManager,
-        UserManager userManager,
-        AppointmentManager appointmentManager,
-        ClinicalManager clinicalManager,
-        AssessmentTypeManager typeManager,
-        MainFrame mainFrame,
-        Runnable onLogout) {
+    public DoctorDashboardNew(SessionManager sessionManager, UserManager userManager,
+            AppointmentManager appointmentManager, ClinicalManager clinicalManager,
+            AssessmentTypeManager typeManager, MainFrame mainFrame, Runnable onLogout) {
+                initComponents();
+        applyStyles();
 
-    initComponents();
+        this.sessionManager = sessionManager;
+        this.userManager = userManager;
+        this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
+        this.typeManager = typeManager;
+        this.mainFrame = mainFrame;
+        this.onLogout = onLogout;
 
-    this.sessionManager = sessionManager;
-    this.userManager = userManager;
-    this.appointmentManager = appointmentManager;
-    this.clinicalManager = clinicalManager;
-    this.typeManager = typeManager;
-    this.mainFrame = mainFrame;
-    this.onLogout = onLogout;
-}
+
+        if (sessionManager != null
+                && sessionManager.getCurrentUser() != null) {
+
+            jLabel1.setText(
+                "Welcome, "
+                + sessionManager.getCurrentUser().getUsername()
+                + " (Doctor)");
+        }
+    
+    }
+        
+        
+        
+        
+        
+        
+        private void openProfile() {
+            mainFrame.showPanel(new EditProfileNew(sessionManager, userManager, () -> mainFrame.showPanel(this)));
+        }
+
+        private void openAppointments() {
+            mainFrame.showPanel(new MyAppointmentsNew(appointmentManager, clinicalManager, typeManager, userManager, sessionManager, mainFrame, onLogout));
+        }
+
+        private void openAssessmentResult() {
+            mainFrame.showPanel(new RecordAssessmentNew(clinicalManager, appointmentManager, typeManager, userManager, sessionManager, mainFrame, onLogout));
+        }
+
+        private void openVitals() {
+            mainFrame.showPanel(new LogVitalsNew(clinicalManager, appointmentManager, typeManager, userManager, sessionManager, mainFrame, onLogout));
+        }
+
+        private void openPrescription() {
+            mainFrame.showPanel(new IssuePrescriptionNew(clinicalManager, appointmentManager, typeManager, userManager, sessionManager, mainFrame, onLogout));
+        }
+
+        private void openLabImaging() {
+            mainFrame.showPanel(new RequestLabImagingNew(clinicalManager, appointmentManager, typeManager, userManager, sessionManager, mainFrame, onLogout));
+        }
+
+        private void logout() {
+            sessionManager.logout();
+            if (onLogout != null) onLogout.run();
+        }
+        
+        
+
+
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(jLabel1);
+
+        UIStyles.applyPrimaryButtonStyle(btnEditMyProfile);
+        UIStyles.applyPrimaryButtonStyle(btnViewMyAppointments);
+        UIStyles.applyPrimaryButtonStyle(btnRecordAssessmentResult);
+        UIStyles.applyPrimaryButtonStyle(btnLogVitalsConsultationNotes);
+        UIStyles.applyPrimaryButtonStyle(btnIssuePrescriptions);
+        UIStyles.applyPrimaryButtonStyle(btnRequestLabImaging);
+        UIStyles.applyPrimaryButtonStyle(btnLogOut);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -159,57 +220,39 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
 
     private void btnIssuePrescriptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIssuePrescriptionsActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new IssuePrescriptionNew(
-            clinicalManager, appointmentManager, typeManager, userManager,
-            sessionManager, mainFrame, onLogout));
+        openPrescription();
         
     }//GEN-LAST:event_btnIssuePrescriptionsActionPerformed
 
     private void btnEditMyProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditMyProfileActionPerformed
         // TODO add your handling code here:
+        openProfile();
     }//GEN-LAST:event_btnEditMyProfileActionPerformed
 
     private void btnViewMyAppointmentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewMyAppointmentsActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(
-        new MyAppointmentsNew(
-        appointmentManager,
-        clinicalManager,
-        typeManager,
-        userManager,
-        sessionManager,
-        mainFrame,
-        onLogout
-    )
-    );
+        openAppointments();
+   
     }//GEN-LAST:event_btnViewMyAppointmentsActionPerformed
 
     private void btnRecordAssessmentResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordAssessmentResultActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new RecordAssessmentNew(
-            clinicalManager, appointmentManager, typeManager, userManager,
-            sessionManager, mainFrame, onLogout));
+        openAssessmentResult();
     }//GEN-LAST:event_btnRecordAssessmentResultActionPerformed
 
     private void btnLogVitalsConsultationNotesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogVitalsConsultationNotesActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new LogVitalsNew(
-            clinicalManager, appointmentManager, typeManager, userManager,
-            sessionManager, mainFrame, onLogout));
+        openVitals();
     }//GEN-LAST:event_btnLogVitalsConsultationNotesActionPerformed
 
     private void btnRequestLabImagingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRequestLabImagingActionPerformed
         // TODO add your handling code here:
-         mainFrame.showPanel(new RequestLabImagingNew(
-            clinicalManager, appointmentManager, typeManager, userManager,
-            sessionManager, mainFrame, onLogout));
+        openLabImaging();
     }//GEN-LAST:event_btnRequestLabImagingActionPerformed
 
     private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
         // TODO add your handling code here:
-        if (onLogout != null) {
-        onLogout.run();
-        }
+        logout();
     }//GEN-LAST:event_btnLogOutActionPerformed
 
 

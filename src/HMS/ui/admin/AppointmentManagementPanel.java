@@ -156,7 +156,7 @@ public class AppointmentManagementPanel extends javax.swing.JPanel {
         };
         appointmentTable.setModel(tableModel);
         backButton.addActionListener(e -> mainFrame.showPanel(
-                new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
+                new AdminDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
                         assetManager, rateManager, insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 

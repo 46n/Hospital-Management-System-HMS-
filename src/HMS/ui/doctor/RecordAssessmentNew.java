@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import hms.ui.common.UIStyles;
 
 /**
  *
@@ -39,6 +40,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
     private List<Appointment> doctorAppointments;
     private List<AssessmentType> activeTypes;
+    
 
     /**
      * Creates new form DoctorAssessmentResultNew
@@ -50,7 +52,8 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
     public RecordAssessmentNew(ClinicalManager clinicalManager, AppointmentManager appointmentManager,
             AssessmentTypeManager typeManager, UserManager userManager, SessionManager sessionManager,
             MainFrame mainFrame, Runnable onLogout) {
-        initComponents();
+            initComponents();
+            applyStyles();
 
         this.clinicalManager = clinicalManager;
         this.appointmentManager = appointmentManager;
@@ -74,75 +77,94 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
     
     
     private void loadData() {
-        doctorAppointments = appointmentManager.listForDoctor(currentDoctor().getDoctorId());
-
+        doctorAppointments =
+            appointmentManager.listActiveForDoctor(currentDoctor().getDoctorId());
         cmbAppointment.removeAllItems();
 
         for (Appointment appointment : doctorAppointments) {
-                cmbAppointment.addItem(
+            cmbAppointment.addItem(
                 appointment.getAppointmentId() + " - "
                 + appointment.getPatient().getUsername()
-                + " (" + appointment.getStatus() + ")");
+                + " (" + appointment.getStatus() + ")"
+            );
         }
-        
-    
+        activeTypes = new ArrayList<>();
 
-    activeTypes = new ArrayList<>();
-
-    for (AssessmentType type : typeManager.getTypes()) {
-        if (type.isActive()) {
+        for (AssessmentType type : typeManager.getTypes()) {
+            if (type.isActive()) {
             activeTypes.add(type);
+            }
         }
-    }
 
-    cmbAssessmentType.removeAllItems();
+        cmbAssessmentType.removeAllItems();
 
-    for (AssessmentType type : activeTypes) {
-        cmbAssessmentType.addItem(
+        for (AssessmentType type : activeTypes) {
+            cmbAssessmentType.addItem(
                 type.getName() + " ("
                 + type.getCategory() + ", "
                 + type.getGradingRule() + ")"
-        );
-    }
+            );
+        }
+        loadSelectedAppointmentResults();
     }
     
     
     
     private void recordResult() {
         if (doctorAppointments.isEmpty()) {
-        showError("You have no appointments to record a result against.");
-        return;
-    }
+            showError("You have no appointments to record a result against.");
+            return;
+        }
 
-    if (activeTypes.isEmpty()) {
-        showError("No active assessment types are available. Ask a Medical Manager to add one.");
-        return;
-    }
+        if (activeTypes.isEmpty()) {
+            showError("No active assessment types are available. Ask a Medical Manager to add one.");
+            return;
+        }
 
-    Appointment appointment = doctorAppointments.get(cmbAppointment.getSelectedIndex());
-    AssessmentType type = activeTypes.get(cmbAssessmentType.getSelectedIndex());
+        int appointmentIndex = cmbAppointment.getSelectedIndex();
 
-    try {
-        MedicalRecord record = clinicalManager.getOrOpenRecord(
+        if (appointmentIndex < 0
+            || appointmentIndex >= doctorAppointments.size()) {
+                showError("Please select an appointment.");
+                return;
+        }
+
+        Appointment appointment = doctorAppointments.get(appointmentIndex);
+    
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            showError("Cannot record an assessment result for a cancelled appointment.");
+            return;
+        }
+        int typeIndex = cmbAssessmentType.getSelectedIndex();
+
+        if (typeIndex < 0 || typeIndex >= activeTypes.size()) {
+            showError("Please select an assessment type.");
+            return;
+        }
+
+        AssessmentType type = activeTypes.get(typeIndex);
+
+        try {
+            MedicalRecord record = clinicalManager.getOrOpenRecord(
                 appointment.getAppointmentId(), currentDoctor().getDoctorId());
 
-        clinicalManager.addAssessmentResult(
+            clinicalManager.addAssessmentResult(
                 record.getRecordId(), type.getAssessmentTypeId(),
                 txtValue.getText().trim(), txtGradeInterpretation.getText().trim());
 
-        txtValue.setText("");
-        txtGradeInterpretation.setText("");
+            txtValue.setText("");
+            txtGradeInterpretation.setText("");
 
-        refreshResultsTable(record);
+            refreshResultsTable(record);
 
-        JOptionPane.showMessageDialog(this, "Assessment result recorded.",
+            JOptionPane.showMessageDialog(this, "Assessment result recorded.",
                 "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
             
-}
+    }
     
     
     private void refreshResultsTable(MedicalRecord record) {
@@ -150,24 +172,59 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
             (DefaultTableModel) tblAssessmentResults.getModel();
 
             model.setRowCount(0);
+            if (record == null) {
+                return;
+            }    
 
         for (AssessmentResult result : record.getAssessmentResults()) {
-        model.addRow(new Object[]{
-            result.getResultId(),
-            result.getAssessmentName(),
-            result.getValue(),
-            result.getGrade(),
-            result.getResultDate()
-        });
-    }
+            model.addRow(new Object[]{
+                result.getResultId(),
+                result.getAssessmentName(),
+                result.getValue(),
+                result.getGrade(),
+                result.getResultDate()
+            });
+        }
         
     }
     
+    private void loadSelectedAppointmentResults() {
+        if (doctorAppointments == null) {
+            refreshResultsTable(null);
+            return;
+        }
+
+        int index = cmbAppointment.getSelectedIndex();
+
+        if (index < 0 || index >= doctorAppointments.size()) {
+            refreshResultsTable(null);
+            return;
+        }
+
+        Appointment appointment = doctorAppointments.get(index);
+        refreshResultsTable(appointment.getMedicalRecord());
+    }
+    
+    
+    
+    
+    private void backToDashboard() {
+        mainFrame.showPanel(new DoctorDashboardNew(sessionManager, userManager,
+            appointmentManager, clinicalManager, typeManager, mainFrame, onLogout));
+    }
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message,
             "Error", JOptionPane.ERROR_MESSAGE);
     }
-            
+    
+    
+    private void applyStyles() {
+
+        UIStyles.applyHeadingStyle(lblRecordAssessmentResult);
+
+        UIStyles.applyPrimaryButtonStyle(btnRecordResult);
+        UIStyles.applyPrimaryButtonStyle(btnBackToDashboard);
+    }   
 
 
     
@@ -196,22 +253,46 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         btnBackToDashboard = new javax.swing.JButton();
         btnRecordResult = new javax.swing.JButton();
 
+        setLayout(null);
+
         jPanel1.setLayout(new java.awt.BorderLayout());
+        add(jPanel1);
+        jPanel1.setBounds(320, 430, 10, 0);
 
         lblRecordAssessmentResult.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lblRecordAssessmentResult.setText("Record Assessment Result");
+        add(lblRecordAssessmentResult);
+        lblRecordAssessmentResult.setBounds(6, 6, 277, 32);
 
         lblAppointment.setText("Appointment:");
+        add(lblAppointment);
+        lblAppointment.setBounds(40, 60, 120, 16);
 
         lblGradeInterpretation.setText("Grade / Interpretation (optional):");
+        add(lblGradeInterpretation);
+        lblGradeInterpretation.setBounds(450, 40, 240, 40);
 
         lblAssessmentType.setText("Assessment Type:");
+        add(lblAssessmentType);
+        lblAssessmentType.setBounds(20, 100, 170, 16);
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbAppointment.addActionListener(this::cmbAppointmentActionPerformed);
+        add(cmbAppointment);
+        cmbAppointment.setBounds(170, 50, 210, 30);
 
         cmbAssessmentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbAssessmentType.addActionListener(this::cmbAssessmentTypeActionPerformed);
+        add(cmbAssessmentType);
+        cmbAssessmentType.setBounds(160, 100, 330, 28);
 
         lblValue.setText("Value:");
+        add(lblValue);
+        lblValue.setBounds(540, 100, 90, 40);
+        add(txtGradeInterpretation);
+        txtGradeInterpretation.setBounds(680, 50, 170, 32);
+        add(txtValue);
+        txtValue.setBounds(680, 110, 170, 32);
 
         tblAssessmentResults.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -234,90 +315,22 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         });
         jScrollPane1.setViewportView(tblAssessmentResults);
 
+        add(jScrollPane1);
+        jScrollPane1.setBounds(0, 194, 760, 209);
+
         btnBackToDashboard.setBackground(new java.awt.Color(51, 51, 51));
         btnBackToDashboard.setForeground(new java.awt.Color(255, 255, 255));
         btnBackToDashboard.setText("Back to Dashboard");
         btnBackToDashboard.addActionListener(this::btnBackToDashboardActionPerformed);
+        add(btnBackToDashboard);
+        btnBackToDashboard.setBounds(370, 420, 160, 45);
 
         btnRecordResult.setBackground(new java.awt.Color(51, 51, 51));
         btnRecordResult.setForeground(new java.awt.Color(255, 255, 255));
         btnRecordResult.setText("Record Result");
         btnRecordResult.addActionListener(this::btnRecordResultActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(btnBackToDashboard)
-                .addGap(288, 288, 288))
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(157, 157, 157)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(lblAppointment)
-                            .addComponent(lblAssessmentType))
-                        .addGap(86, 86, 86)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(130, 130, 130))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cmbAssessmentType, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cmbAppointment, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(135, 135, 135)
-                                        .addComponent(lblValue))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(59, 59, 59)
-                                        .addComponent(lblGradeInterpretation, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(25, 25, 25)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtGradeInterpretation, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
-                            .addComponent(txtValue)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 690, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(28, 28, 28)
-                        .addComponent(lblRecordAssessmentResult)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblRecordAssessmentResult)
-                .addGap(38, 38, 38)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblAppointment)
-                    .addComponent(cmbAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblValue)
-                    .addComponent(txtValue, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(lblGradeInterpretation)
-                        .addComponent(lblAssessmentType)
-                        .addComponent(txtGradeInterpretation, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(cmbAssessmentType, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(5, 5, 5)))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRecordResult, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnBackToDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15))
-        );
+        add(btnRecordResult);
+        btnRecordResult.setBounds(202, 139, 155, 37);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRecordResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecordResultActionPerformed
@@ -327,11 +340,18 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
 
     private void btnBackToDashboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackToDashboardActionPerformed
         // TODO add your handling code here:
-        mainFrame.showPanel(new DoctorDashboardNew(
-            sessionManager, userManager, appointmentManager,
-            clinicalManager, typeManager, mainFrame, onLogout));
+        backToDashboard();
 
     }//GEN-LAST:event_btnBackToDashboardActionPerformed
+
+    private void cmbAssessmentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAssessmentTypeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbAssessmentTypeActionPerformed
+
+    private void cmbAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAppointmentActionPerformed
+        // TODO add your handling code here:
+        loadSelectedAppointmentResults();
+    }//GEN-LAST:event_cmbAppointmentActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

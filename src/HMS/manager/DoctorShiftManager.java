@@ -29,6 +29,7 @@ public class DoctorShiftManager {
     private static final String HEADER = "#shiftId|doctorId|shiftDate|startTime|endTime|createdByManagerId";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final double HIGH_WORKLOAD_HOURS = 40.0;
 
     private final List<DoctorShift> shifts = new ArrayList<>();
     private final UserManager userManager;
@@ -153,13 +154,196 @@ public class DoctorShiftManager {
         }
         return result;
     }
+    
+    public List<Doctor> getManagedDoctors(String managerId) {
+
+    MedicalManager manager =
+            requireMedicalManager(managerId);
+
+    return new ArrayList<>(
+            manager.getManagedDoctors()
+    );
+}
+
+
+    public int getUpcomingShiftCount(
+            String doctorId,
+            int days) {
+
+        return getUpcomingShifts(
+                doctorId,
+                days
+        ).size();
+    }
+
+
+    public double getUpcomingShiftHours(
+            String doctorId,
+            int days) {
+
+        long totalMinutes = 0;
+
+        for (DoctorShift shift :
+                getUpcomingShifts(doctorId, days)) {
+
+            if (shift.getStartTime() == null
+                    || shift.getEndTime() == null) {
+                continue;
+            }
+
+            if (!shift.getStartTime()
+                    .isBefore(shift.getEndTime())) {
+                continue;
+            }
+
+            totalMinutes += java.time.Duration.between(
+                    shift.getStartTime(),
+                    shift.getEndTime()
+            ).toMinutes();
+        }
+
+        double hours = totalMinutes / 60.0;
+
+        return Math.round(hours * 10.0) / 10.0;
+    }
+
+    public String getWorkloadStatus(
+            String doctorId,
+            int days) {
+        int shiftCount =
+                getUpcomingShiftCount(
+                        doctorId,
+                        days
+                );
+        if (shiftCount == 0) {
+            return "No Shift";
+        }
+        double hours =
+                getUpcomingShiftHours(
+                        doctorId,
+                        days
+                );
+        if (hours > HIGH_WORKLOAD_HOURS) {
+            return "High Workload";
+        }
+        return "Normal";
+    }
+
+
+    public List<String> getSchedulingAlerts(
+            String managerId,
+            int days) {
+        List<String> alerts =
+                new ArrayList<>();
+        for (Doctor doctor :
+                getManagedDoctors(managerId)) {
+            if (!doctor.isActive()) {
+                continue;
+            }
+            String status =
+                    getWorkloadStatus(
+                            doctor.getDoctorId(),
+                            days
+                    );
+            if ("No Shift".equals(status)) {
+                alerts.add(doctor.getDoctorId() + " - " + doctor.getUsername() + " has no upcoming shifts " + "in the next " + days+ " days."
+                );
+            } else if ("High Workload"
+                    .equals(status)) {
+                double hours =
+                        getUpcomingShiftHours(
+                                doctor.getDoctorId(),
+                                days
+                        );
+                alerts.add( doctor.getDoctorId()  + " - "  + doctor.getUsername()+ " has a high scheduled workload of " 
+                        + hours + " hours in the next " + days + " days."
+                );
+            }
+        }
+
+        return alerts;
+    }
+
+
+    private List<DoctorShift> getUpcomingShifts(
+            String doctorId,
+            int days) {
+
+        if (days <= 0) {
+            throw new IllegalArgumentException(
+                    "Monitoring period must be greater than zero"
+            );
+        }
+
+        Doctor doctor =
+                userManager.findDoctorById(doctorId);
+
+        if (doctor == null) {
+            throw new IllegalArgumentException(
+                    "Doctor not found: " + doctorId
+            );
+        }
+
+        LocalDate startDate =
+                LocalDate.now();
+
+        LocalDate endDate =
+                startDate.plusDays(days);
+
+        List<DoctorShift> result =
+                new ArrayList<>();
+
+        for (DoctorShift shift :
+                getShiftsForDoctor(doctorId)) {
+
+            if (shift.getShiftDate() == null) {
+                continue;
+            }
+
+            LocalDate shiftDate =
+                    shift.getShiftDate()
+                            .toInstant()
+                            .atZone(
+                                    ZoneId.systemDefault()
+                            )
+                            .toLocalDate();
+
+            boolean withinPeriod =
+                    !shiftDate.isBefore(startDate)
+                    && shiftDate.isBefore(endDate);
+
+            if (withinPeriod) {
+                result.add(shift);
+            }
+        }
+
+        return result;
+    }
 
     private void validateTimes(LocalTime startTime, LocalTime endTime) {
     if (startTime == null || endTime == null) {
-        throw new IllegalArgumentException("Start and end time are required" );
+        throw new IllegalArgumentException(
+                "Start and end time are required"
+        );
     }
-    if (startTime.equals(endTime)) {
-        throw new IllegalArgumentException( "Start time and end time cannot be the same" );
+    if (!startTime.isBefore(endTime)) {
+        throw new IllegalArgumentException(
+                "End time must be after start time"
+        );
+    }
+    long durationMinutes =
+            java.time.Duration
+                    .between(startTime, endTime)
+                    .toMinutes();
+    if (durationMinutes < 30) {
+        throw new IllegalArgumentException(
+                "Doctor shift must be at least 30 minutes"
+        );
+    }
+    if (durationMinutes > 8 * 60) {
+        throw new IllegalArgumentException(
+                "Doctor shift cannot exceed 8 hours"
+        );
     }
 }
 

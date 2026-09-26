@@ -130,34 +130,18 @@ public class EditProfileNew extends javax.swing.JPanel {
                 new String(NewPasswordPf.getPassword());
         String confirmPassword =
                 new String(ConfirmPasswordPf.getPassword());
-        boolean changingPassword =
-                !currentPassword.isEmpty()
-                || !newPassword.isEmpty()
-                || !confirmPassword.isEmpty();
-        userManager.updateProfile(
+
+        // One atomic manager call: phone, email, and an optional password change are all
+        // validated first and saved together, so a bad password field can never leave an
+        // already-saved phone/email change behind.
+        userManager.updateOwnProfile(
                 user.getUserId(),
                 phone,
-                email
+                email,
+                currentPassword,
+                newPassword,
+                confirmPassword
         );
-        if (changingPassword) {
-            if (currentPassword.isEmpty()
-                    || newPassword.isEmpty()
-                    || confirmPassword.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Please complete all password fields."
-                );
-            }
-            if (!newPassword.equals(confirmPassword)) {
-                throw new IllegalArgumentException(
-                        "New password and confirm password do not match."
-                );
-            }
-            userManager.changePassword(
-                    user.getUserId(),
-                    currentPassword,
-                    newPassword
-            );
-        }
         JOptionPane.showMessageDialog(
                 this,
                 "Profile updated successfully.",

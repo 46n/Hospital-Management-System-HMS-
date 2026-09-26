@@ -11,6 +11,7 @@ import hms.manager.InsuranceNetworkManager;
 import hms.manager.SessionManager;
 import hms.manager.UserManager;
 import hms.model.AdminStaff;
+import hms.ui.common.EditProfileNew;
 import hms.ui.common.MainFrame;
 
 import java.io.File;
@@ -24,16 +25,21 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 
 /**
- * Standalone, dependency-free Step 10 tests for the Admin dashboard's navigation wiring: every
- * dashboard button opens the intended screen with the shared manager instances, every management
- * screen's Back button returns to a fresh AdminDashboardPanel using the same session and
- * managers, tables stay non-editable, and a persistence failure on Admin's own Edit Profile
- * screen is shown as an error instead of crashing. Same hand-rolled runner style as the other
- * Step test files, since the project has no JUnit on its classpath.
+ * Standalone, dependency-free tests for the Admin dashboard's navigation wiring, now that Admin
+ * has migrated onto AdminDashboardNew - a genuine NetBeans GUI Builder JPanel (the same pattern
+ * as DoctorDashboardNew/MedicalManagerDashboardNew), replacing the older
+ * AdminDashboardPanel/AdminNavigationPanel pair. Every dashboard button opens the intended screen
+ * with the shared manager instances, every management screen's Back button returns to a fresh
+ * AdminDashboardNew using the same session and managers, tables stay non-editable, and a
+ * persistence failure on the shared Edit Profile screen is shown as an error instead of crashing.
+ * Same hand-rolled runner style as the other Step test files, since the project has no JUnit on
+ * its classpath.
  *
- * This file lives in package hms.ui.admin (matching the production classes it tests) so it can
- * call AdminDashboardPanel.createNavigationPanel() directly - that method is protected, not
- * public, so no production visibility had to be widened just for testing.
+ * This file lives in package hms.ui.admin (matching the production classes it tests). Unlike the
+ * retired AdminNavigationPanel, AdminDashboardNew's buttons are private fields on the dashboard
+ * itself (the same shape as DoctorDashboardNew/MedicalManagerDashboardNew), so this test reaches
+ * them the same way this project's other dashboard tests already do: reflection on the private
+ * field, not a public getter.
  *
  * Run with (from the project root, after compiling src to build/classes):
  *   javac -d build/test-classes -cp build/classes test/HMS/ui/admin/AdminNavigationTest.java
@@ -48,8 +54,9 @@ public class AdminNavigationTest {
         AdminNavigationTest suite = new AdminNavigationTest();
 
         // ---- dashboard navigation ----
-        suite.run("testAllEightDashboardButtonsExistAndEnabled", suite::testAllEightDashboardButtonsExistAndEnabled);
-        suite.run("testEditProfileButtonOpensEditProfilePanel", suite::testEditProfileButtonOpensEditProfilePanel);
+        suite.run("testAllEightFeatureButtonsAndLogoutExistAndEnabled",
+                suite::testAllEightFeatureButtonsAndLogoutExistAndEnabled);
+        suite.run("testEditProfileButtonOpensSharedEditProfileNew", suite::testEditProfileButtonOpensSharedEditProfileNew);
         suite.run("testManageUsersButtonOpensUserManagementPanel", suite::testManageUsersButtonOpensUserManagementPanel);
         suite.run("testManageDoctorsButtonOpensDoctorManagementPanel", suite::testManageDoctorsButtonOpensDoctorManagementPanel);
         suite.run("testViewAppointmentsButtonOpensAppointmentManagementPanel",
@@ -79,15 +86,19 @@ public class AdminNavigationTest {
                 suite::testAppointmentManagementBackButtonReturnsToDashboard);
         suite.run("testMedicalRequestManagementBackButtonReturnsToDashboard",
                 suite::testMedicalRequestManagementBackButtonReturnsToDashboard);
-        suite.run("testEditProfileBackButtonReturnsToDashboard", suite::testEditProfileBackButtonReturnsToDashboard);
+        suite.run("testEditProfileBackButtonReturnsToSameDashboardInstance",
+                suite::testEditProfileBackButtonReturnsToSameDashboardInstance);
         suite.run("testBackNavigationPreservesLoggedInSession", suite::testBackNavigationPreservesLoggedInSession);
+
+        // ---- logout ----
+        suite.run("testLogoutButtonLogsOutAndRunsSuppliedCallback", suite::testLogoutButtonLogsOutAndRunsSuppliedCallback);
 
         // ---- table and state behavior ----
         suite.run("testAllAdminTablesAreNonEditable", suite::testAllAdminTablesAreNonEditable);
         suite.run("testToggleAvailabilityRefreshesAssetTableUsingAssetId",
                 suite::testToggleAvailabilityRefreshesAssetTableUsingAssetId);
-        suite.run("testUpdateProfileFailureThrowsTheExceptionTypeEditProfilePanelNowCatches",
-                suite::testUpdateProfileFailureThrowsTheExceptionTypeEditProfilePanelNowCatches);
+        suite.run("testUpdateOwnProfileFailureThrowsTheExceptionTypeEditProfileNewCatches",
+                suite::testUpdateOwnProfileFailureThrowsTheExceptionTypeEditProfileNewCatches);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -162,9 +173,13 @@ public class AdminNavigationTest {
         }
 
         /** Builds the dashboard exactly the way Main.java does, with every shared manager. */
-        AdminDashboardPanel newDashboard(MainFrame mainFrame) {
-            return new AdminDashboardPanel(sessionManager, userManager, appointmentManager, clinicalManager,
-                    hospitalAssetManager, rateManager, insuranceManager, allocationManager, mainFrame, () -> { });
+        AdminDashboardNew newDashboard(MainFrame mainFrame) {
+            return newDashboard(mainFrame, () -> { });
+        }
+
+        AdminDashboardNew newDashboard(MainFrame mainFrame, Runnable onLogout) {
+            return new AdminDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
+                    hospitalAssetManager, rateManager, insuranceManager, allocationManager, mainFrame, onLogout);
         }
 
         UserManagementPanel newUserPanel(MainFrame mainFrame) {
@@ -204,11 +219,6 @@ public class AdminNavigationTest {
             return new MedicalRequestManagementPanel(clinicalManager, userManager, appointmentManager,
                     hospitalAssetManager, rateManager, insuranceManager, allocationManager, sessionManager, mainFrame,
                     () -> { });
-        }
-
-        EditProfilePanel newEditProfilePanel(MainFrame mainFrame) {
-            return new EditProfilePanel(userManager, appointmentManager, clinicalManager, hospitalAssetManager,
-                    rateManager, insuranceManager, allocationManager, sessionManager, mainFrame, () -> { });
         }
 
         @Override
@@ -277,44 +287,47 @@ public class AdminNavigationTest {
 
     // ---- tests: dashboard navigation ----
 
-    private void testAllEightDashboardButtonsExistAndEnabled() throws Exception {
+    private void testAllEightFeatureButtonsAndLogoutExistAndEnabled() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
             JButton[] buttons = {
-                    navPanel.getEditProfileButton(), navPanel.getManageUsersButton(),
-                    navPanel.getManageDoctorsButton(), navPanel.getViewAppointmentsButton(),
-                    navPanel.getManageRequestsButton(), navPanel.getManageAssetsButton(),
-                    navPanel.getManageRatesButton(), navPanel.getManageInsuranceButton()
+                    (JButton) getPrivateField(dashboard, "btnEditProfile"),
+                    (JButton) getPrivateField(dashboard, "btnManageUsers"),
+                    (JButton) getPrivateField(dashboard, "btnManageDoctors"),
+                    (JButton) getPrivateField(dashboard, "btnViewAppointments"),
+                    (JButton) getPrivateField(dashboard, "btnMedicalRequests"),
+                    (JButton) getPrivateField(dashboard, "btnManageAssets"),
+                    (JButton) getPrivateField(dashboard, "btnManageRates"),
+                    (JButton) getPrivateField(dashboard, "btnManageInsurance"),
+                    (JButton) getPrivateField(dashboard, "btnLogout")
             };
             for (JButton button : buttons) {
-                assertNotNull(button, "every one of the eight dashboard buttons must exist");
-                assertTrue(button.isEnabled(), "every one of the eight dashboard buttons must be enabled");
+                assertNotNull(button, "every one of the eight feature buttons plus Logout must exist");
+                assertTrue(button.isEnabled(), "every one of the eight feature buttons plus Logout must be enabled");
             }
         }
     }
 
-    private void testEditProfileButtonOpensEditProfilePanel() throws Exception {
+    private void testEditProfileButtonOpensSharedEditProfileNew() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getEditProfileButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnEditProfile")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof EditProfilePanel, "Edit Profile must open EditProfilePanel");
+            assertTrue(mainFrame.lastPanel instanceof EditProfileNew,
+                    "Edit Profile must open the group's shared EditProfileNew screen");
         }
     }
 
     private void testManageUsersButtonOpensUserManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageUsersButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageUsers")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof UserManagementPanel, "Manage Users must open UserManagementPanel");
         }
@@ -323,10 +336,9 @@ public class AdminNavigationTest {
     private void testManageDoctorsButtonOpensDoctorManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageDoctorsButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageDoctors")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof DoctorManagementPanel, "Manage Doctors must open DoctorManagementPanel");
         }
@@ -335,10 +347,9 @@ public class AdminNavigationTest {
     private void testViewAppointmentsButtonOpensAppointmentManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getViewAppointmentsButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnViewAppointments")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof AppointmentManagementPanel,
                     "View Appointments must open AppointmentManagementPanel");
@@ -348,10 +359,9 @@ public class AdminNavigationTest {
     private void testManageRequestsButtonOpensMedicalRequestManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageRequestsButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnMedicalRequests")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof MedicalRequestManagementPanel,
                     "Medical Requests must open MedicalRequestManagementPanel");
@@ -361,10 +371,9 @@ public class AdminNavigationTest {
     private void testManageAssetsButtonOpensHospitalAssetManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageAssetsButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageAssets")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof HospitalAssetManagementPanel,
                     "Manage Hospital Assets must open HospitalAssetManagementPanel");
@@ -374,10 +383,9 @@ public class AdminNavigationTest {
     private void testManageRatesButtonOpensConsultationRateManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageRatesButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageRates")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof ConsultationRateManagementPanel,
                     "Manage Consultation Rates must open ConsultationRateManagementPanel");
@@ -387,10 +395,9 @@ public class AdminNavigationTest {
     private void testManageInsuranceButtonOpensInsuranceNetworkManagementPanel() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageInsuranceButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageInsurance")).doClick();
 
             assertTrue(mainFrame.lastPanel instanceof InsuranceNetworkManagementPanel,
                     "Manage Insurance Networks must open InsuranceNetworkManagementPanel");
@@ -402,10 +409,9 @@ public class AdminNavigationTest {
     private void testManageUsersButtonPassesSharedManagerInstances() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageUsersButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageUsers")).doClick();
 
             Object wiredUserManager = getPrivateField(mainFrame.lastPanel, "userManager");
             assertTrue(wiredUserManager == fixture.userManager,
@@ -416,10 +422,9 @@ public class AdminNavigationTest {
     private void testManageAssetsButtonPassesSharedManagerInstances() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            AdminDashboardPanel dashboard = fixture.newDashboard(mainFrame);
-            AdminNavigationPanel navPanel = (AdminNavigationPanel) dashboard.createNavigationPanel();
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            navPanel.getManageAssetsButton().doClick();
+            ((JButton) getPrivateField(dashboard, "btnManageAssets")).doClick();
 
             Object wiredAssetManager = getPrivateField(mainFrame.lastPanel, "assetManager");
             Object wiredAllocationManager = getPrivateField(mainFrame.lastPanel, "allocationManager");
@@ -439,7 +444,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -450,7 +455,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -461,7 +466,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -472,7 +477,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -483,7 +488,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -494,7 +499,7 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
@@ -505,18 +510,27 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backBtn")).doClick();
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            assertTrue(mainFrame.lastPanel instanceof AdminDashboardNew, "Back must return to AdminDashboardNew");
         }
     }
 
-    private void testEditProfileBackButtonReturnsToDashboard() throws Exception {
+    /**
+     * The shared EditProfileNew screen is opened with onBack = () -&gt; mainFrame.showPanel(this) -
+     * the same idiom every other role dashboard uses - so its Back button must return to the exact
+     * dashboard instance it was opened from, not a freshly constructed one.
+     */
+    private void testEditProfileBackButtonReturnsToSameDashboardInstance() throws Exception {
         try (Fixture fixture = new Fixture()) {
             RecordingMainFrame mainFrame = new RecordingMainFrame();
-            EditProfilePanel panel = fixture.newEditProfilePanel(mainFrame);
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame);
 
-            ((JButton) getPrivateField(panel, "backButton")).doClick();
+            ((JButton) getPrivateField(dashboard, "btnEditProfile")).doClick();
+            EditProfileNew profilePanel = (EditProfileNew) mainFrame.lastPanel;
 
-            assertTrue(mainFrame.lastPanel instanceof AdminDashboardPanel, "Back must return to AdminDashboardPanel");
+            ((JButton) getPrivateField(profilePanel, "btnBackDashboard")).doClick();
+
+            assertTrue(mainFrame.lastPanel == dashboard,
+                    "Back from the shared Edit Profile screen must return to the same AdminDashboardNew instance");
         }
     }
 
@@ -527,12 +541,28 @@ public class AdminNavigationTest {
 
             ((JButton) getPrivateField(panel, "backButton")).doClick();
 
-            AdminDashboardPanel dashboard = (AdminDashboardPanel) mainFrame.lastPanel;
+            AdminDashboardNew dashboard = (AdminDashboardNew) mainFrame.lastPanel;
             Object wiredSessionManager = getPrivateField(dashboard, "sessionManager");
             assertTrue(wiredSessionManager == fixture.sessionManager,
                     "Back navigation must reuse the same SessionManager, not a new one");
             assertTrue(fixture.sessionManager.getCurrentUser().getUserId().equals(fixture.admin.getUserId()),
                     "the logged-in Admin must still be the current user after returning to the dashboard");
+        }
+    }
+
+    // ---- tests: logout ----
+
+    private void testLogoutButtonLogsOutAndRunsSuppliedCallback() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            RecordingMainFrame mainFrame = new RecordingMainFrame();
+            boolean[] callbackRan = {false};
+            AdminDashboardNew dashboard = fixture.newDashboard(mainFrame, () -> callbackRan[0] = true);
+
+            ((JButton) getPrivateField(dashboard, "btnLogout")).doClick();
+
+            assertTrue(callbackRan[0], "Logout must run the onLogout callback supplied to the dashboard");
+            assertTrue(fixture.sessionManager.getCurrentUser() == null,
+                    "Logout must clear the session's current user");
         }
     }
 
@@ -580,30 +610,28 @@ public class AdminNavigationTest {
     }
 
     /**
-     * Reviewer-reported correction: Admin's own Edit Profile screen (saveProfile() and the
-     * change-password handler) only caught IllegalArgumentException, so a genuine save failure -
-     * IllegalStateException, per Step 8's persistence hardening - would have gone uncaught
-     * instead of showing a clear error. This step widened both catch clauses to also catch
-     * IllegalStateException.
+     * The shared EditProfileNew screen now calls UserManager.updateOwnProfile() - one atomic
+     * operation - instead of the old two-step updateProfile()+changePassword() sequence. This
+     * proves that same atomic method surfaces a genuine persistence failure as IllegalStateException
+     * (not IOException, and not silently swallowed), which is the exact type EditProfileNew's
+     * saveProfile() catch clause accepts.
      *
-     * This test cannot safely call saveProfile() itself: both its success and failure paths end
-     * in JOptionPane.showMessageDialog(), which would open a real, un-automatable modal window on
-     * this non-headless machine and hang the test run - exactly what this project's tests must
-     * avoid. Instead, it proves the regression this fix prevents: UserManager.updateProfile(),
-     * the exact method saveProfile() calls, now throws IllegalStateException (not IOException, and
-     * not silently swallowed) on a write failure - the type EditProfilePanel's catch clause was
-     * fixed to accept. Holding the users file open (the same technique as the Step 8 persistence
-     * tests) forces that failure without touching any real data.
+     * This test cannot safely call saveProfile() itself: both its success and failure paths end in
+     * JOptionPane.showMessageDialog(), which would open a real, un-automatable modal window on this
+     * non-headless machine and hang the test run - exactly what this project's tests must avoid.
+     * Holding the users file open (the same technique as the Step 8 persistence tests) forces that
+     * failure without touching any real data.
      */
-    private void testUpdateProfileFailureThrowsTheExceptionTypeEditProfilePanelNowCatches() throws Exception {
+    private void testUpdateOwnProfileFailureThrowsTheExceptionTypeEditProfileNewCatches() throws Exception {
         try (Fixture fixture = new Fixture()) {
             try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
                 try {
-                    fixture.userManager.updateProfile(fixture.admin.getUserId(), "0199999999", "changed@test.com");
+                    fixture.userManager.updateOwnProfile(fixture.admin.getUserId(), "0199999999", "changed@test.com",
+                            "", "", "");
                     throw new AssertionError("test setup: the locked write should have failed");
                 } catch (IllegalStateException expected) {
-                    // This is the exact exception type EditProfilePanel.saveProfile()'s
-                    // now-widened catch clause must accept instead of letting it escape.
+                    // This is the exact exception type EditProfileNew.saveProfile()'s
+                    // catch clause must accept instead of letting it escape.
                 }
             }
         }

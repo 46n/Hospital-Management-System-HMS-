@@ -197,6 +197,22 @@ public class UserManagerTest {
         suite.run("testDeleteManagerWriteFailureRestoresAllDoctorRelationships",
                 suite::testDeleteManagerWriteFailureRestoresAllDoctorRelationships);
 
+        // ---- updateOwnProfile (atomic self-profile update, shared EditProfileNew screen) ----
+        suite.run("testUpdateOwnProfileContactOnlySucceedsAndPersistsAfterReload",
+                suite::testUpdateOwnProfileContactOnlySucceedsAndPersistsAfterReload);
+        suite.run("testUpdateOwnProfileContactAndPasswordSucceedsAndPersistsAfterReload",
+                suite::testUpdateOwnProfileContactAndPasswordSucceedsAndPersistsAfterReload);
+        suite.run("testUpdateOwnProfileIncompletePasswordFieldsLeaveEverythingUnchanged",
+                suite::testUpdateOwnProfileIncompletePasswordFieldsLeaveEverythingUnchanged);
+        suite.run("testUpdateOwnProfileWrongCurrentPasswordLeavesEverythingUnchanged",
+                suite::testUpdateOwnProfileWrongCurrentPasswordLeavesEverythingUnchanged);
+        suite.run("testUpdateOwnProfileMismatchedConfirmationLeavesEverythingUnchanged",
+                suite::testUpdateOwnProfileMismatchedConfirmationLeavesEverythingUnchanged);
+        suite.run("testUpdateOwnProfileInvalidContactDetailsLeaveEverythingUnchanged",
+                suite::testUpdateOwnProfileInvalidContactDetailsLeaveEverythingUnchanged);
+        suite.run("testUpdateOwnProfileWriteFailureRestoresEveryField",
+                suite::testUpdateOwnProfileWriteFailureRestoresEveryField);
+
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
         if (suite.failed > 0) {
@@ -1633,6 +1649,124 @@ public class UserManagerTest {
                     "the manager's doctor list must be restored to include doctorA");
             assertTrue(manager.getManagedDoctors().contains(doctorB),
                     "the manager's doctor list must be restored to include doctorB");
+        }
+    }
+
+    // ---- updateOwnProfile (atomic self-profile update, shared EditProfileNew screen) ----
+
+    private void testUpdateOwnProfileContactOnlySucceedsAndPersistsAfterReload() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com", "", "", "");
+
+            assertEquals("0199999999", admin.getPhone(), "phone must be updated");
+            assertEquals("updated@test.com", admin.getEmail(), "email must be updated");
+            assertEquals("pass1234", admin.getPassword(), "a contact-only update must not touch the password");
+
+            UserManager reloaded = new UserManager(fixture.usersFile);
+            AdminStaff reloadedAdmin = (AdminStaff) reloaded.findById(admin.getUserId());
+            assertEquals("0199999999", reloadedAdmin.getPhone(), "phone must survive reload");
+            assertEquals("updated@test.com", reloadedAdmin.getEmail(), "email must survive reload");
+            assertEquals("pass1234", reloadedAdmin.getPassword(), "password must be unchanged after reload");
+        }
+    }
+
+    private void testUpdateOwnProfileContactAndPasswordSucceedsAndPersistsAfterReload() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com",
+                    "pass1234", "newPass99", "newPass99");
+
+            assertEquals("0199999999", admin.getPhone(), "phone must be updated");
+            assertEquals("updated@test.com", admin.getEmail(), "email must be updated");
+            assertEquals("newPass99", admin.getPassword(), "password must be updated");
+
+            UserManager reloaded = new UserManager(fixture.usersFile);
+            AdminStaff reloadedAdmin = (AdminStaff) reloaded.findById(admin.getUserId());
+            assertEquals("0199999999", reloadedAdmin.getPhone(), "phone must survive reload");
+            assertEquals("updated@test.com", reloadedAdmin.getEmail(), "email must survive reload");
+            assertEquals("newPass99", reloadedAdmin.getPassword(), "new password must survive reload");
+        }
+    }
+
+    private void testUpdateOwnProfileIncompletePasswordFieldsLeaveEverythingUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com",
+                            "pass1234", "newPass99", ""),
+                    "an incomplete set of password fields must be rejected");
+
+            assertEquals("0111111111", admin.getPhone(), "phone must be unchanged after the rejected update");
+            assertEquals("admin1@test.com", admin.getEmail(), "email must be unchanged after the rejected update");
+            assertEquals("pass1234", admin.getPassword(), "password must be unchanged after the rejected update");
+        }
+    }
+
+    private void testUpdateOwnProfileWrongCurrentPasswordLeavesEverythingUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com",
+                            "wrongPassword", "newPass99", "newPass99"),
+                    "an incorrect current password must be rejected");
+
+            assertEquals("0111111111", admin.getPhone(), "phone must be unchanged after the rejected update");
+            assertEquals("admin1@test.com", admin.getEmail(), "email must be unchanged after the rejected update");
+            assertEquals("pass1234", admin.getPassword(), "password must be unchanged after the rejected update");
+        }
+    }
+
+    private void testUpdateOwnProfileMismatchedConfirmationLeavesEverythingUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com",
+                            "pass1234", "newPass99", "differentPass99"),
+                    "a mismatched confirmation must be rejected");
+
+            assertEquals("0111111111", admin.getPhone(), "phone must be unchanged after the rejected update");
+            assertEquals("admin1@test.com", admin.getEmail(), "email must be unchanged after the rejected update");
+            assertEquals("pass1234", admin.getPassword(), "password must be unchanged after the rejected update");
+        }
+    }
+
+    private void testUpdateOwnProfileInvalidContactDetailsLeaveEverythingUnchanged() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "not-a-phone", "updated@test.com",
+                            "pass1234", "newPass99", "newPass99"),
+                    "an invalid phone must be rejected");
+            assertThrows(IllegalArgumentException.class,
+                    () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "not-an-email",
+                            "pass1234", "newPass99", "newPass99"),
+                    "an invalid email must be rejected");
+
+            assertEquals("0111111111", admin.getPhone(), "phone must be unchanged after either rejected update");
+            assertEquals("admin1@test.com", admin.getEmail(), "email must be unchanged after either rejected update");
+            assertEquals("pass1234", admin.getPassword(), "password must be unchanged after either rejected update");
+        }
+    }
+
+    private void testUpdateOwnProfileWriteFailureRestoresEveryField() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            AdminStaff admin = fixture.registerAdmin("admin1");
+            try (FileOutputStream lock = new FileOutputStream(fixture.usersFile, true)) {
+                assertThrows(IllegalStateException.class,
+                        () -> fixture.userManager.updateOwnProfile(admin.getUserId(), "0199999999", "updated@test.com",
+                                "pass1234", "newPass99", "newPass99"),
+                        "updateOwnProfile must propagate a save failure instead of reporting success");
+            }
+            assertEquals("0111111111", admin.getPhone(), "phone must be restored after a failed write");
+            assertEquals("admin1@test.com", admin.getEmail(), "email must be restored after a failed write");
+            assertEquals("pass1234", admin.getPassword(), "password must be restored after a failed write");
         }
     }
 }

@@ -1,1 +1,9 @@
 #prescriptionId|recordId|doctorId|patientId|medicationDetails|dosage|instructions|prescribedDate
+RX001|MR001|DR001|PT001|Aspirin 75 mg|1 tablet daily|Take after breakfast|2026-09-15
+RX002|MR002|DR002|PT002|Paracetamol 500 mg|1 tablet every 6 hours|Take when required for fever|2026-09-16
+RX003|MR003|DR002|PT001|Metformin 500 mg|1 tablet daily|Take with evening meal|2026-09-17
+RX004|MR004|DR001|PT002|Propranolol 10 mg|1 tablet twice daily|Take morning and evening|2026-09-18
+RX005|MR005|DR001|PT001|Atorvastatin 20 mg|1 tablet nightly|Take before bedtime|2026-09-19
+RX006|MR006|DR002|PT002|Amoxicillin 500 mg|1 capsule three times daily|Complete the 5 day course|2026-09-20
+RX007|MR007|DR002|PT001|Vitamin D3 1000 IU|1 tablet daily|Take after food|2026-09-21
+RX008|MR008|DR001|PT002|Magnesium 250 mg|1 tablet daily|Take after dinner|2026-09-22

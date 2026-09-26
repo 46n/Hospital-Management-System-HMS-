@@ -180,7 +180,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         });
         toggleButton.addActionListener(e -> toggleSelectedActive());
         deleteButton.addActionListener(e -> deleteSelected());
-        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
+        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardNew(
                 sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
                 insuranceManager, allocationManager, mainFrame, onLogout)));
     }

@@ -119,7 +119,7 @@ public class ClinicalManagerMedicalRequestTest {
                     "PT001|PATIENT|patient1|pass1234|0122222222|patient1@test.com|PT001|1990-01-01|true|");
             writeFile(appointmentsFile,
                     "#appointmentId|patientId|doctorId|appointmentDate|appointmentTime|status",
-                    "AP001|PT001|DR001|2026-01-10|09:00|SCHEDULED");
+                    "AP001|PT001|DR001|2026-01-10|09:00|CONFIRMED");
 
             userManager = new UserManager(usersFile);
             DoctorShiftManager shiftManager = new DoctorShiftManager(userManager, shiftsFile);

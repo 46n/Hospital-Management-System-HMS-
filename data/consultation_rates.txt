@@ -1,1 +1,9 @@
 #rateId|consultationType|baseAmount|effectiveDate|active|configuredByStaffId
+CR001|General Consultation|35.00|2025-01-01|false|AS001
+CR002|General Consultation|40.00|2025-06-01|false|AS001
+CR003|General Consultation|42.00|2025-09-01|false|AS002
+CR004|General Consultation|45.00|2026-01-01|false|AS001
+CR005|General Consultation|46.00|2026-03-01|false|AS002
+CR006|General Consultation|48.00|2026-05-01|false|AS001
+CR007|General Consultation|49.00|2026-07-01|false|AS002
+CR008|General Consultation|50.00|2026-09-01|true|AS001

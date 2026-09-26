@@ -1,1 +1,9 @@
 #assetId|assetName|assetType|location|availability|managedByStaffId
+HA001|Consultation Room 101|CONSULTATION_ROOM|Block A Level 1|true|AS001
+HA002|Consultation Room 102|CONSULTATION_ROOM|Block A Level 1|true|AS002
+HA003|Cardiology Examination Room|CONSULTATION_ROOM|Block B Level 2|true|AS001
+HA004|General Medical Ward|INPATIENT_WARD|Block C Level 3|true|AS002
+HA005|Clinical Laboratory 1|LABORATORY|Block D Level 1|true|AS001
+HA006|X-Ray Room 1|IMAGING_ROOM|Block D Level 2|true|AS002
+HA007|Ultrasound Room|IMAGING_ROOM|Block D Level 2|true|AS001
+HA008|Emergency Observation Ward|INPATIENT_WARD|Emergency Block Level 1|true|AS002
