@@ -254,7 +254,7 @@ private void applyStyles() {
 
         cmbAppointment.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         add(cmbAppointment);
-        cmbAppointment.setBounds(230, 160, 72, 25);
+        cmbAppointment.setBounds(210, 160, 130, 25);
 
         lblRating.setFont(new java.awt.Font("Dialog", 0, 13)); // NOI18N
         lblRating.setText("Rating (1 - 5):");
@@ -263,7 +263,7 @@ private void applyStyles() {
 
         spnRating.setModel(new javax.swing.SpinnerNumberModel(5, 1, 5, 1));
         add(spnRating);
-        spnRating.setBounds(510, 160, 64, 28);
+        spnRating.setBounds(510, 160, 130, 28);
 
         txtComment.setColumns(20);
         txtComment.setLineWrap(true);
