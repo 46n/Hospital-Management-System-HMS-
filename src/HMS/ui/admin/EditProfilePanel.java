@@ -248,7 +248,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
             userManager.updateProfile(currentUser().getUserId(),
                     phoneField.getText().trim(), emailField.getText().trim());
             JOptionPane.showMessageDialog(this, "Profile updated.", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -290,7 +290,7 @@ public class EditProfilePanel extends javax.swing.JPanel {
                 dialog.dispose();
                 JOptionPane.showMessageDialog(this, "Password changed successfully.",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });
