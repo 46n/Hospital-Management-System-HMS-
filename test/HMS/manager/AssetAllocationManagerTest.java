@@ -107,6 +107,8 @@ public class AssetAllocationManagerTest {
         suite.run("testRequestWriteFailureLeavesConsistentState", suite::testRequestWriteFailureLeavesConsistentState);
         suite.run("testAdminGuiExposesAllocationControlsAndStatusFilter",
                 suite::testAdminGuiExposesAllocationControlsAndStatusFilter);
+        suite.run("testUnreadableAllocationFileIsReportedAsLoadFailure",
+                suite::testUnreadableAllocationFileIsReportedAsLoadFailure);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -1059,6 +1061,58 @@ public class AssetAllocationManagerTest {
             assertEquals("HA001", historyModel.getValueAt(0, columns.indexOf("Asset")), "history row shows the asset");
             assertEquals(AssetAllocation.STATUS_SCHEDULED, historyModel.getValueAt(0, columns.indexOf("Status")),
                     "history row shows the status");
+        }
+    }
+
+    /**
+     * A directory sitting where asset_allocations.txt is expected must fail construction clearly
+     * (IllegalStateException), not silently load as an empty allocation list - the same rule
+     * already proven for users.txt and hospital_assets.txt. The supporting managers (clinical,
+     * hospital asset, user) all use normal temporary files, so the failure is isolated to the
+     * allocation file itself.
+     */
+    private void testUnreadableAllocationFileIsReportedAsLoadFailure() throws Exception {
+        Path tempDir = Files.createTempDirectory("hms-allocation-load-failure-test-");
+        try {
+            File usersFile = new File(tempDir.toFile(), "users.txt");
+            File shiftsFile = new File(tempDir.toFile(), "doctor_shifts.txt");
+            File appointmentsFile = new File(tempDir.toFile(), "appointments.txt");
+            File typesFile = new File(tempDir.toFile(), "assessment_types.txt");
+            File recordsFile = new File(tempDir.toFile(), "medical_records.txt");
+            File prescriptionsFile = new File(tempDir.toFile(), "prescriptions.txt");
+            File requestsFile = new File(tempDir.toFile(), "medical_requests.txt");
+            File resultsFile = new File(tempDir.toFile(), "assessment_results.txt");
+            File feedbackFile = new File(tempDir.toFile(), "feedback.txt");
+            File assetsFile = new File(tempDir.toFile(), "hospital_assets.txt");
+
+            File directoryInPlaceOfAllocationsFile = new File(tempDir.toFile(), "asset_allocations.txt");
+            boolean created = directoryInPlaceOfAllocationsFile.mkdirs();
+            assertTrue(created, "test setup: could not create the directory standing in for the allocation file");
+
+            UserManager userManager = new UserManager(usersFile);
+            DoctorShiftManager shiftManager = new DoctorShiftManager(userManager, shiftsFile);
+            AppointmentManager appointmentManager = new AppointmentManager(userManager, shiftManager, appointmentsFile);
+            AssessmentTypeManager typeManager = new AssessmentTypeManager(userManager, typesFile);
+            ClinicalManager clinicalManager = new ClinicalManager(userManager, appointmentManager, typeManager,
+                    recordsFile, prescriptionsFile, requestsFile, resultsFile, feedbackFile);
+            HospitalAssetManager hospitalAssetManager = new HospitalAssetManager(userManager, assetsFile);
+
+            boolean constructionFailed = false;
+            String failureMessage = null;
+            try {
+                new AssetAllocationManager(clinicalManager, hospitalAssetManager, userManager,
+                        directoryInPlaceOfAllocationsFile);
+            } catch (IllegalStateException ex) {
+                constructionFailed = true;
+                failureMessage = ex.getMessage();
+            }
+            assertTrue(constructionFailed,
+                    "an allocation file that is actually a directory must be reported as a load failure, not an empty allocation list");
+            assertNotNull(failureMessage, "the load-failure exception must carry a message");
+            assertTrue(failureMessage.contains(directoryInPlaceOfAllocationsFile.getPath()),
+                    "the load-failure message must identify the allocation file path: " + failureMessage);
+        } finally {
+            deleteRecursively(tempDir);
         }
     }
 

@@ -65,6 +65,8 @@ public class ClinicalManagerMedicalRequestTest {
         suite.run("testTableRowFormattingIsSafeAndCorrect", suite::testTableRowFormattingIsSafeAndCorrect);
         suite.run("testActiveDoctorScreenTableIncludesDetailsAndStatus",
                 suite::testActiveDoctorScreenTableIncludesDetailsAndStatus);
+        suite.run("testUnreadableRequestFileIsReportedAsLoadFailure",
+                suite::testUnreadableRequestFileIsReportedAsLoadFailure);
 
         System.out.println();
         System.out.println(suite.passed + " passed, " + suite.failed + " failed");
@@ -557,6 +559,52 @@ public class ClinicalManagerMedicalRequestTest {
                 }
             }
             assertTrue(foundRow, "the newly submitted request must be present in the active Doctor screen's table");
+        }
+    }
+
+    /**
+     * A directory sitting where medical_requests.txt is expected must fail construction clearly
+     * (IllegalStateException), not silently load as an empty request list - the same rule already
+     * proven for users.txt and hospital_assets.txt. All other dependencies use normal temporary
+     * files so the failure is isolated to the request file itself.
+     */
+    private void testUnreadableRequestFileIsReportedAsLoadFailure() throws Exception {
+        Path tempDir = Files.createTempDirectory("hms-request-load-failure-test-");
+        try {
+            File usersFile = new File(tempDir.toFile(), "users.txt");
+            File shiftsFile = new File(tempDir.toFile(), "doctor_shifts.txt");
+            File appointmentsFile = new File(tempDir.toFile(), "appointments.txt");
+            File typesFile = new File(tempDir.toFile(), "assessment_types.txt");
+            File recordsFile = new File(tempDir.toFile(), "medical_records.txt");
+            File prescriptionsFile = new File(tempDir.toFile(), "prescriptions.txt");
+            File resultsFile = new File(tempDir.toFile(), "assessment_results.txt");
+            File feedbackFile = new File(tempDir.toFile(), "feedback.txt");
+
+            File directoryInPlaceOfRequestsFile = new File(tempDir.toFile(), "medical_requests.txt");
+            boolean created = directoryInPlaceOfRequestsFile.mkdirs();
+            assertTrue(created, "test setup: could not create the directory standing in for the request file");
+
+            UserManager userManager = new UserManager(usersFile);
+            DoctorShiftManager shiftManager = new DoctorShiftManager(userManager, shiftsFile);
+            AppointmentManager appointmentManager = new AppointmentManager(userManager, shiftManager, appointmentsFile);
+            AssessmentTypeManager typeManager = new AssessmentTypeManager(userManager, typesFile);
+
+            boolean constructionFailed = false;
+            String failureMessage = null;
+            try {
+                new ClinicalManager(userManager, appointmentManager, typeManager,
+                        recordsFile, prescriptionsFile, directoryInPlaceOfRequestsFile, resultsFile, feedbackFile);
+            } catch (IllegalStateException ex) {
+                constructionFailed = true;
+                failureMessage = ex.getMessage();
+            }
+            assertTrue(constructionFailed,
+                    "a request file that is actually a directory must be reported as a load failure, not an empty request list");
+            assertNotNull(failureMessage, "the load-failure exception must carry a message");
+            assertTrue(failureMessage.contains(directoryInPlaceOfRequestsFile.getPath()),
+                    "the load-failure message must identify the request file path: " + failureMessage);
+        } finally {
+            deleteRecursively(tempDir);
         }
     }
 

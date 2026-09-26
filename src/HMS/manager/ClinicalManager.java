@@ -630,7 +630,16 @@ public class ClinicalManager {
     // ---- persistence: medical requests ----
 
     private void loadRequests() {
-        for (String line : TextFileUtil.readLines(requestsFile)) {
+        // A missing file means "no requests yet", but a file that exists and cannot be read must
+        // not be silently treated the same way - that would risk overwriting real Admin request
+        // data with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(requestsFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + requestsFile.getPath() + ": " + e.getMessage(), e);
+        }
+        for (String line : rawLines) {
             String[] fields = line.split("\\|", -1);
             if (fields.length < 6) {
                 System.err.println("Skipping malformed medical request: " + line);

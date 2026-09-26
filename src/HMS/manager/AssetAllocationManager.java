@@ -448,10 +448,20 @@ public class AssetAllocationManager {
     }
 
     private void load() {
+        // A missing file means "no allocations yet", but a file that exists and cannot be read
+        // must not be silently treated the same way - that would risk overwriting real Admin
+        // allocation data with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(dataFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + dataFile.getPath() + ": " + e.getMessage(), e);
+        }
+
         // Keeps every allocation ID seen so far in this file, so a duplicate row can be
         // detected with a plain list search instead of a Set.
         List<String> loadedIds = new ArrayList<>();
-        for (String line : TextFileUtil.readLines(dataFile)) {
+        for (String line : rawLines) {
             String[] fields = line.split("\\|", -1);
             if (fields.length < 9) {
                 System.err.println("Skipping malformed asset allocation record: " + line);
