@@ -22,38 +22,34 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace pref="0" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="lblWelcome" min="-2" max="-2" attributes="0"/>
                   <Group type="102" attributes="0">
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="btnEditProfile" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnManageDoctors" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnMedicalRequests" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnManageRates" min="-2" pref="0" max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="btnEditProfile" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnManageDoctors" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnMedicalRequests" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnManageRates" min="-2" pref="220" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="btnManageUsers" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnViewAppointments" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnManageAssets" min="-2" pref="0" max="32767" attributes="0"/>
-                          <Component id="btnManageInsurance" min="-2" pref="0" max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="btnManageUsers" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnViewAppointments" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnManageAssets" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="btnManageInsurance" min="-2" pref="220" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="-2" pref="0" max="32767" attributes="0"/>
-                      <Component id="btnLogout" min="-2" pref="100" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="0" max="32767" attributes="0"/>
-                  </Group>
+                  <Component id="btnLogout" alignment="2" min="-2" pref="100" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace pref="0" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace pref="0" max="32767" attributes="0"/>
               <Component id="lblWelcome" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -75,9 +71,9 @@
                   <Component id="btnManageRates" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
                   <Component id="btnManageInsurance" alignment="3" min="-2" pref="37" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace min="-2" pref="0" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
               <Component id="btnLogout" min="-2" pref="37" max="-2" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace pref="0" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
