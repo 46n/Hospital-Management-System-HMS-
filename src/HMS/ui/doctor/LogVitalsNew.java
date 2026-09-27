@@ -230,6 +230,7 @@ public class LogVitalsNew extends javax.swing.JPanel {
         Appointment appointment = doctorAppointments.get(index);
 
         try {
+            String vitalSigns = getVitalSignsText();
             MedicalRecord record = clinicalManager.getOrOpenRecord(
                 appointment.getAppointmentId(),
                 currentDoctor().getDoctorId());
