@@ -1,6 +1,8 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -44,8 +46,10 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
     private final HospitalAssetManager assetManager;
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
+    private final ClinicalManager clinicalManager;
     private final ConsultationRateManager rateManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -53,13 +57,16 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public HospitalAssetManagementPanel(HospitalAssetManager assetManager, UserManager userManager,
-            AppointmentManager appointmentManager, ConsultationRateManager rateManager,
-            InsuranceNetworkManager insuranceManager, SessionManager sessionManager,
-            MainFrame mainFrame, Runnable onLogout) {
+            AppointmentManager appointmentManager, ClinicalManager clinicalManager,
+            ConsultationRateManager rateManager, InsuranceNetworkManager insuranceManager,
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.assetManager = assetManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
         this.rateManager = rateManager;
+        this.allocationManager = allocationManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -171,9 +178,9 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         });
         toggleButton.addActionListener(e -> toggleSelectedAvailability());
         deleteButton.addActionListener(e -> deleteSelected());
-        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
-                sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
-                mainFrame, onLogout)));
+        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardNew(
+                sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
+                insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private void refreshTable() {
@@ -208,7 +215,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         try {
             assetManager.setAvailability(asset.getAssetId(), !asset.isAvailability());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -216,6 +223,17 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
     private void deleteSelected() {
         HospitalAsset asset = requireSelection();
         if (asset == null) {
+            return;
+        }
+        // Deleting an asset that already has allocation history (scheduled, completed or
+        // cancelled) would leave a dangling asset ID in asset_allocations.txt and destroy that
+        // history. The rule itself lives in AssetAllocationManager.validateAssetCanBeDeleted() -
+        // not here, and not in HospitalAssetManager (which has no reference to
+        // AssetAllocationManager, avoiding a circular dependency between the two managers).
+        try {
+            allocationManager.validateAssetCanBeDeleted(asset.getAssetId());
+        } catch (IllegalStateException ex) {
+            showError(ex.getMessage());
             return;
         }
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -227,7 +245,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         try {
             assetManager.deleteAsset(asset.getAssetId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -250,6 +268,10 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
         if (isEdit) {
             typeCombo.setSelectedItem(existingAsset.getAssetType());
             availableCheckBox.setEnabled(false);
+            if (allocationManager.hasAllocationHistoryForAsset(existingAsset.getAssetId())) {
+                typeCombo.setEnabled(false);
+                typeCombo.setToolTipText("This asset has allocation history, so its type cannot be changed.");
+            }
         }
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -277,6 +299,17 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
                 String type = (String) typeCombo.getSelectedItem();
                 String location = locationField.getText().trim();
                 if (isEdit) {
+                    // An asset with allocation history keeps its type forever, so the historical
+                    // allocation rows (each recording a compatible asset type at the time) always
+                    // stay meaningful. Name and location can still change freely. The rule itself
+                    // lives in AssetAllocationManager.validateAssetTypeCanChange().
+                    try {
+                        allocationManager.validateAssetTypeCanChange(
+                                existingAsset.getAssetId(), existingAsset.getAssetType(), type);
+                    } catch (IllegalStateException ex) {
+                        showError(ex.getMessage());
+                        return;
+                    }
                     assetManager.updateAsset(existingAsset.getAssetId(), name, type, location);
                 } else {
                     String staffId = sessionManager.getCurrentUser().getUserId();
@@ -284,7 +317,7 @@ public class HospitalAssetManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

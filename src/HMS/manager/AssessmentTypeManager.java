@@ -157,18 +157,27 @@ public class AssessmentTypeManager {
     }
 
     private void load() {
+        // Keeps every assessment type ID seen so far in this file, so a duplicate row can be
+        // detected with a plain list search - the same style used elsewhere in the app (e.g.
+        // UserManager, HospitalAssetManager).
+        List<String> loadedIds = new ArrayList<>();
         for (String line : TextFileUtil.readLines(dataFile)) {
-            AssessmentType type = parseLine(line);
+            AssessmentType type = parseLine(line, loadedIds);
             if (type != null) {
+                loadedIds.add(type.getAssessmentTypeId());
                 types.add(type);
             }
         }
     }
 
-    private AssessmentType parseLine(String line) {
+    private AssessmentType parseLine(String line, List<String> loadedIds) {
         String[] fields = line.split("\\|", -1);
         if (fields.length < 7) {
             System.err.println("Skipping malformed assessment type record: " + line);
+            return null;
+        }
+        if (loadedIds.contains(fields[0])) {
+            System.err.println("Skipping duplicate assessment type ID: " + line);
             return null;
         }
         try {

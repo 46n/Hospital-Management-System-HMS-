@@ -14,6 +14,7 @@ import hms.util.IdGenerator;
 import hms.util.ValidationUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,7 +28,15 @@ import hms.model.ConsultationRate;
  */
 public class ClinicalManager {
 
+    /** Strict so an impossible calendar date (e.g. 2026-02-30) is rejected as malformed, not silently rolled over. */
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    /** Records exactly when an Admin processed a request; kept strict since it drives the audit trail. */
+    private static final SimpleDateFormat PROCESSED_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    static {
+        DATE_FORMAT.setLenient(false);
+        PROCESSED_FORMAT.setLenient(false);
+    }
 
     private static final String RECORDS_FILE = "data/medical_records.txt";
     private static final String RECORDS_HEADER =
@@ -38,7 +47,13 @@ public class ClinicalManager {
             "#prescriptionId|recordId|doctorId|patientId|medicationDetails|dosage|instructions|prescribedDate";
 
     private static final String REQUESTS_FILE = "data/medical_requests.txt";
-    private static final String REQUESTS_HEADER = "#requestId|recordId|doctorId|requestType|requestDate|status";
+    /**
+     * The trailing details|rejectionReason|processedBy|processedDateTime columns were added for
+     * Admin request processing. Older 6-field rows (no trailing columns) still load fine -
+     * loadRequests() treats any missing trailing field as blank/unset.
+     */
+    private static final String REQUESTS_HEADER =
+            "#requestId|recordId|doctorId|requestType|requestDate|status|details|rejectionReason|processedBy|processedDateTime";
 
     private static final String RESULTS_FILE = "data/assessment_results.txt";
     private static final String RESULTS_HEADER =
@@ -149,14 +164,172 @@ public class ClinicalManager {
         return prescription;
     }
 
-    public MedicalRequest addRequest(String recordId, String requestType) {
+    public MedicalRequest addRequest(String recordId, String requestType) throws IOException {
+        return addRequest(recordId, requestType, "");
+    }
+
+    /**
+     * Creates a PENDING request and persists it immediately. If the write fails, the request
+     * is removed from the in-memory record before rethrowing, so no phantom request is left
+     * visible and existing requests on the record are unaffected.
+     */
+    public MedicalRequest addRequest(String recordId, String requestType, String details) throws IOException {
         MedicalRecord record = requireRecord(recordId);
         ValidationUtil.requireNonBlank(requestType, "Request type");
         MedicalRequest request = new MedicalRequest(nextRequestId(), requestType, new Date(), "PENDING");
         request.setDoctor(record.getDoctor());
         request.setMedicalRecord(record);
+        request.setDetails(details == null ? "" : details.trim());
         record.addRequest(request);
-        saveRequests();
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            record.getMedicalRequests().remove(request);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Every lab/imaging request across every patient's record, for Admin oversight. */
+    public List<MedicalRequest> getAllRequests() {
+        List<MedicalRequest> all = new ArrayList<>();
+        for (MedicalRecord record : records) {
+            all.addAll(record.getMedicalRequests());
+        }
+        return all;
+    }
+
+    /**
+     * Approves a PENDING request. Rolls back the in-memory change (and rethrows) if the file
+     * write fails, so the request never appears approved unless it was actually saved.
+     */
+    public MedicalRequest approveRequest(String requestId, String adminId) throws IOException {
+        ValidationUtil.requireNonBlank(adminId, "Admin");
+        MedicalRequest request = requireRequest(requestId);
+        if (!"PENDING".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only a pending request can be approved (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.setStatus("APPROVED");
+        request.setRejectionReason(null);
+        request.setProcessedBy(adminId);
+        request.setProcessedDate(new Date());
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            request.setProcessedBy(null);
+            request.setProcessedDate(null);
+            throw e;
+        }
+        return request;
+    }
+
+    /**
+     * Rejects a PENDING request with a required, non-blank reason. Rolls back the in-memory
+     * change (and rethrows) if the file write fails, matching approveRequest().
+     */
+    public MedicalRequest rejectRequest(String requestId, String adminId, String reason) throws IOException {
+        ValidationUtil.requireNonBlank(adminId, "Admin");
+        ValidationUtil.requireNonBlank(reason, "Rejection reason");
+        MedicalRequest request = requireRequest(requestId);
+        if (!"PENDING".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only a pending request can be rejected (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.setStatus("REJECTED");
+        request.setRejectionReason(reason.trim());
+        request.setProcessedBy(adminId);
+        request.setProcessedDate(new Date());
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            request.setRejectionReason(null);
+            request.setProcessedBy(null);
+            request.setProcessedDate(null);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Looks up a request across every patient's record, for Step 2 allocation orchestration. */
+    public MedicalRequest findRequestById(String requestId) {
+        for (MedicalRecord record : records) {
+            for (MedicalRequest request : record.getMedicalRequests()) {
+                if (request.getRequestId().equals(requestId)) {
+                    return request;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Marks an APPROVED request ALLOCATED once Admin has assigned a hospital asset to it.
+     * Called by AssetAllocationManager as one half of a single allocate operation; rolls back
+     * the in-memory status (and rethrows) if the file write fails, matching approveRequest().
+     */
+    public MedicalRequest markRequestAllocated(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"APPROVED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an approved request can be marked allocated (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.markAllocated();
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Marks an ALLOCATED request COMPLETED once Admin has completed its asset allocation. */
+    public MedicalRequest markRequestCompleted(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"ALLOCATED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an allocated request can be marked completed (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.markCompleted();
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
+    }
+
+    /** Reverts an ALLOCATED request back to APPROVED once Admin has cancelled its asset allocation. */
+    public MedicalRequest revertRequestToApproved(String requestId) throws IOException {
+        MedicalRequest request = requireRequest(requestId);
+        if (!"ALLOCATED".equals(request.getStatus())) {
+            throw new IllegalStateException(
+                    "Only an allocated request can be reverted to approved (current status: " + request.getStatus() + ")");
+        }
+        String previousStatus = request.getStatus();
+        request.setStatus("APPROVED");
+        try {
+            saveRequestsChecked();
+        } catch (IOException e) {
+            request.setStatus(previousStatus);
+            throw e;
+        }
+        return request;
+    }
+
+    private MedicalRequest requireRequest(String requestId) {
+        MedicalRequest request = findRequestById(requestId);
+        if (request == null) {
+            throw new IllegalArgumentException("Medical request not found: " + requestId);
+        }
         return request;
     }
 
@@ -457,7 +630,16 @@ public class ClinicalManager {
     // ---- persistence: medical requests ----
 
     private void loadRequests() {
-        for (String line : TextFileUtil.readLines(requestsFile)) {
+        // A missing file means "no requests yet", but a file that exists and cannot be read must
+        // not be silently treated the same way - that would risk overwriting real Admin request
+        // data with nothing on the next save.
+        List<String> rawLines;
+        try {
+            rawLines = TextFileUtil.readLinesChecked(requestsFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read " + requestsFile.getPath() + ": " + e.getMessage(), e);
+        }
+        for (String line : rawLines) {
             String[] fields = line.split("\\|", -1);
             if (fields.length < 6) {
                 System.err.println("Skipping malformed medical request: " + line);
@@ -469,9 +651,32 @@ public class ClinicalManager {
                     System.err.println("Skipping medical request with unknown record: " + line);
                     continue;
                 }
+                Doctor doctor = userManager.findDoctorById(fields[2]);
+                if (doctor == null) {
+                    System.err.println("Skipping medical request with unknown doctor: " + line);
+                    continue;
+                }
                 MedicalRequest request = new MedicalRequest(fields[0], fields[3], DATE_FORMAT.parse(fields[4]), fields[5]);
-                request.setDoctor(userManager.findDoctorById(fields[2]));
+                request.setDoctor(doctor);
                 request.setMedicalRecord(record);
+                // Fields 6-9 (details, rejectionReason, processedBy, processedDateTime) were added
+                // later; a legacy 6-field row simply leaves them unset.
+                if (fields.length > 6) {
+                    request.setDetails(fields[6]);
+                }
+                if (fields.length > 7 && !fields[7].isEmpty()) {
+                    request.setRejectionReason(fields[7]);
+                }
+                if (fields.length > 8 && !fields[8].isEmpty()) {
+                    request.setProcessedBy(fields[8]);
+                }
+                if (fields.length > 9 && !fields[9].isEmpty()) {
+                    try {
+                        request.setProcessedDate(PROCESSED_FORMAT.parse(fields[9]));
+                    } catch (ParseException e) {
+                        System.err.println("Ignoring invalid processed date/time on medical request: " + line);
+                    }
+                }
                 record.addRequest(request);
             } catch (ParseException e) {
                 System.err.println("Skipping medical request with invalid date: " + line);
@@ -479,7 +684,12 @@ public class ClinicalManager {
         }
     }
 
-    private void saveRequests() {
+    /** Propagates a write failure to the caller instead of only logging it - every request-file save uses this. */
+    private void saveRequestsChecked() throws IOException {
+        TextFileUtil.writeLinesChecked(requestsFile, REQUESTS_HEADER, buildRequestLines());
+    }
+
+    private List<String> buildRequestLines() {
         List<String> lines = new ArrayList<>();
         for (MedicalRecord record : records) {
             for (MedicalRequest request : record.getMedicalRequests()) {
@@ -489,10 +699,14 @@ public class ClinicalManager {
                         request.getDoctor().getDoctorId(),
                         TextFileUtil.sanitize(request.getRequestType()),
                         DATE_FORMAT.format(request.getRequestDate()),
-                        request.getStatus()));
+                        request.getStatus(),
+                        TextFileUtil.sanitize(request.getDetails()),
+                        TextFileUtil.sanitize(request.getRejectionReason()),
+                        TextFileUtil.emptyIfNull(request.getProcessedBy()),
+                        request.getProcessedDate() == null ? "" : PROCESSED_FORMAT.format(request.getProcessedDate())));
             }
         }
-        TextFileUtil.writeLines(requestsFile, REQUESTS_HEADER, lines);
+        return lines;
     }
 
     // ---- persistence: assessment results ----

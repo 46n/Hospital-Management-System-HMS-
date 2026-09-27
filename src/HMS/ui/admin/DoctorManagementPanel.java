@@ -1,6 +1,8 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -39,9 +41,11 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
 
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
+    private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final ConsultationRateManager rateManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -49,13 +53,15 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public DoctorManagementPanel(UserManager userManager, AppointmentManager appointmentManager,
-            HospitalAssetManager assetManager, ConsultationRateManager rateManager,
-            InsuranceNetworkManager insuranceManager, SessionManager sessionManager,
-            MainFrame mainFrame, Runnable onLogout) {
+            ClinicalManager clinicalManager, HospitalAssetManager assetManager, ConsultationRateManager rateManager,
+            InsuranceNetworkManager insuranceManager, AssetAllocationManager allocationManager,
+            SessionManager sessionManager, MainFrame mainFrame, Runnable onLogout) {
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
         this.rateManager = rateManager;
+        this.allocationManager = allocationManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -99,7 +105,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
 
         searchPanel.setBackground(new java.awt.Color(255, 255, 255));
 
-        searchLabel.setText("Search (username or specialty):");
+        searchLabel.setText("Search (ID, username, specialty, or manager):");
         searchPanel.add(searchLabel);
 
         searchField.setColumns(16);
@@ -217,8 +223,8 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         unassignManagerButton.addActionListener(e -> unassignSelectedManager());
         updateSpecialtyButton.addActionListener(e -> openUpdateSpecialtyDialog());
         backButton.addActionListener(e -> mainFrame.showPanel(
-                new AdminDashboardPanel(sessionManager, userManager, appointmentManager, assetManager,
-                        rateManager, insuranceManager, mainFrame, onLogout)));
+                new AdminDashboardNew(sessionManager, userManager, appointmentManager, clinicalManager,
+                        assetManager, rateManager, insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private List<Doctor> getAllDoctors() {
@@ -241,6 +247,17 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         return managers;
     }
 
+    /** Only an active Medical Manager may be offered as a new assignment target. */
+    private List<MedicalManager> getActiveMedicalManagers() {
+        List<MedicalManager> activeManagers = new ArrayList<>();
+        for (MedicalManager manager : getAllMedicalManagers()) {
+            if (manager.isActive()) {
+                activeManagers.add(manager);
+            }
+        }
+        return activeManagers;
+    }
+
     private void applySearch() {
         String query = searchField.getText().trim().toLowerCase();
         if (query.isEmpty()) {
@@ -249,12 +266,27 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         }
         List<Doctor> matches = new ArrayList<>();
         for (Doctor doctor : getAllDoctors()) {
-            String specialty = doctor.getSpecialty() == null ? "" : doctor.getSpecialty().toLowerCase();
-            if (doctor.getUsername().toLowerCase().contains(query) || specialty.contains(query)) {
+            if (doctorMatchesSearch(doctor, query)) {
                 matches.add(doctor);
             }
         }
         refreshTable(matches);
+    }
+
+    /** Matches on Doctor ID, username, specialty, and the assigned manager's username/ID/unassigned state. */
+    private boolean doctorMatchesSearch(Doctor doctor, String query) {
+        String specialty = doctor.getSpecialty() == null ? "" : doctor.getSpecialty().toLowerCase();
+        String managerText = managerLabel(doctor).toLowerCase();
+        if (doctor.getDoctorId().toLowerCase().contains(query)) {
+            return true;
+        }
+        if (doctor.getUsername().toLowerCase().contains(query)) {
+            return true;
+        }
+        if (specialty.contains(query)) {
+            return true;
+        }
+        return managerText.contains(query);
     }
 
     private void refreshTable(List<Doctor> doctors) {
@@ -323,9 +355,9 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
             return;
         }
         Doctor doctor = userManager.findDoctorById(doctorId);
-        List<MedicalManager> managers = getAllMedicalManagers();
+        List<MedicalManager> managers = getActiveMedicalManagers();
         if (managers.isEmpty()) {
-            showError("No Medical Managers are registered yet.");
+            showError("No active Medical Managers are available to assign.");
             return;
         }
 
@@ -348,7 +380,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
                 userManager.assignDoctorToManager(doctorId, managers.get(index).getManagerId());
             }
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -369,7 +401,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         try {
             userManager.updateDoctorSpecialty(doctorId, (String) selection);
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -393,7 +425,7 @@ public class DoctorManagementPanel extends javax.swing.JPanel {
         try {
             userManager.assignDoctorToManager(doctorId, null);
             refreshTable(getAllDoctors());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }

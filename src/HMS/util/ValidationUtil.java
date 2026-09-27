@@ -1,5 +1,8 @@
 package hms.util;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 /**
@@ -12,6 +15,7 @@ public final class ValidationUtil {
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[0-9]{7,15}$");
+    private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
     private ValidationUtil() {
     }
@@ -25,6 +29,52 @@ public final class ValidationUtil {
     public static void requireNonNegative(double value, String fieldName) {
         if (value < 0) {
             throw new IllegalArgumentException(fieldName + " cannot be negative");
+        }
+    }
+
+    /**
+     * A genuine, finite monetary amount: not NaN, not positive/negative infinity, and not
+     * negative. NaN and infinity both fail a plain "value &lt; 0" check (NaN compares false to
+     * everything, and positive infinity is not negative), so they need their own check here
+     * rather than relying on requireNonNegative alone. Zero is accepted as valid - a rate may
+     * legitimately be free of charge.
+     */
+    public static void requireValidAmount(double value, String fieldName) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException(fieldName + " must be a finite number");
+        }
+        requireNonNegative(value, fieldName);
+    }
+
+    /**
+     * A genuine percentage value: not NaN, not positive/negative infinity, and between 0 and 100
+     * inclusive. NaN and infinity both fail a plain "0 &lt;= value &lt;= 100" check in different
+     * ways (NaN compares false to every comparison, and infinity is always outside the range
+     * anyway) - checking finiteness explicitly first gives a clearer error message than letting
+     * NaN silently slip through a range check that never rejects it.
+     */
+    public static void requireValidPercentage(double value, String fieldName) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new IllegalArgumentException(fieldName + " must be a finite number");
+        }
+        if (value < 0 || value > 100) {
+            throw new IllegalArgumentException(fieldName + " must be between 0 and 100");
+        }
+    }
+
+    /**
+     * Rejects a value that would corrupt the pipe-delimited text files: a '|' would create an
+     * extra field, and a carriage return or newline would create an extra record. Requires the
+     * value to be non-blank first, since every field this is used for is mandatory. Ordinary
+     * spaces and punctuation stay valid - only these three characters are rejected.
+     */
+    public static void requireFileSafeText(String value, String fieldName) {
+        requireNonBlank(value, fieldName);
+        if (value.indexOf('|') >= 0) {
+            throw new IllegalArgumentException(fieldName + " cannot contain the '|' character");
+        }
+        if (value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) {
+            throw new IllegalArgumentException(fieldName + " cannot contain line breaks");
         }
     }
 
@@ -53,5 +103,21 @@ public final class ValidationUtil {
             throw new IllegalArgumentException(
                     fieldName + " must be 7-15 digits, optionally starting with +");
         }
+    }
+
+    /**
+     * Parses a yyyy-MM-dd date strictly: the whole string must match that exact shape, so
+     * trailing characters (e.g. "2000-01-01junk") and non-canonical forms (e.g. "2000-1-1") are
+     * rejected before parsing is even attempted, and the date itself must be a real calendar
+     * date (lenient=false), so an impossible date like "2026-02-30" is rejected too, not
+     * silently rolled over to March.
+     */
+    public static Date parseStrictDate(String text) throws ParseException {
+        if (text == null || !DATE_PATTERN.matcher(text).matches()) {
+            throw new ParseException("Date must be in yyyy-MM-dd format", 0);
+        }
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        format.setLenient(false);
+        return format.parse(text);
     }
 }
