@@ -1,6 +1,8 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -41,8 +43,10 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
     private final InsuranceNetworkManager insuranceManager;
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
+    private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final ConsultationRateManager rateManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -50,13 +54,16 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public InsuranceNetworkManagementPanel(InsuranceNetworkManager insuranceManager, UserManager userManager,
-            AppointmentManager appointmentManager, HospitalAssetManager assetManager,
-            ConsultationRateManager rateManager, SessionManager sessionManager,
-            MainFrame mainFrame, Runnable onLogout) {
+            AppointmentManager appointmentManager, ClinicalManager clinicalManager,
+            HospitalAssetManager assetManager, ConsultationRateManager rateManager,
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.insuranceManager = insuranceManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
+        this.allocationManager = allocationManager;
         this.rateManager = rateManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -168,9 +175,9 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
         });
         toggleButton.addActionListener(e -> toggleSelectedActive());
         deleteButton.addActionListener(e -> deleteSelected());
-        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
-                sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
-                mainFrame, onLogout)));
+        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardNew(
+                sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
+                insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private void refreshTable() {
@@ -205,7 +212,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
         try {
             insuranceManager.setActive(network.getNetworkId(), !network.isActive());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -224,7 +231,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
         try {
             insuranceManager.deleteNetwork(network.getNetworkId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -278,7 +285,7 @@ public class InsuranceNetworkManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

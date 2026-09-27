@@ -1,6 +1,8 @@
 package hms.ui.admin;
 
 import hms.manager.AppointmentManager;
+import hms.manager.AssetAllocationManager;
+import hms.manager.ClinicalManager;
 import hms.manager.ConsultationRateManager;
 import hms.manager.HospitalAssetManager;
 import hms.manager.InsuranceNetworkManager;
@@ -10,6 +12,7 @@ import hms.model.ConsultationRate;
 import hms.ui.common.MainFrame;
 import hms.ui.common.Theme;
 import hms.ui.common.UIStyles;
+import hms.util.ValidationUtil;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -45,8 +48,10 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     private final ConsultationRateManager rateManager;
     private final UserManager userManager;
     private final AppointmentManager appointmentManager;
+    private final ClinicalManager clinicalManager;
     private final HospitalAssetManager assetManager;
     private final InsuranceNetworkManager insuranceManager;
+    private final AssetAllocationManager allocationManager;
     private final SessionManager sessionManager;
     private final MainFrame mainFrame;
     private final Runnable onLogout;
@@ -54,13 +59,16 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
     private DefaultTableModel tableModel;
 
     public ConsultationRateManagementPanel(ConsultationRateManager rateManager, UserManager userManager,
-            AppointmentManager appointmentManager, HospitalAssetManager assetManager,
-            InsuranceNetworkManager insuranceManager, SessionManager sessionManager,
-            MainFrame mainFrame, Runnable onLogout) {
+            AppointmentManager appointmentManager, ClinicalManager clinicalManager,
+            HospitalAssetManager assetManager, InsuranceNetworkManager insuranceManager,
+            AssetAllocationManager allocationManager, SessionManager sessionManager, MainFrame mainFrame,
+            Runnable onLogout) {
         this.rateManager = rateManager;
         this.userManager = userManager;
         this.appointmentManager = appointmentManager;
+        this.clinicalManager = clinicalManager;
         this.assetManager = assetManager;
+        this.allocationManager = allocationManager;
         this.insuranceManager = insuranceManager;
         this.sessionManager = sessionManager;
         this.mainFrame = mainFrame;
@@ -172,9 +180,9 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         });
         toggleButton.addActionListener(e -> toggleSelectedActive());
         deleteButton.addActionListener(e -> deleteSelected());
-        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardPanel(
-                sessionManager, userManager, appointmentManager, assetManager, rateManager, insuranceManager,
-                mainFrame, onLogout)));
+        backButton.addActionListener(e -> mainFrame.showPanel(new AdminDashboardNew(
+                sessionManager, userManager, appointmentManager, clinicalManager, assetManager, rateManager,
+                insuranceManager, allocationManager, mainFrame, onLogout)));
     }
 
     private void refreshTable() {
@@ -209,7 +217,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         try {
             rateManager.setActive(rate.getRateId(), !rate.isActive());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -228,7 +236,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
         try {
             rateManager.deleteRate(rate.getRateId());
             refreshTable();
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             showError(ex.getMessage());
         }
     }
@@ -274,7 +282,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
                 return;
             }
             try {
-                effectiveDate = DATE_FORMAT.parse(dateField.getText().trim());
+                effectiveDate = ValidationUtil.parseStrictDate(dateField.getText().trim());
             } catch (ParseException ex) {
                 showError("Effective date must be in yyyy-MM-dd format.");
                 return;
@@ -289,7 +297,7 @@ public class ConsultationRateManagementPanel extends javax.swing.JPanel {
                 }
                 dialog.dispose();
                 refreshTable();
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 showError(ex.getMessage());
             }
         });

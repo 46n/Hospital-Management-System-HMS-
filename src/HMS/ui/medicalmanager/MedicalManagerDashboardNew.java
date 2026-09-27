@@ -187,65 +187,91 @@ public class MedicalManagerDashboardNew extends javax.swing.JPanel {
         btnReports1 = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(204, 204, 204));
-        setLayout(null);
 
         jPanel1.setLayout(new java.awt.BorderLayout());
-        add(jPanel1);
-        jPanel1.setBounds(244, 226, 0, 0);
 
         lblPageTitle.setFont(new java.awt.Font("Helvetica Neue", 0, 24)); // NOI18N
         lblPageTitle.setText("Medical Manager Dashboard");
-        add(lblPageTitle);
-        lblPageTitle.setBounds(24, 6, 311, 29);
 
         btnAssessmentTypes.setBackground(new java.awt.Color(51, 51, 51));
         btnAssessmentTypes.setForeground(new java.awt.Color(255, 255, 255));
         btnAssessmentTypes.setText("Assessment Types");
         btnAssessmentTypes.addActionListener(this::btnAssessmentTypesActionPerformed);
-        add(btnAssessmentTypes);
-        btnAssessmentTypes.setBounds(320, 85, 215, 37);
 
         btnDepartments.setBackground(new java.awt.Color(51, 51, 51));
         btnDepartments.setForeground(new java.awt.Color(255, 255, 255));
         btnDepartments.setText("Clinical Departments ");
         btnDepartments.addActionListener(this::btnDepartmentsActionPerformed);
-        add(btnDepartments);
-        btnDepartments.setBounds(58, 85, 215, 37);
 
         btnWorkloadAlerts.setBackground(new java.awt.Color(51, 51, 51));
         btnWorkloadAlerts.setForeground(new java.awt.Color(255, 255, 255));
         btnWorkloadAlerts.setText("Doctor Workload & Alerts");
         btnWorkloadAlerts.addActionListener(this::btnWorkloadAlertsActionPerformed);
-        add(btnWorkloadAlerts);
-        btnWorkloadAlerts.setBounds(320, 183, 215, 37);
 
         btnDoctorShifts.setBackground(new java.awt.Color(51, 51, 51));
         btnDoctorShifts.setForeground(new java.awt.Color(255, 255, 255));
         btnDoctorShifts.setText("Doctor Shifts");
         btnDoctorShifts.addActionListener(this::btnDoctorShiftsActionPerformed);
-        add(btnDoctorShifts);
-        btnDoctorShifts.setBounds(58, 128, 215, 37);
 
         btnLogout.setBackground(new java.awt.Color(51, 51, 51));
         btnLogout.setForeground(new java.awt.Color(255, 255, 255));
         btnLogout.setText("LOGOUT");
         btnLogout.addActionListener(this::btnLogoutActionPerformed);
-        add(btnLogout);
-        btnLogout.setBounds(256, 279, 100, 37);
 
         btnProfile.setBackground(new java.awt.Color(51, 51, 51));
         btnProfile.setForeground(new java.awt.Color(255, 255, 255));
         btnProfile.setText("My Profile");
         btnProfile.addActionListener(this::btnProfileActionPerformed);
-        add(btnProfile);
-        btnProfile.setBounds(58, 183, 215, 37);
 
         btnReports1.setBackground(new java.awt.Color(51, 51, 51));
         btnReports1.setForeground(new java.awt.Color(255, 255, 255));
         btnReports1.setText("Reports");
         btnReports1.addActionListener(this::btnReports1ActionPerformed);
-        add(btnReports1);
-        btnReports1.setBounds(320, 128, 215, 37);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblPageTitle)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnDepartments, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnDoctorShifts, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnAssessmentTypes, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnReports1, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnWorkloadAlerts, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(btnLogout, javax.swing.GroupLayout.Alignment.CENTER, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(lblPageTitle)
+                .addGap(23, 23, 23)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnDepartments, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnAssessmentTypes, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnDoctorShifts, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnReports1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnWorkloadAlerts, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(12, 12, 12)
+                .addComponent(btnLogout, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProfileActionPerformed

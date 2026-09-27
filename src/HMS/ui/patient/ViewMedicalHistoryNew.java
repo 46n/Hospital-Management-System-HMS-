@@ -197,7 +197,7 @@ private void applyStyles() {
         lblRecordDetails.setFont(new java.awt.Font("Dialog", 0, 24)); // NOI18N
         lblRecordDetails.setText("Record Details");
         add(lblRecordDetails);
-        lblRecordDetails.setBounds(190, 400, 157, 32);
+        lblRecordDetails.setBounds(190, 360, 157, 32);
 
         txtRecordDetails.setEditable(false);
         txtRecordDetails.setColumns(20);
@@ -205,13 +205,13 @@ private void applyStyles() {
         jScrollPane2.setViewportView(txtRecordDetails);
 
         add(jScrollPane2);
-        jScrollPane2.setBounds(190, 430, 478, 76);
+        jScrollPane2.setBounds(190, 396, 478, 130);
 
         btnBack.setForeground(new java.awt.Color(51, 51, 51));
         btnBack.setText("Back to Dashboard");
         btnBack.addActionListener(this::btnBackActionPerformed);
         add(btnBack);
-        btnBack.setBounds(340, 520, 180, 30);
+        btnBack.setBounds(340, 530, 180, 30);
     }// </editor-fold>//GEN-END:initComponents
 
     private void tblMedicalRecordsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMedicalRecordsMouseClicked

@@ -15,7 +15,7 @@ import javax.swing.SwingConstants;
  */
 public class MainFrame extends JFrame {
 
-    private static final Color CONTENT_BACKGROUND = new Color(244, 247, 250);
+    private static final Color CONTENT_BACKGROUND = new Color(255, 255, 255);
     private static final Color BORDER_COLOR = new Color(220, 225, 230);
     private static final Color MUTED_TEXT_COLOR = new Color(96, 108, 120);
     public static final int WINDOW_WIDTH = 1000;

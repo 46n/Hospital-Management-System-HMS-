@@ -4,10 +4,13 @@ MM001|MEDICAL_MANAGER|manager|manager123|0111000004|manager@hms.com|MM001||true|
 DR001|DOCTOR|doctor|doctor123|0111000003|doctor@hms.com|DR001|Cardiology|true|MM001
 PT001|PATIENT|patient|patient123|0111000004|patient@hms.com|PT001|1995-06-15|true|
 AS002|ADMIN_STAFF|ali|ali123|01368200|ali@mail.com|AS002||true|
-AS003|ADMIN_STAFF|123|123|0550066624|email@mail.com|AS003||true|
-AS004|ADMIN_STAFF|12032h|123|12312231|123@mail.com|AS004||true|
+AS003|ADMIN_STAFF|farah_admin|admin456|0124406624|farah.admin@hms.com|AS003||true|
+AS004|ADMIN_STAFF|daniel_admin|admin789|0123123231|daniel.admin@hms.com|AS004||true|
 DR002|DOCTOR|ahmed123|123|0123456789|ahmed@hms.com|DR002|Emergency Medicine|true|MM002
 MM002|MEDICAL_MANAGER|abdalla|abdalla123|0123456789|abdalla@hms.com|MM002||true|
 DR003|DOCTOR|sarah.ali|sarah123|0123456791|sarah.ali@hms.com|DR003|Neurology|true|MM002
 DR004|DOCTOR|mohamed.khan|mohamed123|0123456792|mohamed.khan@hms.com|DR004|Orthopedics|true|MM002
 PT002|PATIENT|nurul|nurul123|0123456704|nurul@hms.com|PT002|2001-11-02|true|
+PT003|PATIENT|amir_rahman|amir123|0125550103|amir.rahman@hms.com|PT003|1998-03-21|true|
+PT004|PATIENT|mei_lin|mei12345|0125550104|mei.lin@hms.com|PT004|1992-08-14|true|
+PT005|PATIENT|farid_aziz|farid123|0125550105|farid.aziz@hms.com|PT005|1987-12-03|false|

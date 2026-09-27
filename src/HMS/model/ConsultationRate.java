@@ -21,7 +21,7 @@ public class ConsultationRate {
         this.rateId = rateId;
         this.consultationType = consultationType;
         this.baseAmount = baseAmount;
-        this.effectiveDate = effectiveDate;
+        this.effectiveDate = copyDate(effectiveDate);
         this.active = active;
     }
 
@@ -49,12 +49,20 @@ public class ConsultationRate {
         this.baseAmount = baseAmount;
     }
 
+    /** Defensive copy - mutating the returned Date cannot change this rate's effective date. */
     public Date getEffectiveDate() {
-        return effectiveDate;
+        return copyDate(effectiveDate);
     }
 
     public void setEffectiveDate(Date effectiveDate) {
-        this.effectiveDate = effectiveDate;
+        this.effectiveDate = copyDate(effectiveDate);
+    }
+
+    // Dates are mutable in Java, so we copy them here instead of storing the caller's reference -
+    // this stops code elsewhere in the app from reaching back in later and mutating the Date it
+    // originally passed in.
+    private static Date copyDate(Date date) {
+        return date == null ? null : new Date(date.getTime());
     }
 
     public boolean isActive() {
