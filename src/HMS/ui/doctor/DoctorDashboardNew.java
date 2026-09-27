@@ -30,7 +30,15 @@ public class DoctorDashboardNew extends javax.swing.JPanel {
 
     /**
      * Creates new form DoctorDashboardNew
+     * @param sessionManager
+     * @param userManager
+     * @param appointmentManager
+     * @param clinicalManager
+     * @param typeManager
+     * @param mainFrame
+     * @param onLogout
      */
+    
     public DoctorDashboardNew(SessionManager sessionManager, UserManager userManager,
             AppointmentManager appointmentManager, ClinicalManager clinicalManager,
             AssessmentTypeManager typeManager, MainFrame mainFrame, Runnable onLogout) {
