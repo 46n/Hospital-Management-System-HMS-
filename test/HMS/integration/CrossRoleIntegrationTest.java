@@ -1010,7 +1010,7 @@ public class CrossRoleIntegrationTest {
             }
 
             // ---- users: all four roles ----
-            assertEquals(12, userManager.getUsers().size(), "all twelve merged demonstration users must load");
+            assertEquals(15, userManager.getUsers().size(), "all fifteen merged demonstration users must load");
             int adminCount = 0;
             int managerCount = 0;
             int doctorCount = 0;
@@ -1029,7 +1029,7 @@ public class CrossRoleIntegrationTest {
             assertEquals(4, adminCount, "all four Admin Staff rows must load");
             assertEquals(2, managerCount, "both Medical Manager rows must load");
             assertEquals(4, doctorCount, "all four Doctor rows must load");
-            assertEquals(2, patientCount, "both Patient rows must load");
+            assertEquals(5, patientCount, "all five Patient rows must load");
 
             // ---- Doctor -> Medical Manager links ----
             Doctor dr001 = userManager.findDoctorById("DR001");
@@ -1039,23 +1039,23 @@ public class CrossRoleIntegrationTest {
             Doctor dr002 = userManager.findDoctorById("DR002");
             assertEquals("MM002", dr002.getShiftManager().getManagerId(), "DR002 must link to MM002");
 
-            // ---- hospital assets: all eight, with the three legacy-alias rows resolved canonically ----
-            assertEquals(8, assetManager.getAssets().size(), "all eight merged hospital assets must load");
+            // ---- hospital assets: all eleven, with the three legacy-alias rows resolved canonically ----
+            assertEquals(11, assetManager.getAssets().size(), "all eleven merged hospital assets must load");
             assertEquals("WARD", assetManager.findById("HA004").getAssetType(), "HA004 must resolve to WARD");
             assertEquals("LAB", assetManager.findById("HA005").getAssetType(), "HA005 must resolve to LAB");
             assertEquals("WARD", assetManager.findById("HA008").getAssetType(), "HA008 must resolve to WARD");
 
             // ---- consultation rates / insurance networks ----
-            assertEquals(8, rateManager.getRates().size(), "all eight merged consultation rates must load");
-            assertEquals(8, insuranceManager.getNetworks().size(), "all eight merged insurance networks must load");
+            assertEquals(9, rateManager.getRates().size(), "all nine merged consultation rates must load");
+            assertEquals(10, insuranceManager.getNetworks().size(), "all ten merged insurance networks must load");
 
             // ---- shifts / appointments ----
-            assertEquals(9, shiftManager.getShiftsForDoctor("DR001").size()
+            assertEquals(18, shiftManager.getShiftsForDoctor("DR001").size()
                     + shiftManager.getShiftsForDoctor("DR002").size()
                     + shiftManager.getShiftsForDoctor("DR003").size()
                     + shiftManager.getShiftsForDoctor("DR004").size(),
-                    "all nine merged doctor shifts must load");
-            assertEquals(8, appointmentManager.getAppointments().size(), "all eight merged appointments must load");
+                    "all eighteen merged doctor shifts must load");
+            assertEquals(14, appointmentManager.getAppointments().size(), "all fourteen merged appointments must load");
 
             // ---- medical records / prescriptions / assessment results ----
             assertEquals(8, clinicalManager.getRecords().size(), "all eight merged medical records must load");
@@ -1066,10 +1066,10 @@ public class CrossRoleIntegrationTest {
                 resultCount += record.getAssessmentResults().size();
             }
             assertEquals(8, prescriptionCount, "all eight merged prescriptions must load");
-            assertEquals(8, resultCount, "all eight merged assessment results must load");
+            assertEquals(12, resultCount, "all twelve merged assessment results must load");
 
-            // ---- assessment types: all fourteen load, with no duplicate ID ----
-            assertEquals(14, typeManager.getTypes().size(), "all fourteen corrected merged assessment types must load");
+            // ---- assessment types: all fifteen load, with no duplicate ID ----
+            assertEquals(15, typeManager.getTypes().size(), "all fifteen corrected merged assessment types must load");
             assertNotNull(typeManager.findById("AT001"), "AT001 (original) must still load");
             assertNotNull(typeManager.findById("AT008"), "AT008 (original) must still load");
             assertNotNull(typeManager.findById("AT009"), "AT009 (Fitness check) must still load");
@@ -1077,19 +1077,20 @@ public class CrossRoleIntegrationTest {
             assertEquals("Chest X-Ray Examination", typeManager.findById("AT011").getName(), "AT011 must be the renumbered X-Ray type");
             assertEquals("Electrocardiogram (ECG)", typeManager.findById("AT012").getName(), "AT012 must be the renumbered ECG type");
             assertEquals("Magnetic Resonance Imaging (MRI)", typeManager.findById("AT013").getName(), "AT013 must be the renumbered MRI type");
-            assertEquals("Blood Glucose Test", typeManager.findById("AT014").getName(), "AT014 must be the renumbered glucose type");
+            assertEquals("Fasting Blood Glucose Test", typeManager.findById("AT014").getName(), "AT014 must be the fasting glucose type");
+            assertEquals("Vision Screening", typeManager.findById("AT015").getName(), "AT015 must be the added vision screening type");
 
             // ---- medical requests, including the legacy 6-field rows ----
-            assertEquals(8, clinicalManager.getAllRequests().size(),
-                    "all eight merged medical requests (including legacy 6-field rows) must load");
+            assertEquals(10, clinicalManager.getAllRequests().size(),
+                    "all ten merged medical requests (including legacy 6-field rows) must load");
 
             // ---- feedback / payments ----
             assertEquals(8, clinicalManager.getDoctorFeedback("DR001").size() + clinicalManager.getDoctorFeedback("DR002").size(),
                     "all eight merged feedback entries must load");
-            assertEquals(8, billingManager.getPayments().size(), "all eight merged payments must load");
+            assertEquals(9, billingManager.getPayments().size(), "all nine merged payments must load");
 
-            // ---- clinical departments: all nine load, including the corrected CD009 ----
-            assertEquals(9, departmentManager.getDepartments().size(), "all nine merged clinical departments must load");
+            // ---- clinical departments: all eleven load, including the corrected CD009 ----
+            assertEquals(11, departmentManager.getDepartments().size(), "all eleven merged clinical departments must load");
             assertEquals("Fitness Lab", departmentManager.findById("CD009").getDepartmentName(),
                     "CD009 must be the corrected single-line Fitness Lab department");
         } finally {
@@ -1135,8 +1136,8 @@ public class CrossRoleIntegrationTest {
                     userManager, allocationsFile);
 
             // Confirm the corrected counts before any mutation.
-            assertEquals(14, typeManager.getTypes().size(), "all fourteen assessment types must load before mutation");
-            assertEquals(9, departmentManager.getDepartments().size(), "all nine clinical departments must load before mutation");
+            assertEquals(15, typeManager.getTypes().size(), "all fifteen assessment types must load before mutation");
+            assertEquals(11, departmentManager.getDepartments().size(), "all eleven clinical departments must load before mutation");
 
             // Safe mutation 1: update an existing profile.
             userManager.updateProfile("PT001", "0199990000", "patient-updated@test.com");
@@ -1167,22 +1168,22 @@ public class CrossRoleIntegrationTest {
             ClinicalDepartmentManager reloadedDepartments = new ClinicalDepartmentManager(reloadedUsers, departmentsFile);
 
             // Neither assessment types nor clinical departments were touched by any of these
-            // mutations - confirm all fourteen types and all nine departments are still exactly
+            // mutations - confirm all fifteen types and all eleven departments are still exactly
             // as they were, proving no unrelated row was lost by reloading the rest of the graph.
-            assertEquals(14, reloadedTypes.getTypes().size(), "all fourteen assessment types must remain after the mutation");
+            assertEquals(15, reloadedTypes.getTypes().size(), "all fifteen assessment types must remain after the mutation");
             assertEquals("Complete Blood Count (CBC)", reloadedTypes.findById("AT010").getName(), "AT010 must remain unchanged");
-            assertEquals(9, reloadedDepartments.getDepartments().size(), "all nine clinical departments must remain after the mutation");
+            assertEquals(11, reloadedDepartments.getDepartments().size(), "all eleven clinical departments must remain after the mutation");
             assertEquals("Fitness Lab", reloadedDepartments.findById("CD009").getDepartmentName(), "CD009 must remain unchanged");
 
-            assertEquals(12, reloadedUsers.getUsers().size(), "the original twelve users must remain after the mutation");
+            assertEquals(15, reloadedUsers.getUsers().size(), "the original fifteen users must remain after the mutation");
             assertEquals("0199990000", reloadedUsers.findById("PT001").getPhone(), "the profile update must persist");
-            assertEquals(9, reloadedAppointments.getAppointments().size(),
-                    "the original eight appointments plus the one new appointment must remain");
-            assertEquals(9, reloadedClinical.getAllRequests().size(),
-                    "the original eight requests plus the one new request must remain, including legacy 6-field rows");
+            assertEquals(15, reloadedAppointments.getAppointments().size(),
+                    "the original fourteen appointments plus the one new appointment must remain");
+            assertEquals(11, reloadedClinical.getAllRequests().size(),
+                    "the original ten requests plus the one new request must remain, including legacy 6-field rows");
             assertEquals("APPROVED", reloadedClinical.findRequestById(newRequest.getRequestId()).getStatus(),
                     "the new request's processed status must persist");
-            assertEquals(8, reloadedAssets.getAssets().size(), "no asset must be lost by the availability toggle");
+            assertEquals(11, reloadedAssets.getAssets().size(), "no asset must be lost by the availability toggle");
             assertTrue(!reloadedAssets.findById("HA001").isAvailability(), "the availability toggle must persist");
 
             // The legacy-aliased assets were not touched by this mutation (only HA001 was saved), so

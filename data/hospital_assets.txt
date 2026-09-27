@@ -2,8 +2,11 @@
 HA001|Consultation Room 101|CONSULTATION_ROOM|Block A Level 1|true|AS001
 HA002|Consultation Room 102|CONSULTATION_ROOM|Block A Level 1|true|AS002
 HA003|Cardiology Examination Room|CONSULTATION_ROOM|Block B Level 2|true|AS001
-HA004|General Medical Ward|INPATIENT_WARD|Block C Level 3|true|AS002
-HA005|Clinical Laboratory 1|LABORATORY|Block D Level 1|true|AS001
+HA004|General Medical Ward|WARD|Block C Level 3|true|AS002
+HA005|Clinical Laboratory 1|LAB|Block D Level 1|true|AS001
 HA006|X-Ray Room 1|IMAGING_ROOM|Block D Level 2|true|AS002
 HA007|Ultrasound Room|IMAGING_ROOM|Block D Level 2|true|AS001
-HA008|Emergency Observation Ward|INPATIENT_WARD|Emergency Block Level 1|true|AS002
+HA008|Emergency Observation Ward|WARD|Emergency Block Level 1|true|AS002
+HA009|MRI Suite 1|IMAGING_ROOM|Block D Level 3|false|AS003
+HA010|Pediatric Consultation Room|CONSULTATION_ROOM|Block A Level 2|true|AS004
+HA011|Clinical Laboratory 2|LAB|Block D Level 1|false|AS001

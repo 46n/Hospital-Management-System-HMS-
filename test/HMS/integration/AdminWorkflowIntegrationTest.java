@@ -756,8 +756,8 @@ public class AdminWorkflowIntegrationTest {
             // HospitalAssetType.fromPersistedValue() closes. Asserting the concrete count and the
             // three legacy rows' resolved canonical types is what actually proves that fix, rather
             // than merely proving the constructor didn't throw.
-            assertEquals(8, assetManager.getAssets().size(),
-                    "all eight assets in the merged demonstration data must load - none silently skipped");
+            assertEquals(11, assetManager.getAssets().size(),
+                    "all eleven assets in the merged demonstration data must load - none silently skipped");
             HospitalAsset ha004 = assetManager.findById("HA004");
             assertNotNull(ha004, "HA004 must load");
             assertEquals("WARD", ha004.getAssetType(), "HA004's legacy INPATIENT_WARD must resolve to the canonical WARD");
