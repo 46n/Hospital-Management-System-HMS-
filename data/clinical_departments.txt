@@ -9,4 +9,4 @@ CD007|Outpatient Clinic|Scheduled consultations and follow-up care|true|MM002
 CD008|Health Assessment Unit|Routine health assessments and monitoring|true|MM001
 CD009|Fitness Lab|Physical readiness and fitness assessment services|true|MM002
 CD010|Neurology|Diagnosis and management of neurological conditions|true|MM002
-CD011|Dermatology|Assessment and treatment of skin conditions|true|MM001
+CD012|Eye examination|To assess the patient's visual health.|true|MM001
