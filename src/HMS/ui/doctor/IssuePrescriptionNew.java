@@ -218,6 +218,8 @@ public class IssuePrescriptionNew extends javax.swing.JPanel {
         btnIssuePrescription = new javax.swing.JButton();
         txtMedication = new javax.swing.JTextField();
 
+        setBackground(new java.awt.Color(204, 204, 204));
+
         jPanel1.setLayout(new java.awt.BorderLayout());
 
         lblIssuePrescription.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
