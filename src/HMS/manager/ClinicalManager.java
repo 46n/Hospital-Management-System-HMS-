@@ -173,20 +173,39 @@ public class ClinicalManager {
      * is removed from the in-memory record before rethrowing, so no phantom request is left
      * visible and existing requests on the record are unaffected.
      */
-    public MedicalRequest addRequest(String recordId, String requestType, String details) throws IOException {
+    public MedicalRequest addRequest( String recordId, String requestType,
+            String details) throws IOException {
+
         MedicalRecord record = requireRecord(recordId);
         ValidationUtil.requireNonBlank(requestType, "Request type");
-        MedicalRequest request = new MedicalRequest(nextRequestId(), requestType, new Date(), "PENDING");
+        requestType = requestType.trim();
+
+    // Allow only one request of each type for this appointment.
+        for (MedicalRequest existing : record.getMedicalRequests()) {
+            if (requestType.equalsIgnoreCase(existing.getRequestType())) {
+                throw new IllegalArgumentException(
+                    "A " + requestType
+                    + " request already exists for this appointment."
+                );
+            }
+        }
+
+        MedicalRequest request = new MedicalRequest(
+            nextRequestId(), requestType, new Date(), "PENDING"
+        );
+
         request.setDoctor(record.getDoctor());
         request.setMedicalRecord(record);
         request.setDetails(details == null ? "" : details.trim());
         record.addRequest(request);
+
         try {
             saveRequestsChecked();
         } catch (IOException e) {
             record.getMedicalRequests().remove(request);
             throw e;
         }
+
         return request;
     }
 

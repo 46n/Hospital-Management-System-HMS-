@@ -228,6 +228,8 @@ public class RequestLabImagingNew extends javax.swing.JPanel {
         btnBackToDashboard = new javax.swing.JButton();
         btnSubmitRequest = new javax.swing.JButton();
 
+        setBackground(new java.awt.Color(204, 204, 204));
+
         jPanel1.setLayout(new java.awt.BorderLayout());
 
         lblRequestLabImaging.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N

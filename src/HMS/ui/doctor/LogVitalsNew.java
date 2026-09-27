@@ -126,35 +126,57 @@ public class LogVitalsNew extends javax.swing.JPanel {
     
     private String getVitalSignsText() {
 
-        String systolic = txtSystolic.getText().trim();
-        String diastolic = txtDiastolic.getText().trim();
-        String pulse = txtPulse.getText().trim();
-        String temperature = txtTemperature.getText().trim();
+        String systolicText = txtSystolic.getText().trim();
+        String diastolicText = txtDiastolic.getText().trim();
+        String pulseText = txtPulse.getText().trim();
+        String temperatureText = txtTemperature.getText().trim();
 
-        if (systolic.isEmpty()
-            || diastolic.isEmpty()
-            || pulse.isEmpty()
-            || temperature.isEmpty()) {
+        if (systolicText.isEmpty()
+            || diastolicText.isEmpty()
+            || pulseText.isEmpty()
+            || temperatureText.isEmpty()) {
 
-            throw new IllegalArgumentException(
+        throw new IllegalArgumentException(
                 "Please enter all vital signs.");
         }
 
         try {
-            Integer.parseInt(systolic);
-            Integer.parseInt(diastolic);
-            Integer.parseInt(pulse);
-            Double.parseDouble(temperature);
+
+            int systolic = Integer.parseInt(systolicText);
+            int diastolic = Integer.parseInt(diastolicText);
+            int pulse = Integer.parseInt(pulseText);
+            double temperature = Double.parseDouble(temperatureText);
+
+             if (systolic <= 0 || systolic > 400) {
+            throw new IllegalArgumentException(
+                    "Systolic value must be between 1 and 400.");
+            }
+
+            if (diastolic <= 0 || diastolic > 400) {
+                throw new IllegalArgumentException(
+                    "Diastolic value must be between 1 and 400.");
+            }
+
+            if (pulse <= 0 || pulse > 400) {
+                throw new IllegalArgumentException(
+                    "Pulse value must be between 1 and 400.");
+            }
+
+            if (temperature <= 0 || temperature > 400) {
+                throw new IllegalArgumentException(
+                    "Temperature value must be between 1 and 400.");
+            }
+
+            return "Systolic: " + systolic + " mmHg"
+                + "; Diastolic: " + diastolic + " mmHg"
+                + "; Pulse: " + pulse + " bpm"
+                + "; Temperature: " + temperature + " C";
 
         } catch (NumberFormatException ex) {
+
             throw new IllegalArgumentException(
                 "Vital signs must contain valid numbers.");
         }
-
-        return "Systolic: " + systolic + " mmHg"
-            + "; Diastolic: " + diastolic + " mmHg"
-            + "; Pulse: " + pulse + " bpm"
-            + "; Temperature: " + temperature + " C";
     }
     
     private void clearVitalFields() {

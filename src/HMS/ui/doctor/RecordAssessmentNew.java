@@ -253,6 +253,7 @@ public class RecordAssessmentNew extends javax.swing.JPanel {
         btnBackToDashboard = new javax.swing.JButton();
         btnRecordResult = new javax.swing.JButton();
 
+        setBackground(new java.awt.Color(204, 204, 204));
         setLayout(null);
 
         jPanel1.setLayout(new java.awt.BorderLayout());
