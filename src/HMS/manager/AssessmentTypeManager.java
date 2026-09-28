@@ -50,7 +50,7 @@ public class AssessmentTypeManager {
 
     public AssessmentType createType(String name, String category, String gradingRule,
             double baseCharge, String createdByManagerId) {
-        ValidationUtil.requireNonBlank(name, "Name");
+        validateAssessmentName(name);
         requireUniqueName(name, null);
         validateCategory(category);
         validateGradingRule(gradingRule);
@@ -67,7 +67,7 @@ public class AssessmentTypeManager {
 
     public void updateType(String typeId, String name, String category, String gradingRule, double baseCharge) {
         AssessmentType type = requireType(typeId);
-        ValidationUtil.requireNonBlank(name, "Name");
+        validateAssessmentName(name);
         requireUniqueName(name, typeId);
         validateCategory(category);
         validateGradingRule(gradingRule);
@@ -106,6 +106,16 @@ public class AssessmentTypeManager {
     public List<AssessmentType> getTypes() {
         return new ArrayList<>(types);
     }
+    
+    private void validateAssessmentName(String name) {
+    ValidationUtil.requireNonBlank(name, "Name");
+
+    if (name.matches(".*\\d.*")) {
+        throw new IllegalArgumentException(
+                "Assessment name cannot contain numbers"
+        );
+    }
+}
 
     private void requireUniqueName(String name, String excludingTypeId) {
         for (AssessmentType type : types) {
