@@ -108,14 +108,14 @@ public class AssessmentTypeManager {
     }
     
     private void validateAssessmentName(String name) {
-    ValidationUtil.requireNonBlank(name, "Name");
+        ValidationUtil.requireNonBlank(name, "Name");
 
-    if (name.matches(".*\\d.*")) {
-        throw new IllegalArgumentException(
+        if (name.matches(".*\\d.*")) {
+            throw new IllegalArgumentException(
                 "Assessment name cannot contain numbers"
-        );
+            );
+        }
     }
-}
 
     private void requireUniqueName(String name, String excludingTypeId) {
         for (AssessmentType type : types) {

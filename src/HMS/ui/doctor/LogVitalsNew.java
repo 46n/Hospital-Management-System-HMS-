@@ -162,9 +162,10 @@ public class LogVitalsNew extends javax.swing.JPanel {
                     "Pulse value must be between 1 and 400.");
             }
 
-            if (temperature <= 0 || temperature > 400) {
+            if (!Double.isFinite(temperature)
+                    || temperature <= 0 || temperature > 400) {
                 throw new IllegalArgumentException(
-                    "Temperature value must be between 1 and 400.");
+                    "Temperature must be a valid number greater than 0 and up to 400.");
             }
 
             return "Systolic: " + systolic + " mmHg"
@@ -259,7 +260,7 @@ public class LogVitalsNew extends javax.swing.JPanel {
 
             clinicalManager.updateVitalsAndNotes(
                 record.getRecordId(),
-                getVitalSignsText(),
+                vitalSigns,
                 txtDiagnosis.getText().trim(),
                 txtConsultationNotes.getText().trim());
 
