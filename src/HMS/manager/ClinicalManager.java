@@ -172,6 +172,11 @@ public class ClinicalManager {
      * Creates a PENDING request and persists it immediately. If the write fails, the request
      * is removed from the in-memory record before rethrowing, so no phantom request is left
      * visible and existing requests on the record are unaffected.
+     * @param recordId
+     * @param requestType
+     * @param details
+     * @return 
+     * @throws java.io.IOException 
      */
     public MedicalRequest addRequest( String recordId, String requestType,
             String details) throws IOException {
@@ -766,7 +771,7 @@ public class ClinicalManager {
                         record.getRecordId(),
                         TextFileUtil.sanitize(result.getAssessmentName()),
                         TextFileUtil.sanitize(result.getValue()),
-                        TextFileUtil.emptyIfNull(result.getGrade()),
+                        TextFileUtil.sanitize(result.getGrade()),
                         DATE_FORMAT.format(result.getResultDate()),
                         result.getRecordedBy() == null ? "" : result.getRecordedBy().getDoctorId(),
                         result.getAssessmentType() == null ? "" : result.getAssessmentType().getAssessmentTypeId()));
