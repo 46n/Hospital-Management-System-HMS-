@@ -111,50 +111,50 @@ public class UserManager {
      * fail on the password, leaving a partial update behind. Pass blank current/new/confirm
      * password text to update contact details only, with no password change at all.
      */
-    public void updateOwnProfile(String userId, String phone, String email,
-            String currentPassword, String newPassword, String confirmPassword) {
-        User user = requireById(userId);
-
-        ValidationUtil.requireValidPhone(phone, "Phone");
-        ValidationUtil.requireValidEmail(email, "Email");
+    public void updateOwnProfile( String userId, String phone, String email, String currentPassword, String newPassword, String confirmPassword) {
+    User user = requireById(userId);
+    ValidationUtil.requireValidPhone(phone, "Phone");
+    ValidationUtil.requireValidEmail(email, "Email");
+    boolean currentBlank =currentPassword == null || currentPassword.isEmpty();
+    boolean newBlank =newPassword == null || newPassword.isEmpty();
+    boolean confirmBlank = confirmPassword == null || confirmPassword.isEmpty();
+    boolean changingPassword = !currentBlank || !newBlank || !confirmBlank;
+    if (changingPassword) {
+        if (currentBlank || newBlank || confirmBlank) {throw new IllegalArgumentException("Please complete all password fields");
+        }
+        if (!user.getPassword().equals(currentPassword)) {
+            throw new IllegalArgumentException(
+                    "Current password is incorrect"
+            );
+        }
         ValidationUtil.requireValidPassword(newPassword,"New password");
-
-        boolean currentBlank = currentPassword == null || currentPassword.isEmpty();
-        boolean newBlank = newPassword == null || newPassword.isEmpty();
-        boolean confirmBlank = confirmPassword == null || confirmPassword.isEmpty();
-        boolean changingPassword = !currentBlank || !newBlank || !confirmBlank;
-
-        if (changingPassword) {
-            if (currentBlank || newBlank || confirmBlank) {
-                throw new IllegalArgumentException("Please complete all password fields");
-            }
-            if (!user.getPassword().equals(currentPassword)) {
-                throw new IllegalArgumentException("Current password is incorrect");
-            }
-            ValidationUtil.requireFileSafeText(newPassword, "New password");
-            if (!newPassword.equals(confirmPassword)) {
-                throw new IllegalArgumentException("New password and confirm password do not match");
-            }
-        }
-
-        // Every value has now passed validation - apply and save them together, as one operation.
-        String previousPhone = user.getPhone();
-        String previousEmail = user.getEmail();
-        String previousPassword = user.getPassword();
-
-        user.updateContactDetails(phone.trim(), email.trim());
-        if (changingPassword) {
-            user.setPassword(newPassword);
-        }
-        try {
-            save();
-        } catch (IllegalStateException e) {
-            user.updateContactDetails(previousPhone, previousEmail);
-            user.setPassword(previousPassword);
-            throw e;
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException(
+                    "New password and confirm password do not match"
+            );
         }
     }
-
+    String previousPhone = user.getPhone();
+    String previousEmail = user.getEmail();
+    String previousPassword = user.getPassword();
+    user.updateContactDetails(
+            phone.trim(),
+            email.trim()
+    );
+    if (changingPassword) {
+        user.setPassword(newPassword);
+    }
+    try {
+        save();
+    } catch (IllegalStateException e) {
+        user.updateContactDetails(
+                previousPhone,
+                previousEmail
+        );
+        user.setPassword(previousPassword);
+        throw e;
+    }
+}
     /**
      * The complete Admin "Edit Profile" operation for a managed user: username, phone, and
      * email, plus the role-specific field (Doctor specialty or Patient date of birth) when the
@@ -218,10 +218,7 @@ public class UserManager {
                 "Current password is incorrect"
         );
     }
-    ValidationUtil.requireValidPassword(
-            newPassword,
-            "New password"
-    );
+    ValidationUtil.requireValidPassword( newPassword, "New password");
     user.setPassword(newPassword);
     save();
     }
@@ -229,7 +226,7 @@ public class UserManager {
     /** Admin-initiated reset: unlike changePassword(), does not require knowing the current password. */
     public void resetPassword(String userId, String newPassword) {
         User user = requireById(userId);
-        ValidationUtil.requireFileSafeText(newPassword, "New password");
+        ValidationUtil.requireValidPassword( newPassword, "New password");
         String previousPassword = user.getPassword();
         user.setPassword(newPassword);
         try {

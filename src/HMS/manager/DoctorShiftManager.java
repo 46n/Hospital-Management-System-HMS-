@@ -66,22 +66,6 @@ public class DoctorShiftManager {
         );
     }
 }
-    
-    private void validateShiftStartTime(Date shiftDate, LocalTime startTime) {
-    LocalDate selectedDate = shiftDate.toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate();
-    LocalDate today = LocalDate.now();
-    LocalTime currentTime = LocalTime.now()
-            .withSecond(0)
-            .withNano(0);
-    if (selectedDate.equals(today)
-            && startTime.isBefore(currentTime)) {
-        throw new IllegalArgumentException(
-                "Start time cannot be in the past"
-        );
-    }
-}
 
     public DoctorShift createShift(String managerId, String doctorId, Date shiftDate,
             LocalTime startTime, LocalTime endTime) {
