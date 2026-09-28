@@ -24,6 +24,16 @@ public class ClinicalDepartmentManager {
     public ClinicalDepartmentManager(UserManager userManager) {
         this(userManager, new File(DATA_FILE));
     }
+    
+    private void validateDepartmentName(String departmentName) {
+    ValidationUtil.requireNonBlank(departmentName, "Department name");
+
+    if (departmentName.matches(".*\\d.*")) {
+        throw new IllegalArgumentException(
+                "Department name cannot contain numbers"
+        );
+    }
+}
 
     public ClinicalDepartmentManager(UserManager userManager, File dataFile) {
         if (userManager == null) {
@@ -35,7 +45,7 @@ public class ClinicalDepartmentManager {
     }
 
     public ClinicalDepartment createDepartment(String departmentName, String description, String createdByManagerId) {
-        ValidationUtil.requireNonBlank(departmentName, "Department name");
+        validateDepartmentName(departmentName);
         requireUniqueName(departmentName, null);
         MedicalManager manager = requireMedicalManager(createdByManagerId);
 
@@ -49,7 +59,7 @@ public class ClinicalDepartmentManager {
 
     public void updateDepartment(String departmentId, String departmentName, String description) {
         ClinicalDepartment department = requireDepartment(departmentId);
-        ValidationUtil.requireNonBlank(departmentName, "Department name");
+        validateDepartmentName(departmentName);
         requireUniqueName(departmentName, departmentId);
         department.setDepartmentName(departmentName);
         department.setDescription(description);

@@ -61,6 +61,36 @@ public final class ValidationUtil {
             throw new IllegalArgumentException(fieldName + " must be between 0 and 100");
         }
     }
+    
+    public static void requireValidPassword(String password, String fieldName) {
+
+    requireNonBlank(password, fieldName);
+
+    if (password.length() < 8 || password.length() > 10) {
+        throw new IllegalArgumentException(
+                fieldName + " must be 8 to 10 characters"
+        );
+    }
+
+    boolean hasLetter = false;
+    boolean hasNumber = false;
+
+    for (char c : password.toCharArray()) {
+        if (Character.isLetter(c)) {
+            hasLetter = true;
+        }
+
+        if (Character.isDigit(c)) {
+            hasNumber = true;
+        }
+    }
+
+    if (!hasLetter || !hasNumber) {
+        throw new IllegalArgumentException(
+                fieldName + " must contain at least one letter and one number"
+        );
+    }
+}
 
     /**
      * Rejects a value that would corrupt the pipe-delimited text files: a '|' would create an

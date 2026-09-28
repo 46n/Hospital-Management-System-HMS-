@@ -48,7 +48,7 @@ public class UserManager {
             throw new IllegalArgumentException("User is required");
         }
         ValidationUtil.requireValidUsername(user.getUsername(), "Username");
-        ValidationUtil.requireFileSafeText(user.getPassword(), "Password");
+        ValidationUtil.requireValidPassword( user.getPassword(), "Password");
         ValidationUtil.requireValidPhone(user.getPhone(), "Phone");
         ValidationUtil.requireValidEmail(user.getEmail(), "Email");
         if (user instanceof Doctor) {
@@ -76,7 +76,7 @@ public class UserManager {
 
     public User login(String username, String password) {
         ValidationUtil.requireNonBlank(username, "Username");
-        ValidationUtil.requireNonBlank(password, "Password");
+        ValidationUtil.requireNonBlank(password, "Password");       
         User user = findByUsername(username);
         if (user == null || !user.getPassword().equals(password)) {
             throw new IllegalArgumentException("Invalid username or password");
@@ -117,6 +117,7 @@ public class UserManager {
 
         ValidationUtil.requireValidPhone(phone, "Phone");
         ValidationUtil.requireValidEmail(email, "Email");
+        ValidationUtil.requireValidPassword(newPassword,"New password");
 
         boolean currentBlank = currentPassword == null || currentPassword.isEmpty();
         boolean newBlank = newPassword == null || newPassword.isEmpty();
@@ -211,19 +212,18 @@ public class UserManager {
     }
 
     public void changePassword(String userId, String currentPassword, String newPassword) {
-        User user = requireById(userId);
-        if (!user.getPassword().equals(currentPassword)) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
-        ValidationUtil.requireFileSafeText(newPassword, "New password");
-        String previousPassword = user.getPassword();
-        user.setPassword(newPassword);
-        try {
-            save();
-        } catch (IllegalStateException e) {
-            user.setPassword(previousPassword);
-            throw e;
-        }
+    User user = requireById(userId);
+    if (!user.getPassword().equals(currentPassword)) {
+        throw new IllegalArgumentException(
+                "Current password is incorrect"
+        );
+    }
+    ValidationUtil.requireValidPassword(
+            newPassword,
+            "New password"
+    );
+    user.setPassword(newPassword);
+    save();
     }
 
     /** Admin-initiated reset: unlike changePassword(), does not require knowing the current password. */
