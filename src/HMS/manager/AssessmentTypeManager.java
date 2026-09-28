@@ -54,7 +54,7 @@ public class AssessmentTypeManager {
         requireUniqueName(name, null);
         validateCategory(category);
         validateGradingRule(gradingRule);
-        ValidationUtil.requireNonNegative(baseCharge, "Base charge");
+        ValidationUtil.requireValidAmount(  baseCharge, "Base charge");
         MedicalManager manager = requireMedicalManager(createdByManagerId);
 
         AssessmentType type = new AssessmentType(
@@ -71,7 +71,7 @@ public class AssessmentTypeManager {
         requireUniqueName(name, typeId);
         validateCategory(category);
         validateGradingRule(gradingRule);
-        ValidationUtil.requireNonNegative(baseCharge, "Base charge");
+        ValidationUtil.requireValidAmount(  baseCharge, "Base charge");
         type.setName(name);
         type.setCategory(category);
         type.setGradingRule(gradingRule);
