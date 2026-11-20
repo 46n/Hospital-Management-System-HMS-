@@ -23,6 +23,14 @@ This is a map of the source structure, not a claim that every path was rerun for
 | **Doctor** | Review appointments, record assessments and vital signs, issue prescriptions, and request lab or imaging work. |
 | **Patient** | Book or manage appointments and view clinical history, prescriptions, bills, and feedback. |
 
+### What happens when two patients want the same slot?
+
+A time inside a doctor's shift can still be unavailable. The booking manager checks the doctor's calendar and then the patient's calendar. The second check matters even when the doctor is free, because a patient can already have a visit booked with someone else.
+
+![Four stages of booking, from checking the request through saving the confirmed appointment](figures/walkthrough.png)
+
+On success the manager links the same appointment to the doctor and patient, adds it to its own collection, and saves it. A failed check exits before those updates. That ordering explains how two dashboards can refer to one booking and why a rejected request should never appear in either calendar. [Booking implementation](src/HMS/manager/AppointmentManager.java) · [Python figure source](figures/plot_walkthrough.py)
+
 ### Follow an appointment through the code
 
 1. [DoctorShiftManager](src/HMS/manager/DoctorShiftManager.java) maintains the working shifts used to decide which times are available.
