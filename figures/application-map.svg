@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="438" viewBox="0 0 1000 438" role="img" aria-labelledby="title desc">
+  <title id="title">Hospital Management System application map</title>
+  <desc id="desc">Login routes to four role screens: Administrative Staff, Medical Manager, Doctor, and Patient. The screens use application managers and models, which read and write local text files.</desc>
+  <rect width="1000" height="438" rx="20" fill="#f5f8fc"/>
+  <text x="36" y="50" fill="#132a45" font-family="Arial, sans-serif" font-size="27" font-weight="700">One application, four working views</text>
+  <text x="36" y="78" fill="#50647c" font-family="Arial, sans-serif" font-size="15">A map of the source code, from login to locally saved records</text>
+  <rect x="36" y="110" width="154" height="74" rx="13" fill="#13375d"/>
+  <text x="113" y="155" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="20" font-weight="700">Login</text>
+  <path d="M190 147 H222" stroke="#8195ab" stroke-width="3"/>
+  <path d="M222 147 l-8 -6 v12z" fill="#8195ab"/>
+  <text x="238" y="122" fill="#50647c" font-family="Arial, sans-serif" font-size="13" font-weight="700">ROLE SCREENS</text>
+  <rect x="226" y="135" width="170" height="53" rx="11" fill="#dceaf8" stroke="#bdd5ec"/>
+  <text x="311" y="167" text-anchor="middle" fill="#12395b" font-family="Arial, sans-serif" font-size="15" font-weight="700">Administrative Staff</text>
+  <rect x="408" y="135" width="170" height="53" rx="11" fill="#e3f4ee" stroke="#c2e5d6"/>
+  <text x="493" y="167" text-anchor="middle" fill="#145345" font-family="Arial, sans-serif" font-size="15" font-weight="700">Medical Manager</text>
+  <rect x="590" y="135" width="170" height="53" rx="11" fill="#eae6f8" stroke="#d8cff2"/>
+  <text x="675" y="167" text-anchor="middle" fill="#4d3984" font-family="Arial, sans-serif" font-size="15" font-weight="700">Doctor</text>
+  <rect x="772" y="135" width="190" height="53" rx="11" fill="#fff0df" stroke="#f5dcbf"/>
+  <text x="867" y="167" text-anchor="middle" fill="#885020" font-family="Arial, sans-serif" font-size="15" font-weight="700">Patient</text>
+  <path d="M594 188 V224" stroke="#8195ab" stroke-width="3"/>
+  <path d="M594 224 l-6 -8 h12z" fill="#8195ab"/>
+  <rect x="226" y="231" width="736" height="77" rx="13" fill="white" stroke="#d4deea"/>
+  <text x="594" y="263" text-anchor="middle" fill="#13375d" font-family="Arial, sans-serif" font-size="19" font-weight="700">Managers and validation</text>
+  <text x="594" y="286" text-anchor="middle" fill="#50647c" font-family="Arial, sans-serif" font-size="14">Scheduling · users · billing · clinical work · reporting</text>
+  <path d="M594 308 V337" stroke="#8195ab" stroke-width="3"/>
+  <path d="M594 337 l-6 -8 h12z" fill="#8195ab"/>
+  <rect x="226" y="344" width="352" height="61" rx="13" fill="#e8eef6"/>
+  <text x="402" y="380" text-anchor="middle" fill="#234768" font-family="Arial, sans-serif" font-size="18" font-weight="700">Models</text>
+  <rect x="590" y="344" width="372" height="61" rx="13" fill="#e8eef6"/>
+  <text x="776" y="380" text-anchor="middle" fill="#234768" font-family="Arial, sans-serif" font-size="18" font-weight="700">Local text files</text>
+  <path d="M578 375 H590" stroke="#8195ab" stroke-width="3"/>
+</svg>
