@@ -1,1 +1,0 @@
-#allocationId|requestId|assetId|allocatedByAdminId|startDateTime|endDateTime|status|createdDateTime|cancellationReason

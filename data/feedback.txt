@@ -1,9 +1,0 @@
-#feedbackId|patientId|doctorId|rating|comment|feedbackDate|appointmentId
-FB001|PT001|DR001|5|Doctor explained the treatment plan clearly and professionally|2026-09-15|AP001
-FB002|PT002|DR002|4|Consultation was helpful and the doctor answered my questions|2026-09-16|AP002
-FB003|PT001|DR002|5|Very clear advice about diet and blood glucose management|2026-09-17|AP003
-FB004|PT002|DR001|4|Good consultation and careful examination|2026-09-18|AP004
-FB005|PT001|DR001|5|Follow-up consultation was efficient and informative|2026-09-19|AP005
-FB006|PT002|DR002|4|Friendly service and useful medication instructions|2026-09-20|AP006
-FB007|PT001|DR002|5|Doctor gave practical lifestyle recommendations|2026-09-21|AP007
-FB008|PT002|DR001|5|Professional consultation and clear explanation of results|2026-09-22|AP008
