@@ -10,28 +10,11 @@ A patient books a consultation, a doctor records the visit, and staff arrange an
 
 ## Follow a visit
 
-Read the map from top to bottom. The left branch follows the consultation through completion. The right branch follows an optional lab or imaging request. A request and an appointment have separate statuses, so finishing one does not tell you whether the other has finished.
+The map follows the patient from booking through a completed consultation. During care, the doctor can open a lab or imaging request that Administrative Staff manage separately. Each box names the role or manager responsible for the next decision.
 
-```mermaid
-flowchart TD
-    Shift["Medical Manager publishes a doctor shift"] --> Slot["Patient selects a doctor and time"]
-    Slot --> Check{"Within shift and both calendars free?"}
-    Check -->|No| Slot
-    Check -->|Yes| Book["Save confirmed booking for patient and doctor"]
-    Book --> Visit["Assigned doctor opens the consultation record"]
-    Visit --> Notes["Record vitals, diagnosis and consultation notes"]
-    Notes --> Finish["Finalize visit with consultation notes"]
-    Finish --> History["Patient can review history and leave one rating"]
-    Finish --> Bill["Billing uses the active consultation rate when configured"]
-    Visit -->|Optional| Rx["Issue a prescription linked to the record"]
-    Visit -->|Optional| Request["Doctor submits lab or imaging request"]
-    Request --> Review{"Administrative Staff review"}
-    Review -->|Reject| Rejected["Record rejection reason"]
-    Review -->|Approve| Approved["Approved request awaits allocation"]
-    Approved --> Allocate["Reserve a compatible available asset for a time window"]
-    Allocate -->|Complete| Done["Complete allocation and linked request"]
-    Allocate -->|Cancel with reason| Approved
-```
+[![HMS procedure map showing shift setup, booking conflicts, clinical documentation, billing, and approval, cancellation or completion of an asset reservation](figures/visit-procedures.svg)](figures/visit-procedures.svg)
+
+*Open the map at full size to trace the return paths. An unavailable slot sends the patient back to time selection. Cancelling an asset reservation returns the already approved request to staff for another allocation.*
 
 ### How a booking reaches the right doctor
 
