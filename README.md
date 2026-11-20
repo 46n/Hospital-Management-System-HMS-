@@ -34,9 +34,13 @@ flowchart LR
 - [Models](src/HMS/model) define users, appointments, records, and hospital entities.
 - [Tests](test/HMS) cover selected managers, navigation, and cross-role flows.
 
+## Development trail
+
+This is the integrated team version. Browse the [branches](https://github.com/46n/Hospital-Management-System-HMS-/branches) and [merged pull requests](https://github.com/46n/Hospital-Management-System-HMS-/pulls?q=is%3Apr+is%3Amerged) to see how the role features were developed and brought together. The older `feature-admin` branch records an earlier interface experiment; `main` is the version to read first.
+
 ## Running locally
 
-Open the repository as a NetBeans project with a JDK that supports Java 26, then build and run `hms.app.Main`. The project configuration declares no external libraries. This cleaned version excludes the original `data/` records, so test users and records need to be created locally before exploring every role. A fresh build and full user-flow check for this publication are still pending.
+Open the repository as a NetBeans project with a JDK that supports Java 26, then build and run `hms.app.Main`. The project configuration declares no external libraries. The current `main` tree has no seeded `data/` records or first-run account setup. To explore the role screens, create fictional local test users in the format handled by [UserManager](src/HMS/manager/UserManager.java). A fresh build and full user-flow check for this publication are still pending.
 
 ## Scope
 
